@@ -4,7 +4,7 @@
 #define BNA_NAME "BjutNetAssistant"
 #define BNS_NAME "BjutNetService"
 #define BNC_NAME "BjutNetConsole"
-#define BNW_NAME "BjutNetWindow"
+#define BNW_NAME "BjutNetDesktop"
 
 #define BNA_VERSION "4.0.0"
 

@@ -70,23 +70,8 @@ bool ServiceBridge::sendSyncHello()
     if(!m_socket->receive(buf)) {
         return false;
     }
-    try {
-        boost::property_tree::ptree pt;
-        stringstream rrbuf(buf);
-        boost::property_tree::json_parser::read_json(rrbuf, pt);
-        int type2 = pt.get<int>("type", -1);
-        int act2 = pt.get<int>("act", -1);
-        int seed2 = pt.get<int>("seed", 0);
-        if(type2==MessageValue::ERR){
-            m_strLastError = pt.get<char>("msg", "Unknow message error.");
-        }
-        return type2==MessageValue::SYNC &&
-                act2==MessageValue::HELLO_ACK &&
-                seed==seed2;
-    }
-    catch(...) {
-        return false;
-    }
+    boost::property_tree::ptree pt;
+    return parseJsonAndVarify(buf, seed);
 }
 
 bool ServiceBridge::sendAct_common(MessageValue::ActionAct type)
@@ -260,16 +245,12 @@ bool ServiceBridge::sendGetOnlineDevices(std::vector<std::array<std::string, 4>>
     boost::property_tree::ptree data;
     if (parseJson(buf, seed, data))
     {
-        string d1id = std::to_string(data.get<int>("id1", 0));
-        string d1v4 = data.get<char>("d1v4", "");
-        string d1v6 = data.get<char>("d1v6", "");
-        string d2id = std::to_string(data.get<int>("id2", 0));
-        string d2v4 = data.get<char>("d2v4", "");
-        string d2v6 = data.get<char>("d2v6", "");
-        if(!d1id.empty()){
-            devices.emplace_back(std::array<std::string, 4>{d1id, d1v4, d1v6, ""});
-            if(!d2id.empty()){
-                devices.emplace_back(std::array<std::string, 4>{d2id, d2v4, d2v6, ""});
+        if(data.size()){
+            for(auto &d : data){
+                auto id = d.second.get<int>("id", 0);
+                auto ipv4 = d.second.get<char>("ipv4", "");
+                auto ipv6 = d.second.get<char>("ipv6", "");
+                devices.emplace_back(std::array<std::string, 4>{std::to_string(id), ipv4, ipv6, ""});
             }
         }
         return true;
@@ -417,7 +398,7 @@ bool ServiceBridge::parseJson(const std::string &json, int seed, boost::property
             }
             else if(type2==MessageValue::ERR){
                 if(pt.find("msg")!=pt.not_found()){
-                    m_strLastError = pt.get<char>("msg");
+                    m_strLastError = pt.get<char>("msg", "");
                 }
             }
             else{

@@ -25,7 +25,10 @@ public:
 
     enum ActionSync{
         HELLO=0,
-        HELLO_ACK=1
+        REGIST_MESSAGE=1,
+        MESSAGE_CHANGE=2,
+        REGIST_STATUS=3,
+        STATUS_CHANGE=4,
     };
 
     enum ActionAct{
@@ -45,12 +48,12 @@ public:
         GET_ACCOUNT=2,
         GET_USED_FLOW=3,
         GET_USED_TIME=4,
-        GET_LEFT_FEE,
-        GET_ALL_FLOW,
-        GET_DEVICE_ONLINE,
-        GET_FLOW_SERVICE,
-        GET_BOOKED_SERVICE,
-        GET_ALL_SERVICES
+        GET_LEFT_FEE=5,
+        GET_ALL_FLOW=6,
+        GET_DEVICE_ONLINE=7,
+        GET_FLOW_SERVICE=8,
+        GET_BOOKED_SERVICE=9,
+        GET_ALL_SERVICES=10
     };
 
     enum ActionSet{

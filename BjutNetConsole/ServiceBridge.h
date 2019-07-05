@@ -2,6 +2,8 @@
 #define BNC_SERVICEBRIDGE_H
 
 #include <string>
+#include <array>
+#include <vector>
 #include <boost/property_tree/ptree.hpp>
 #include "MessageValue.h"
 

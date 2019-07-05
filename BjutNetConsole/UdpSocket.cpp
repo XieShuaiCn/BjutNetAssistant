@@ -33,6 +33,10 @@ bool UdpSocket::setRemoteHost(const std::string &address, unsigned short port)
         return false;
     }
     m_remote_endpoint = udp::endpoint(addr, port);
+    if(m_socket->is_open()) {
+        m_socket->close();
+    }
+    m_socket->open(m_remote_endpoint.protocol());
     return true;
 }
 

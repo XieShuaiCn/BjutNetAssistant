@@ -8,25 +8,28 @@ class QUdpSocket;
 
 namespace bna{
 
+class BjutNet;
+
 class ServiceInterface : public QObject
 {
     Q_OBJECT
 public:
-    ServiceInterface(int argc, char **argv);
+    ServiceInterface(BjutNet *BjutNet);
 
-    int Run();
+    bool Initilize();
 
 public slots:
     void ReadSocketData();
 
     void ProcessCommand(const QByteArray &cmd, const QHostAddress &address, quint16 port);
 
-protected:
-    bool Initilize();
+    void PushMessage(const QDateTime& time, const QString& info);
 
 private:
     QUdpSocket *m_socket;
-    QCoreApplication *m_app;
+    QHostAddress m_remoteHost;
+    quint16 m_remotePort;
+    BjutNet *m_bjutnet;
 };
 }
 #endif // BNS_SERVICEINTERFACE_H

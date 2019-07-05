@@ -172,8 +172,8 @@ void InterAction::LoginBjut()
             cout << " OK." << endl;
         }
         else{
-            cout << " Fail." << endl;
             cout << m_service.getLastError() << endl;
+            cout << " Fail." << endl;
         }
     }
 }
@@ -185,8 +185,8 @@ void InterAction::LogoutBjut()
             cout << " OK." << endl;
         }
         else{
-            cout << " Fail." << endl;
             cout << m_service.getLastError() << endl;
+            cout << " Fail." << endl;
         }
     }
 }
@@ -209,8 +209,8 @@ void InterAction::ShowOnline()
             }
         }
         else{
-            cout << "Fail to list online devices." << endl;
             cout << m_service.getLastError() << endl;
+            cout << "Fail to list online devices." << endl;
         }
     }
 }
@@ -221,20 +221,20 @@ void InterAction::RefreshNet()
         if(m_service.sendActRefreshNet()){
            cout << " Have refreshed the status of net." << endl;
         }else{
-            cout << " Fail to refresh the status of net." << endl;
             cout << m_service.getLastError() << endl;
+            cout << " Fail to refresh the status of net." << endl;
         }
         if(m_service.sendActRefreshJfselfAccount()){
            cout << " Have refreshed the infomation of account." << endl;
         }else{
-            cout << " Fail to refresh the infomation of account." << endl;
             cout << m_service.getLastError() << endl;
+            cout << " Fail to refresh the infomation of account." << endl;
         }
         if(m_service.sendActRefreshOnline()){
            cout << " Have refreshed the list of online devices." << endl;
         }else{
-            cout << " Fail to refresh the list of online devices." << endl;
             cout << m_service.getLastError() << endl;
+            cout << " Fail to refresh the list of online devices." << endl;
         }
     }
 }
@@ -245,8 +245,8 @@ void InterAction::ReloadAccount()
         if(m_service.sendActLoadAccount()){
            cout << " Have reloaded account profile." << endl;
         }else{
-                cout << " Fail to reload account profile." << endl;
-                cout << m_service.getLastError() << endl;
+            cout << m_service.getLastError() << endl;
+            cout << " Fail to reload account profile." << endl;
         }
     }
 }
@@ -277,8 +277,8 @@ void InterAction::SetNewAccount()
             cout << " Success to set new account profile." << endl;
         }
         else{
-            cout << " Fail to set new account profile." << endl;
             cout << m_service.getLastError() << endl;
+            cout << " Fail to set new account profile." << endl;
         }
     }
 }
@@ -289,8 +289,8 @@ void InterAction::BookService()
         int sid = 0;
         vector<tuple<int, string, string>> services;
         if(!m_service.sendGetAllServices(services)){
-            cout << " Fail to list all services." << endl;
             cout << m_service.getLastError() << endl;
+            cout << " Fail to list all services." << endl;
             return;
         }
         if(services.empty()){
@@ -311,8 +311,8 @@ void InterAction::BookService()
         if(m_service.sendSetBookedService(get<0>(services[sid-1]))){
             cout << " Success to book service: " << get<1>(services[sid-1]) << endl;
         }else{
-            cout << " Fail to book service." << endl;
             cout << m_service.getLastError() << endl;
+            cout << " Fail to book service." << endl;
         }
     }
 }

@@ -7,13 +7,16 @@ CONFIG -= qt
 INCLUDEPATH += ../BjutNetService/
 
 win32{
-INCLUDEPATH += E:\Programs\Boost-1.69.gcc\include
-LIBS += -LE:\Programs\Boost-1.69.gcc\lib \
-        -lboost_system-mgw54-mt-s-x64-1_69
+INCLUDEPATH += E:\Programs\Boost-1.69\include
+LIBS += -LE:\Programs\Boost-1.69\lib \
+        -lboost_system-mgw54-mt-s-x32-1_69
 LIBS += -lws2_32
 }
 unix{
 INCLUDEPATH += /usr/local/include
+LIBS += -L/usr/local/lib \
+        -lboost_system
+LIBS += -lpthread
 }
 
 SOURCES += \

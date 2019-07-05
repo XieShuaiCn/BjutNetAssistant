@@ -1,4 +1,6 @@
+# QT
 build-*/
+*.user
 
 # Prerequisites
 *.d

@@ -1,8 +1,10 @@
 #include "ServiceInterface.h"
+#include <QDateTime>
 #include <QUdpSocket>
 #include <QHostAddress>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include "BjutNet.h"
 #include "Version.h"
 #include "MessageValue.h"
 
@@ -17,10 +19,12 @@ const QByteArray g_acbACK(1, CHAR_ACK);
 const QByteArray g_acbNAK(1, CHAR_NAK);
 const QByteArray g_acbSYN(1, CHAR_SYN);
 
-ServiceInterface::ServiceInterface(int argc, char **argv)
+ServiceInterface::ServiceInterface(BjutNet *bjutNet)
+    : m_remoteHost(QHostAddress::Null),
+      m_remotePort(0),
+      m_bjutnet(bjutNet)
 {
-    m_app = new QCoreApplication(argc, argv);
-    Q_ASSERT(m_app!=nullptr);
+    Q_ASSERT(bjutNet!=nullptr);
     m_socket = new QUdpSocket();
 }
 
@@ -29,23 +33,13 @@ bool ServiceInterface::Initilize()
     // bind port and listen
     if(false == m_socket->bind(QHostAddress::Any, MessageValue::ServerPort))
     {
-        qDebug() << "Can't bind port:" << MessageValue::ServerPort << endl;
+        qDebug() << "Can't bind port: " << MessageValue::ServerPort << endl;
+        qDebug() << m_socket->errorString() << endl;
         return false;
     }
     connect(m_socket, &QUdpSocket::readyRead, this, &ServiceInterface::ReadSocketData);
+    connect(m_bjutnet, &BjutNet::message, this, &ServiceInterface::PushMessage);
     return true;
-}
-
-int ServiceInterface::Run()
-{
-    if(Initilize()){
-        return m_app->exec();
-    }
-    else{
-        qDebug() << "Fail to initialize service. Exit now." << endl;
-        m_app->exit(0);
-        return 0;
-    }
 }
 
 void ServiceInterface::ReadSocketData()
@@ -111,10 +105,17 @@ inline QByteArray __ServiceInterface_AckDataToByteArray(const QString &data, int
             .toUtf8();
 }
 
-inline QByteArray __ServiceInterface_AckSuccToByteArray(int seed)
+inline QByteArray __ServiceInterface_PushDataToByteArray(int type, const QString &data, int seed)
 {
-    return QString("{\"type\":%1,\"succ\":1,\"seed\":%2}")
-            .arg(MessageValue::ACK).arg(seed)
+    return QString("{\"type\":%1,\"data\":%2,\"seed\":%3}")
+            .arg(type).arg(data).arg(seed)
+            .toUtf8();
+}
+
+inline QByteArray __ServiceInterface_AckSuccToByteArray(int seed, bool succ = true)
+{
+    return QString("{\"type\":%1,\"succ\":%2,\"seed\":%3}")
+            .arg(MessageValue::ACK).arg(succ?1:0).arg(seed)
             .toUtf8();
 }
 
@@ -125,6 +126,8 @@ void ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAddress 
     using MsgCvtToAct = MessageValue::ConvertToActAct;
     using MsgCvtToGet = MessageValue::ConvertToActGet;
     using MsgCvtToSet = MessageValue::ConvertToActSet;
+    auto &lgn = m_bjutnet->getWebLgn();
+    auto &jfself = m_bjutnet->getWebJfself();
 
     // parse json
     QJsonParseError json_error;
@@ -136,6 +139,7 @@ void ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAddress 
             //m_socket->writeDatagram(g_acbACK, address, port);
             // process instructions
             QByteArray buffer;
+            QString strTemp;
             auto seed = jo["seed"].toInt();
             auto type = MsgCvtToType::To(jo["type"].toInt());
             // SYNC
@@ -143,11 +147,27 @@ void ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAddress 
                 auto act = MsgCvtToSync::To(jo["act"].toInt());
                 switch (act) {
                 case MessageValue::HELLO:
-                    buffer = QString("{\"type\":%1,\"act\":%2,\"seed\":%3}")
-                            .arg(static_cast<int>(MessageValue::SYNC))
-                            .arg(static_cast<int>(MessageValue::HELLO_ACK))
-                            .arg(static_cast<int>(seed))
-                            .toLocal8Bit();
+                    buffer = __ServiceInterface_AckSuccToByteArray(seed);
+                    break;
+                case MessageValue::REGIST_MESSAGE:
+                    if(!m_remoteHost.isNull() && m_remotePort!=0){
+                        PushMessage(QDateTime::currentDateTime(),
+                                    QString("Another device required to register message."
+                                            "No more pushed messages from now on."));
+                    }
+                    m_remoteHost = address;
+                    m_remotePort = port;
+                    buffer = __ServiceInterface_AckSuccToByteArray(seed);
+                    break;
+                case MessageValue::REGIST_STATUS:
+                    if(!m_remoteHost.isNull() && m_remotePort!=0){
+                        PushMessage(QDateTime::currentDateTime(),
+                                    QString("Another device required to register status."
+                                            "No more status notification from now on."));
+                    }
+                    m_remoteHost = address;
+                    m_remotePort = port;
+                    buffer = __ServiceInterface_AckSuccToByteArray(seed);
                     break;
                 default:
                     buffer = __ServiceInterface_ErrMsgToByteArray("Bad act", seed);
@@ -159,31 +179,39 @@ void ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAddress 
                 auto act = MsgCvtToAct::To(jo["act"].toInt());
                 switch (act) {
                 case MessageValue::ACT_LOAD_ACCOUNT:
-                    buffer = __ServiceInterface_AckSuccToByteArray(seed);
+                    buffer = __ServiceInterface_AckSuccToByteArray(seed,
+                            m_bjutnet->loadAccount());
                     break;
                 case MessageValue::ACT_SAVE_ACCOUNT:
-                    buffer = __ServiceInterface_AckSuccToByteArray(seed);
+                    buffer = __ServiceInterface_AckSuccToByteArray(seed,
+                            m_bjutnet->saveAccount());
                     break;
                 case MessageValue::ACT_LOGIN_BJUT:
-                    buffer = __ServiceInterface_AckSuccToByteArray(seed);
+                    buffer = __ServiceInterface_AckSuccToByteArray(seed,
+                                    m_bjutnet->start_monitor());
                     break;
                 case MessageValue::ACT_LOGOUT_BJUT:
-                    buffer = __ServiceInterface_AckSuccToByteArray(seed);
+                    buffer = __ServiceInterface_AckSuccToByteArray(seed,
+                                    m_bjutnet->stop_monitor());
                     break;
                 case MessageValue::ACT_LOGIN_JFSELF:
-                    buffer = __ServiceInterface_AckSuccToByteArray(seed);
+                    buffer = __ServiceInterface_AckSuccToByteArray(seed,
+                                    jfself.login());
                     break;
                 case MessageValue::ACT_LOGOUT_JFSELF:
                     buffer = __ServiceInterface_AckSuccToByteArray(seed);
                     break;
                 case MessageValue::ACT_REFRESH_NET:
-                    buffer = __ServiceInterface_AckSuccToByteArray(seed);
+                    buffer = __ServiceInterface_AckSuccToByteArray(seed,
+                                lgn.checkLoginStatus());
                     break;
                 case MessageValue::ACT_REFRESH_JFSELF_ACCOUNT:
-                    buffer = __ServiceInterface_AckSuccToByteArray(seed);
+                    buffer = __ServiceInterface_AckSuccToByteArray(seed,
+                                jfself.refreshAccount());
                     break;
                 case MessageValue::ACT_REFRESH_ONLINE:
-                    buffer = __ServiceInterface_AckSuccToByteArray(seed);
+                    buffer = __ServiceInterface_AckSuccToByteArray(seed,
+                                jfself.refreshOnline());
                     break;
                 default:
                     buffer = __ServiceInterface_ErrMsgToByteArray("Bad act", seed);
@@ -202,52 +230,78 @@ void ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAddress 
                     break;
                 case MessageValue::GET_ACCOUNT:
                     buffer = __ServiceInterface_AckDataToByteArray(
-                                QString("{\"n\":\"S123456789\",\"p\":\"123456\",\"t\":2}"),
+                                QString("{\"n\":\"%1\",\"p\":\"%2\",\"t\":%3}")
+                                .arg(m_bjutnet->getAccount())
+                                .arg(m_bjutnet->getPassword())
+                                .arg(int(m_bjutnet->getLoginType())),
                                 seed);
                     break;
                 case MessageValue::GET_USED_FLOW:
                     buffer = __ServiceInterface_AckDataToByteArray(
-                                QString("{\"v\":11244670}"),
+                                QString("{\"v\":%1}").arg(lgn.getFlow()),
                                 seed);
                     break;
                 case MessageValue::GET_USED_TIME:
                     buffer = __ServiceInterface_AckDataToByteArray(
-                                QString("{\"v\":1276}"),
+                                QString("{\"v\":%1}").arg(lgn.getTime()),
                                 seed);
                     break;
                 case MessageValue::GET_LEFT_FEE:
                     buffer = __ServiceInterface_AckDataToByteArray(
-                                QString("{\"v\":2300}"),
+                                QString("{\"v\":%1}").arg(lgn.getFee()),
                                 seed);
                     break;
                 case MessageValue::GET_ALL_FLOW:
                     buffer = __ServiceInterface_AckDataToByteArray(
-                                QString("{\"v\":12288}"),
+                                QString("{\"v\":%1}").arg(jfself.getTotalFlow()),
                                 seed);
                     break;
                 case MessageValue::GET_DEVICE_ONLINE:
-                    buffer = __ServiceInterface_AckDataToByteArray(
-                                QString("{"
-                                 "\"id1\":111,\"d1v4\":\"172.21.15.11\",\"d1v6\":\"2001:da8:216:210f:8968:7827:8abb:ffb4\","
-                                 "\"id2\":222,\"d2v4\":\"172.21.15.10\",\"d2v6\":\"2001:da8:216:210f:8968:7827:8abb:ffb5\""
-                                 "}"), seed);
+                    {
+                        QVector<OnlineClientInfo> list = jfself.getOnlineClient();
+                        strTemp = "[";
+                        for(const auto &dev : list){
+                            strTemp += QString("{\"id\":%1,\"ipv4\":\"%2\",\"ipv6\":\"%3\"},")
+                                    .arg(dev.strID).arg(dev.strIPv4).arg(dev.strIPv6);
+                        }
+                        if(strTemp.endsWith(',')){
+                            strTemp.remove(strTemp.size()-1, 1);
+                        }
+                        strTemp+="]";
+                        buffer = __ServiceInterface_AckDataToByteArray(strTemp, seed);
+                    }
                     break;
                 case MessageValue::GET_FLOW_SERVICE:
                     buffer = __ServiceInterface_AckDataToByteArray(
-                                QString("{\"n\":\"Default service\", \"v\":12288}"),
+                                QString("{\"n\":\"%1\", \"v\":%2}")
+                                .arg(jfself.getServiceName())
+                                .arg(jfself.getTotalFlow()),
                                 seed);
                     break;
                 case MessageValue::GET_BOOKED_SERVICE:
                     buffer = __ServiceInterface_AckDataToByteArray(
-                                QString("{\"n\":\"Default service\"}"),
+                                QString("{\"n\":\"%1\"}")
+                                .arg(jfself.getCurrentBookService()),
                                 seed);
                     break;
                 case MessageValue::GET_ALL_SERVICES:
-                    buffer = __ServiceInterface_AckDataToByteArray(QString("["
-                                 "{\"id\":1,\"n\":\"Default service\",\"m\":\"12G\"},"
-                                 "{\"id\":2,\"n\":\"20 Yuan service\",\"m\":\"25G\"},"
-                                 "{\"id\":3,\"n\":\"25 Yuan service\",\"m\":\"30G\"}"
-                                 "]"), seed);
+                    {
+                        if(!jfself.refreshBookService()){
+                            buffer = __ServiceInterface_ErrMsgToByteArray("Fail to refresh all services.", seed);
+                            break;
+                        }
+                        QVector<ServiceInfo> list = jfself.getBookServiceList();
+                        strTemp = "[";
+                        for(const ServiceInfo &sv : list){
+                            strTemp += QString("{\"id\":%1,\"n\":\"%2\",\"m\":\"%3\"},")
+                                    .arg(sv.nID).arg(sv.strName).arg(sv.strDescription);
+                        }
+                        if(strTemp.endsWith(',')){
+                            strTemp.remove(strTemp.size()-1, 1);
+                        }
+                        strTemp+="]";
+                        buffer = __ServiceInterface_AckDataToByteArray(strTemp, seed);
+                    }
                     break;
                 default:
                     buffer = __ServiceInterface_ErrMsgToByteArray("Bad act", seed);
@@ -259,10 +313,38 @@ void ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAddress 
                 auto act = MsgCvtToSet::To(jo["act"].toInt());
                 switch(act){
                 case MessageValue::SET_ACCOUNT:
-                    buffer = __ServiceInterface_AckSuccToByteArray(seed);
+                    if(jo.contains("data")){
+                        //{\"n\":\"%1\",\"p\":\"%2\",\"t\":%3}
+                        QJsonObject data = jo["data"].toObject();
+                        if(data.contains("n")){
+                            auto name = data["n"].toString();
+                            m_bjutnet->setAccount(name);
+                        }
+                        if(data.contains("p")){
+                            auto passwd = data["p"].toString();
+                            m_bjutnet->setPassword(passwd);
+                        }
+                        if(data.contains("t")){
+                            auto type = data["t"].toInt();
+                            m_bjutnet->setLoginType(type);
+                        }
+                        m_bjutnet->synchronizeAccount();
+                        buffer = __ServiceInterface_AckSuccToByteArray(seed);
+                        break;
+                    }
+                    buffer = __ServiceInterface_AckSuccToByteArray(seed, false);
                     break;
                 case MessageValue::SET_BOOK_SERVICE:
-                    buffer = __ServiceInterface_AckSuccToByteArray(seed);
+                    if(jo.contains("data")){
+                        //{\"n\":\"%1\",\"p\":\"%2\",\"t\":%3}
+                        QJsonObject data = jo["data"].toObject();
+                        if(data.contains("id")){
+                            buffer = __ServiceInterface_AckSuccToByteArray(seed,
+                                    jfself.submitBookService(data["id"].toString()));
+                            break;
+                        }
+                    }
+                    buffer = __ServiceInterface_AckSuccToByteArray(seed, false);
                     break;
                 default:
                     buffer = __ServiceInterface_ErrMsgToByteArray("Bad act", seed);
@@ -276,7 +358,7 @@ void ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAddress 
 #ifdef QT_DEBUG
             qDebug() << "<==" << buffer << endl;
 #endif
-            m_socket->writeDatagram(buffer, address, port);
+            m_socket->writeDatagram(buffer.data(), buffer.size(), address, port);
         }
         else {
     #ifdef QT_DEBUG
@@ -291,6 +373,18 @@ void ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAddress 
 #endif
         m_socket->writeDatagram(g_acbNAK, address, port);
     }
+}
+
+void ServiceInterface::PushMessage(const QDateTime& time, const QString& info)
+{
+    if(m_remoteHost.isNull()) return;
+
+    int seed = qrand();
+    QByteArray buffer = __ServiceInterface_PushDataToByteArray(
+                MessageValue::MESSAGE_CHANGE,
+                QString("{\"t\":%1,\"m\":\"%2\"}").arg(time.toTime_t()).arg(info),
+                seed);
+    m_socket->writeDatagram(buffer.data(), buffer.size(), m_remoteHost, m_remotePort);
 }
 
 }

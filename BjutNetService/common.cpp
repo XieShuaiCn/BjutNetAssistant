@@ -2,6 +2,8 @@
 #include <QFile>
 #include <QTime>
 
+namespace bna{
+
 QString g_strAppTempPath;
 
 QString RandString(int length)
@@ -15,4 +17,5 @@ QString RandString(int length)
         result.append(set[qrand() % 36]);
     }
     return result;
+}
 }

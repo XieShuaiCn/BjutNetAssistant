@@ -18,9 +18,25 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     main.cpp \
     ServiceInterface.cpp \
-    MessageValue.cpp
+    MessageValue.cpp \
+    BjutNet.cpp \
+    common.cpp \
+    DebugInfo.cpp \
+    HNetworkCookieJar.cpp \
+    HttpClient.cpp \
+    WebJfself.cpp \
+    WebLgn.cpp
 
 HEADERS += \
     ServiceInterface.h \
     MessageValue.h \
-    Version.h
+    Version.h \
+    BjutNet.h \
+    common.h \
+    DebugInfo.h \
+    HNetworkCookieJar.h \
+    HttpClient.h \
+    WebJfself.h \
+    WebLgn.h
+
+include(qtsingleapplication/src/qtsingleapplication.pri)
