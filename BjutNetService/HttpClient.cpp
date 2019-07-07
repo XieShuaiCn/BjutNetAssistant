@@ -87,6 +87,7 @@ QString HttpClient::getUrlHtml(const QUrl &url)
 int HttpClient::getUrlHtml(const QUrl &url, QString &content)
 {
     QByteArray data;
+    content.clear();
     int status = downUrlData(url, QByteArray(), data, false);
     //数据转码
     content.append(m_pCodec->toUnicode(data));
@@ -131,6 +132,7 @@ int HttpClient::postUrlHtml(const QUrl &url, const QString &arg, QString &conten
     QByteArray data;
 
     postArray.append(arg);
+    content.clear();
     int status = downUrlData(url, postArray, data, true);
     //数据转码
     if(data.size())

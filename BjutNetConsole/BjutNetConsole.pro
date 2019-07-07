@@ -10,6 +10,7 @@ win32{
 INCLUDEPATH += E:\Programs\Boost-1.69\include
 LIBS += -LE:\Programs\Boost-1.69\lib \
         -lboost_system-mgw54-mt-s-x32-1_69
+        -lboost_locale-mgw54-mt-s-x32-1_69
 LIBS += -lws2_32
 }
 unix{
@@ -25,7 +26,8 @@ SOURCES += \
     UdpSocket.cpp \
     ../BjutNetService/ParamParse.cpp \
     ../BjutNetService/MessageValue.cpp \
-    InterAction.cpp
+    InterAction.cpp \
+    Utility.cpp
 
 HEADERS += \
     ServiceBridge.h \
@@ -33,4 +35,5 @@ HEADERS += \
     ../BjutNetService/ParamParse.h \
     ../BjutNetService/Version.h \
     ../BjutNetService/MessageValue.h \
-    InterAction.h
+    InterAction.h \
+    Utility.h

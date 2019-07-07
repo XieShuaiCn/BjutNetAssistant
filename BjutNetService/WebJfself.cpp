@@ -15,6 +15,7 @@ WebJfself::WebJfself()
 {
     m_http.setCodec("UTF-8");
     m_lstOnline.reserve(2);
+    connect(this, &WebJfself::debug_info, &g_debugTool, &DebugTool::writeInfo);
 }
 
 bool WebJfself::login()
@@ -33,8 +34,8 @@ bool WebJfself::login()
             if (content.indexOf(regCheckCode) <= 0) {
                 if(g_bAppDebug)
                 {
-                    WriteDebugInfo(DEBUG_FAIL, QString("Can't find jfself code."));
-                    WriteDebugInfo(content.replace('\r', ' ').replace('\n', ' '));
+                    emit debug_info(DebugTool::STATUS_FAIL, QString("Can't find jfself code."));
+                    emit debug_info(DebugTool::STATUS_DATA, content);
                 }
                 return false;
             }
@@ -53,11 +54,15 @@ bool WebJfself::login()
                     return true;
                 }
                 else {
-                    qDebug() << content << endl;
                     if(g_bAppDebug)
                     {
-                        WriteDebugInfo(DEBUG_FAIL, QString("Can't find keywork 'info_title'."));
-                        WriteDebugInfo(content.replace('\r', ' ').replace('\n', ' '));
+                        emit debug_info(DebugTool::STATUS_FAIL, QString("Can't find keywork 'info_title'."));
+                        emit debug_info(DebugTool::STATUS_INFO,
+                                        QString("https://jfself.bjut.edu.cn/LoginAction.action"
+                                                " <== account:%1|password:%2|checkcode:%3")
+                                        .arg(m_strAccount, m_strPassword, strCheckCode)
+                                        , false);
+                        emit debug_info(DebugTool::STATUS_DATA, content, false);
                     }
                     emit message(QDateTime::currentDateTime(), "服务器数据解析失败!");
                 }
@@ -65,7 +70,7 @@ bool WebJfself::login()
             else {
                 if(g_bAppDebug)
                 {
-                    WriteDebugInfo(DEBUG_FAIL, QString("jfself login return %1.").arg(status));
+                    emit debug_info(DebugTool::STATUS_FAIL, QString("jfself login return %1.").arg(status));
                 }
                 emit message(QDateTime::currentDateTime(), "用户自助系统登录失败!");
             }
@@ -73,7 +78,7 @@ bool WebJfself::login()
         else {
             if(g_bAppDebug)
             {
-                WriteDebugInfo(DEBUG_FAIL, QString("jfself code return %1.").arg(status));
+                emit debug_info(DebugTool::STATUS_FAIL, QString("jfself code return %1.").arg(status));
             }
             emit message(QDateTime::currentDateTime(), "验证码获取失败!");
         }
@@ -81,7 +86,7 @@ bool WebJfself::login()
     else {
         if(g_bAppDebug)
         {
-            WriteDebugInfo(DEBUG_FAIL, QString("jfself native return %1.").arg(status));
+            emit debug_info(DebugTool::STATUS_FAIL, QString("jfself native return %1.").arg(status));
         }
         emit message(QDateTime::currentDateTime(), "用户自助登录信息获取失败!");
     }
@@ -172,8 +177,8 @@ bool WebJfself::refreshAccount()
                          "解析账户信息失败:"+jp_err.errorString());
             if(g_bAppDebug)
             {
-                WriteDebugInfo(DEBUG_FAIL, QString("refresh_account"));
-                WriteDebugInfo(content.replace('\r', ' ').replace('\n', ' '));
+                emit debug_info(DebugTool::STATUS_FAIL, QString("refresh_account"));
+                emit debug_info(DebugTool::STATUS_DATA, content);
             }
 #ifdef QT_DEBUG
             QFile f("refresh_account.json");
@@ -185,7 +190,7 @@ bool WebJfself::refreshAccount()
     }
     else if(g_bAppDebug)
     {
-        WriteDebugInfo(DEBUG_FAIL, QString("refresh account return %1").arg(status));
+        emit debug_info(DebugTool::STATUS_FAIL, QString("refresh account return %1").arg(status));
     }
     return false;
 }
@@ -228,7 +233,7 @@ bool WebJfself::refreshOnline()
                     j2 = tbody.indexOf("</td>", j1, Qt::CaseInsensitive);
                     QString id = tbody.mid(j1+26, j2 -j1-26);
                     id = id.replace("&nbsp;", "").trimmed();
-                    m_lstOnline.push_back({id, ipv4, ipv6, macad});
+                    m_lstOnline.push_back({id.toInt(), ipv4, ipv6, macad});
                 }
                 else {
                     break;
@@ -242,7 +247,7 @@ bool WebJfself::refreshOnline()
                          QString("解析在线信息失败:tbody(%1,%2)").arg(i1).arg(i2));
             if(g_bAppDebug)
             {
-                WriteDebugInfo(DEBUG_FAIL, QString("refresh online devices."));
+                emit debug_info(DebugTool::STATUS_FAIL, QString("refresh online devices."));
             }
 #ifdef QT_DEBUG
             QFile f("nav_offline.html");
@@ -323,7 +328,7 @@ bool WebJfself::refreshBookService()
 }
 
 //预约套餐
-bool WebJfself::submitBookService(const QString &id)
+bool WebJfself::submitBookService(int id)
 {
     if(!checkLogin()){
         login();
@@ -331,7 +336,7 @@ bool WebJfself::submitBookService(const QString &id)
     }
     QString content;
     QMap<QString, QString> arg;
-    arg.insert("serid", id);
+    arg.insert("serid", QString::number(id));
     int status = m_http.postUrlHtml(QUrl(QString("https://jfself.bjut.edu.cn/selfservicebookAction")),
                                    arg, content);
     if(status == 200 || status == 0)
@@ -341,7 +346,7 @@ bool WebJfself::submitBookService(const QString &id)
     return false;
 }
 
-bool WebJfself::toOffline(const QString &id)
+bool WebJfself::toOffline(int id)
 {
     if(!checkLogin()){
         login();
@@ -382,8 +387,8 @@ bool WebJfself::toOffline(const QString &id)
         }
         if(g_bAppDebug)
         {
-            WriteDebugInfo(DEBUG_FAIL, QString("offline device"));
-            WriteDebugInfo(content.replace('\r', ' ').replace('\n', ' '));
+            emit debug_info(DebugTool::STATUS_FAIL, QString("offline device"));
+            emit debug_info(DebugTool::STATUS_DATA, content);
         }
     }
     return false;
@@ -393,7 +398,7 @@ bool WebJfself::toOfflineAll()
 {
     for(const OnlineClientInfo &it : m_lstOnline)
     {
-        toOffline(it.strID);
+        toOffline(it.nID);
     }
     return true;
 }

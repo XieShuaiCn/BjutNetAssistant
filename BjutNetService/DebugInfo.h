@@ -3,22 +3,44 @@
 
 #include <QObject>
 #include <QString>
+#include <QFile>
 
-extern bool g_bAppDebug;
+namespace bna {
 
-enum DebugStatus{
-    DEBUG_INFO,
-    DEBUG_SUCCESS,
-    DEBUG_FAIL
+class DebugTool : public QObject{
+
+    Q_OBJECT
+
+public:
+    enum DebugStatus{
+        STATUS_NONE,
+        STATUS_INFO,
+        STATUS_SUCCESS,
+        STATUS_FAIL,
+        STATUS_DATA
+    };
+
+    void init(const QString &name);
+
+    void release();
+
+    QString fileName() const;
+
+    //void writeInfo(const QString &content, bool with_time = true, bool end_line = true);
+
+public slots:
+
+    void writeInfo(DebugStatus status, const QString &content, bool with_time = true, bool end_line = true);
+
+private:
+    QFile m_file;
 };
 
-void InitDebugFile(const QString &name);
+inline QString DebugTool::fileName() const {
+    return m_file.fileName();
+}
 
-void WriteDebugInfo(const QString &content, bool with_time = true, bool end_line = true);
-
-void WriteDebugInfo(const DebugStatus status, const QString &content, bool with_time = true, bool end_line = true);
-
-void ReleaseDebugFile();
+}
 
 
 #endif // DEBUGINFO_H

@@ -9,7 +9,7 @@
 namespace bna{
 
 struct OnlineClientInfo{
-    QString strID;
+    int nID;
     QString strIPv4;
     QString strIPv6;
     QString strMAC;
@@ -38,9 +38,9 @@ public:
     //刷新套餐
     bool refreshBookService();
     //预约套餐
-    bool submitBookService(const QString &id);
+    bool submitBookService(int id);
     //下线某个设备
-    bool toOffline(const QString &id);
+    bool toOffline(int id);
     bool toOfflineAll();
 
     PROPERTY_READ(bool, hasOnline, m_hasOnline)
@@ -51,8 +51,7 @@ public:
     PROPERTY_READ_CONST(QString, ServiceName, m_strService)
     PROPERTY_READ_CONST(QVector<OnlineClientInfo>, OnlineClient, m_lstOnline)
     PROPERTY_READ_CONST(QString, CurrentBookService, m_strCurrentBookService)
-    const QVector<ServiceInfo> &getBookServiceList()
-    {   return m_lstBookService;    }
+    PROPERTY_READ_CONST(QVector<ServiceInfo>, BookServiceList, m_lstBookService)
 
     const QString &getAccount() const;
     void setAccount(const QString &account);
@@ -62,6 +61,8 @@ signals:
     //监视消息
     void message(const QDateTime& time, const QString& info);
     void online_status_update(const QVector<OnlineClientInfo> &info);
+    // 调试信息
+    void debug_info(DebugTool::DebugStatus status, const QString &content, bool with_time = true, bool end_line = true);
 private:
     HttpClient m_http;
     //账号信息

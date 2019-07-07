@@ -58,7 +58,8 @@ public:
 
     enum ActionSet{
         SET_ACCOUNT=1,
-        SET_BOOK_SERVICE=2
+        SET_BOOK_SERVICE=2,
+        SET_OFFLINE_DEVICE=3
     };
 
     template<typename _Tp>

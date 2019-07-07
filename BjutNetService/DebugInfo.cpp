@@ -1,61 +1,91 @@
 #include "DebugInfo.h"
 #include <QFile>
+#include <QDir>
 #include <QDateTime>
 #include <QByteArray>
+#include "common.h"
 
-bool g_bAppDebug = false;
-QFile g_fileDebug;
-bool g_bDbgFileOpened = false;
+namespace bna{
 
-
-void InitDebugFile(const QString &name)
+void DebugTool::init(const QString &name)
 {
-    g_fileDebug.setFileName(name);
-    g_fileDebug.open(QFile::ReadWrite);
-    g_bDbgFileOpened = g_fileDebug.isOpen();
+    m_file.setFileName(name);
+    m_file.open(QFile::ReadWrite);
 }
 
-void ReleaseDebugFile()
+void DebugTool::release()
 {
-    if(g_fileDebug.isOpen()) g_fileDebug.close();
+    if(m_file.isOpen()) m_file.close();
 }
 
-void WriteDebugInfo(const DebugStatus status, const QString &content, bool with_time, bool end_line)
+void DebugTool::writeInfo(DebugStatus status, const QString &content, bool with_time, bool end_line)
 {
-    QString s;
-    switch (status) {
-    case DEBUG_SUCCESS:
-        s = "Succ";
-        break;
-    case DEBUG_FAIL:
-        s = "Fail";
-        break;
-    case DEBUG_INFO:
-    default:
-        s = "Info";
-        break;
-    }
-    WriteDebugInfo(QString("[%1] %2").arg(s).arg(content), with_time, end_line);
-}
-
-void WriteDebugInfo(const QString &content, bool with_time, bool end_line)
-{
-    if(!g_fileDebug.isOpen())
+    if(!m_file.isOpen())
         return;
     qint64 num = 0;
+    QDateTime timeNow = QDateTime::currentDateTime();
     if (with_time)
     {
-        QDateTime time = QDateTime::currentDateTime();
-        QString strCurrentTime = time.toString("[yyyy-MM-dd hh:mm:ss:zzz]");
+        QString strCurrentTime = timeNow.toString("[yyyy-MM-dd hh:mm:ss:zzz]");
         QByteArray tempData = strCurrentTime.toUtf8();
-        num += g_fileDebug.write(tempData.data());
+        num += m_file.write(tempData.data());
     }
-    {
-        QByteArray tempData = content.toUtf8();
-        num += g_fileDebug.write(tempData.data());
+    if(status!=STATUS_NONE){
+        QString s;
+        switch (status) {
+        case STATUS_SUCCESS:
+            s = "Succ";
+            break;
+        case STATUS_FAIL:
+            s = "Fail";
+            break;
+        case STATUS_INFO:
+            s = "Info";
+            break;
+        case STATUS_DATA:
+            s = "Data";
+            break;
+        case STATUS_NONE:
+        default:
+            break;
+        }
+        num += m_file.write(QString("[%1] ").arg(s).toUtf8());
+        if(STATUS_DATA == status && content.size() > 100){
+            QString dataFileName = "log_data_" + timeNow.toString("yyyyMMddhhmmss_");
+            static QDir dirAppTemp(g_strAppTempPath);
+            for(int i =0; i < 32; ++i)
+            {
+                QString rs = RandString(8);
+                auto tmpName = dirAppTemp.absoluteFilePath(dataFileName + rs + ".dat");
+                if(!QFileInfo(tmpName).exists()){
+                    dataFileName = tmpName;
+                    break;
+                }
+            }
+            QFile fData(dataFileName);
+            bool writeDataOK = false;
+            if(fData.open(QFile::WriteOnly)){
+                writeDataOK = 0 < fData.write(content.toUtf8());
+                fData.close();
+            }
+            if(writeDataOK){
+                num += m_file.write(dataFileName.toUtf8());
+            }
+            else{
+                num += m_file.write(content.toUtf8());
+            }
+        }
+        else{
+            num += m_file.write(content.toUtf8());
+        }
+    }
+    else{
+        num += m_file.write(content.toUtf8());
     }
     if(end_line)
     {
-        num += g_fileDebug.write("\n");
+        num += m_file.write("\n");
     }
+}
+
 }

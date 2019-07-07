@@ -23,9 +23,12 @@ void InterAction::ShowMenu()
     cout << "  v     |  Version information.                 " << endl;
     cout << "  li    |  Login BJUT net now.                  " << endl;
     cout << "  lo    |  Logout BJUT net now.                 " << endl;
-    cout << "  ol    |  List online devices with you account." << endl;
+    cout << "  ol    |  List online devices.                 " << endl;
+    cout << "  onl   |  List online devices.                 " << endl;
+    cout << "  ofl   |  Offline devices.                     " << endl;
     cout << "  lda   |  Reload account profile.              " << endl;
     cout << "  sna   |  Set new account profile.             " << endl;
+    cout << "  csv   |  Show the current service             " << endl;
     cout << "  bsv   |  Book the service of next month.      " << endl;
     cout << "================================================" << endl;
     cout << "Input your command: ";
@@ -70,7 +73,7 @@ bool InterAction::Process()
             else if(cmd == "lo"){
                 LogoutBjut();
             }
-            else if(cmd == "ol") {
+            else if(cmd == "ol"){
                 ShowOnline();
             }
             else{
@@ -78,11 +81,20 @@ bool InterAction::Process()
             }
         }
         else if(cmd.size() == 3){
-            if(cmd == "lda"){
+            if(cmd == "onl") {
+                ShowOnline();
+            }
+            if(cmd == "ofl") {
+                OfflineDevice();
+            }
+            else if(cmd == "lda"){
                 ReloadAccount();
             }
             else if(cmd == "sna"){
                 SetNewAccount();
+            }
+            else if(cmd == "csv"){
+                ShowCurrentService();
             }
             else if(cmd == "bsv") {
                 BookService();
@@ -115,7 +127,7 @@ bool InterAction::Connected()
     }
 }
 
-void InterAction::ShowStatus()
+bool InterAction::ShowStatus()
 {
     if(Connected()){
         int allFlow = 0;
@@ -127,7 +139,6 @@ void InterAction::ShowStatus()
         m_service.sendGetUsedFlow(flow);
         m_service.sendGetUsedTime(time);
         m_service.sendGetLeftFee(fee);
-        m_service.sendGetFlowService(serviceName, allFlow);
 
         string timeUnit[] = {"min", "h"};
         string flowUnit[] = {"KB", "MB", "GB", "TB"};
@@ -152,8 +163,10 @@ void InterAction::ShowStatus()
         cout << " Used flow: " << fixed << setprecision(3) << fflow << flowUnit[flowUnitIdx]
              << "   | Used time: " << fixed << setprecision(2) << ftime << timeUnit[timeUnitIdx]
              << "   | Left fee: " << fixed << setprecision(2) << static_cast<double>(fee) / 100 << feeUnit[feeUnitIdx]
-             << endl
-             << " Service: " << serviceName
+             << endl;
+
+        m_service.sendGetFlowService(serviceName, allFlow);
+        cout << " Service: " << serviceName
              << "   | All flow: " << static_cast<double>(allFlow) / 1024 << flowUnit[2];
         if(allFlow > 0){
             cout << "   | Used: " << fixed << setprecision(2) << (100.0 * flow / allFlow / 1024) << "%";
@@ -162,36 +175,42 @@ void InterAction::ShowStatus()
             cout << "   | Used: -- %";
         }
         cout << endl;
+        return true;
     }
+    return false;
 }
 
-void InterAction::LoginBjut()
+bool InterAction::LoginBjut()
 {
     if(Connected()){
         if(m_service.sendActLoginBjut()){
             cout << " OK." << endl;
+            return true;
         }
         else{
             cout << m_service.getLastError() << endl;
             cout << " Fail." << endl;
         }
     }
+    return false;
 }
 
-void InterAction::LogoutBjut()
+bool InterAction::LogoutBjut()
 {
     if(Connected()){
         if(m_service.sendActLogoutBjut()){
             cout << " OK." << endl;
+            return true;
         }
         else{
             cout << m_service.getLastError() << endl;
             cout << " Fail." << endl;
         }
     }
+    return false;
 }
 
-void InterAction::ShowOnline()
+bool InterAction::ShowOnline()
 {
     if(Connected()){
         vector<array<string, 4>> devices;
@@ -200,9 +219,10 @@ void InterAction::ShowOnline()
             if(devices.size()){
                 cout << "   ID  |        IPv4        |         IPv6" << endl;
                 for(const auto &dev : devices){
-                    cout << setw(5) << dev[0] << setw(20) << dev[1]
-                         << setw(45)<< dev[2] << endl;
+                    cout << "  " << setw(9) << std::left << dev[0] << setw(21) << std::left << dev[1]
+                         << setw(45) << std::left << dev[2] << endl;
                 }
+                return true;
             }
             else{
                 cout << "No devices found." << endl;
@@ -213,9 +233,39 @@ void InterAction::ShowOnline()
             cout << "Fail to list online devices." << endl;
         }
     }
+    return false;
 }
 
-void InterAction::RefreshNet()
+bool InterAction::OfflineDevice()
+{
+    if(Connected()){
+        if(!ShowOnline()){
+            return false;
+        }
+        int id;
+        cout << "Input the ID of device which you want to offline: ";
+        string data;
+        cin >> data;
+        try{
+            id = std::stoi(data);
+        }catch(...){
+            cout << "Invalid number." << endl;
+            return false;
+        }
+        if(m_service.SendSetOfflineDevice(id))
+        {
+            cout << "Success to offline device:" << id << endl;
+            return true;
+        }
+        else{
+            cout << m_service.getLastError() << endl;
+            cout << "Fail to offline device:" << id << endl;
+        }
+    }
+    return false;
+}
+
+bool InterAction::RefreshNet()
 {
     if(Connected()){
         if(m_service.sendActRefreshNet()){
@@ -236,22 +286,26 @@ void InterAction::RefreshNet()
             cout << m_service.getLastError() << endl;
             cout << " Fail to refresh the list of online devices." << endl;
         }
+        return true;
     }
+    return false;
 }
 
-void InterAction::ReloadAccount()
+bool InterAction::ReloadAccount()
 {
     if(Connected()){
         if(m_service.sendActLoadAccount()){
            cout << " Have reloaded account profile." << endl;
+           return true;
         }else{
             cout << m_service.getLastError() << endl;
             cout << " Fail to reload account profile." << endl;
         }
     }
+    return false;
 }
 
-void InterAction::SetNewAccount()
+bool InterAction::SetNewAccount()
 {
     if(Connected()){
         string name;
@@ -271,19 +325,53 @@ void InterAction::SetNewAccount()
                  << "     2  IPv6" << endl
                  << "     3  IPv4 & IPv6" << endl;
             cout << " Choose the type of logging(1-3): ";
-            cin >> type;
+            string data;
+            cin >> data;
+            try{
+                type = std::stoi(data);
+            }catch(...){
+                cout << "Invalid number." << endl;
+                continue;
+            }
         }while(type< 1 || type > 3);
         if(m_service.sendSetAccount(name, passwd, type)){
             cout << " Success to set new account profile." << endl;
+            return true;
         }
         else{
             cout << m_service.getLastError() << endl;
             cout << " Fail to set new account profile." << endl;
         }
     }
+    return false;
 }
 
-void InterAction::BookService()
+bool InterAction::ShowCurrentService()
+{
+    if(Connected()){
+        string service;
+        int allflow;
+        if(!m_service.sendGetFlowService(service, allflow)){
+            cout << m_service.getLastError() << endl;
+            cout << " Fail to get service." << endl;
+            return false;
+        }
+        cout << "  The current service: "
+             << service
+             << "    All flow: "
+             << static_cast<double>(allflow) / 1024 << "GB" << endl;
+        if(!m_service.sendGetBookedService(service)){
+            cout << m_service.getLastError() << endl;
+            cout << " Fail to get booked service." << endl;
+            return false;
+        }
+        cout << "  The booked service: " << service << endl;
+        return true;
+    }
+    return false;
+}
+
+bool InterAction::BookService()
 {
     if(Connected()){
         int sid = 0;
@@ -291,40 +379,51 @@ void InterAction::BookService()
         if(!m_service.sendGetAllServices(services)){
             cout << m_service.getLastError() << endl;
             cout << " Fail to list all services." << endl;
-            return;
+            return false;
         }
         if(services.empty()){
             cout << " No avaliable services." << endl;
-            return;
+            return false;
         }
         cout << " The list of all services:" << endl;
         for(int i = 0, i_end = static_cast<int>(services.size()); i < i_end; ++i){
             const auto &s = services[i];
             cout << "  " << i+1 << " | " << get<1>(s) << "  | " << get<2>(s) << endl;
         }
-        cout << " Choose a service(1-" << services.size() << "):";
-        cin >> sid;
+        cout << " Choose a service(1-" << services.size() << ", 0 for menu):";
+        string data;
+        cin >> data;
+        try{
+            sid = std::stoi(data);
+        }catch(...){
+            cout << "Invalid number." << endl;
+            return false;
+        }
         if(sid < 1 || sid > static_cast<int>(services.size())){
             cout << " Wrong choice. Return to menu." << endl;
-            return;
+            return false;
         }
         if(m_service.sendSetBookedService(get<0>(services[sid-1]))){
             cout << " Success to book service: " << get<1>(services[sid-1]) << endl;
+            return true;
         }else{
             cout << m_service.getLastError() << endl;
             cout << " Fail to book service." << endl;
         }
     }
+    return false;
 }
 
-void InterAction::SetHost(const string &host)
+bool InterAction::SetHost(const string &host)
 {
     if(m_service.setHost(host)){
         cout << "Host address is " << host << " now." << endl;
+        return true;
     }
     else{
         cout << "Invalid host address: " << host << endl;
     }
+    return false;
 }
 
 void InterAction::InputPasswd(std::string &passwd, char echo)

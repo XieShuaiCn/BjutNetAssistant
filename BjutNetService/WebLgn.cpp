@@ -21,6 +21,7 @@ WebLgn::WebLgn() :
     m_nFee(0.0f)
 {
     m_http.setCodec("GBK");
+    connect(this, &WebLgn::debug_info, &g_debugTool, &DebugTool::writeInfo);
 }
 
 
@@ -71,7 +72,7 @@ bool WebLgn::loginOnLAN(LoginType type)
 
     if(g_bAppDebug)
     {
-        WriteDebugInfo(DEBUG_INFO, QString("Check login type %1."));
+        emit debug_info(DebugTool::STATUS_INFO, QString("Check login type %1."));
     }
     switch (type) {
     case AutoLoginType:
@@ -349,15 +350,15 @@ bool WebLgn::checkLoginStatus(LoginType type)
             switch (type) {
             case IPv4:
                 msg.append("IPv4");
-                WriteDebugInfo(DEBUG_INFO, QString("Check login type IPv4."));
+                emit debug_info(DebugTool::STATUS_INFO, QString("Check login type IPv4."));
                 break;
             case IPv6:
                 msg.append("IPv6");
-                WriteDebugInfo(DEBUG_INFO, QString("Check login type IPv6."));
+                emit debug_info(DebugTool::STATUS_INFO, QString("Check login type IPv6."));
                 break;
             case IPv4_6:
                 msg.append("IPv4 & IPv6");
-                WriteDebugInfo(DEBUG_INFO, QString("Check login type IPv4 & IPv6."));
+                emit debug_info(DebugTool::STATUS_INFO, QString("Check login type IPv4 & IPv6."));
                 break;
             default:
                 break;
@@ -376,7 +377,7 @@ bool WebLgn::checkLoginStatus(LoginType type)
             m_netType = UnknownNet;
             if (g_bAppDebug)
             {
-                WriteDebugInfo(DEBUG_INFO, QString("Check IPv4: UnKnown Net"));
+                emit debug_info(DebugTool::STATUS_INFO, QString("Check IPv4: UnKnown Net"));
                 emit message(QDateTime::currentDateTime(), "Check IPv4:UnKnown Net");
             }
             return false;
@@ -386,8 +387,8 @@ bool WebLgn::checkLoginStatus(LoginType type)
         {
             emit message(QDateTime::currentDateTime(), QString("没有登录网关4，未检测到时间。"));
             if (g_bAppDebug){
-                WriteDebugInfo(DEBUG_FAIL, QString("Check IPv4: No Time"));
-                WriteDebugInfo(content.replace('\r', ' ').replace('\n', ' '), false);
+                emit debug_info(DebugTool::STATUS_FAIL, QString("Check IPv4: No Time"));
+                emit debug_info(DebugTool::STATUS_DATA, content);
             }
 #ifdef QT_DEBUG
             qDebug() << content << endl;
@@ -398,7 +399,7 @@ bool WebLgn::checkLoginStatus(LoginType type)
         }
         else if (g_bAppDebug)
         {
-            WriteDebugInfo(DEBUG_INFO, QString("Check IPv4: Time OK"));
+            emit debug_info(DebugTool::STATUS_INFO, QString("Check IPv4: Time OK"));
             emit message(QDateTime::currentDateTime(), "Check IPv4: Time OK");
         }
         pos = content.indexOf(regFlow);
@@ -411,7 +412,7 @@ bool WebLgn::checkLoginStatus(LoginType type)
         }
         else if (g_bAppDebug)
         {
-            WriteDebugInfo(DEBUG_INFO, QString("Check IPv4: Flow OK"));
+            emit debug_info(DebugTool::STATUS_INFO, QString("Check IPv4: Flow OK"));
             emit message(QDateTime::currentDateTime(), "Check IPv4: Flow OK");
         }
         pos = content.indexOf(regFee);
@@ -424,7 +425,7 @@ bool WebLgn::checkLoginStatus(LoginType type)
         }
         else if (g_bAppDebug)
         {
-            WriteDebugInfo(DEBUG_INFO, QString("Check IPv4: Fee OK"));
+            emit debug_info(DebugTool::STATUS_INFO, QString("Check IPv4: Fee OK"));
             emit message(QDateTime::currentDateTime(), "Check IPv4: Fee OK");
         }
         if(200 != m_http.getUrlHtml(url6, content))
@@ -432,7 +433,7 @@ bool WebLgn::checkLoginStatus(LoginType type)
             m_netType = UnknownNet;
             if (g_bAppDebug)
             {
-                WriteDebugInfo(DEBUG_INFO, QString("Check IPv6: UnKnown Net"));
+                emit debug_info(DebugTool::STATUS_INFO, QString("Check IPv6: UnKnown Net"));
                 emit message(QDateTime::currentDateTime(), "Check IPv6: UnKnown Net");
             }
             return false;
@@ -447,7 +448,7 @@ bool WebLgn::checkLoginStatus(LoginType type)
         }
         else if (g_bAppDebug)
         {
-            WriteDebugInfo(DEBUG_INFO, QString("Check IPv6: Time OK"));
+            emit debug_info(DebugTool::STATUS_INFO, QString("Check IPv6: Time OK"));
             emit message(QDateTime::currentDateTime(), "Check IPv6: Time OK");
         }
     }
@@ -475,7 +476,7 @@ bool WebLgn::checkLoginStatus(LoginType type)
         }
         else if (g_bAppDebug)
         {
-            WriteDebugInfo(DEBUG_INFO, QString("Check: Time OK"));
+            emit debug_info(DebugTool::STATUS_INFO, QString("Check: Time OK"));
             emit message(QDateTime::currentDateTime(), "Check: Time OK");
         }
         pos = content.indexOf(regFlow);
@@ -489,7 +490,7 @@ bool WebLgn::checkLoginStatus(LoginType type)
         }
         else if (g_bAppDebug)
         {
-            WriteDebugInfo(DEBUG_INFO, QString("Check: Flow OK"));
+            emit debug_info(DebugTool::STATUS_INFO, QString("Check: Flow OK"));
             emit message(QDateTime::currentDateTime(), "Check: Flow OK");
         }
         pos = content.indexOf(regFee);
@@ -503,7 +504,7 @@ bool WebLgn::checkLoginStatus(LoginType type)
         }
         else if (g_bAppDebug)
         {
-            WriteDebugInfo(DEBUG_INFO, QString("Check: Fee OK"));
+            emit debug_info(DebugTool::STATUS_INFO, QString("Check: Fee OK"));
             emit message(QDateTime::currentDateTime(), "Check: Fee OK");
         }
     }
@@ -599,7 +600,7 @@ QString WebLgn::convertMsg(int msg, QString msga)
     return str;
 }
 
-void WebLgn::online_status_change(bool online)
+void WebLgn::network_status_change(bool online)
 {
     if(online)//网卡在线，非账号在线
     {

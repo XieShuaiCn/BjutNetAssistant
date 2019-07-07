@@ -25,6 +25,10 @@
 
 namespace bna{
 
+extern bool g_bAppDebug;
+
+extern DebugTool g_debugTool;
+
 extern QString g_strAppTempPath;
 
 QString RandString(int length);

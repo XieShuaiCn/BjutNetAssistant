@@ -1,6 +1,7 @@
 
 #include "common.h"
 #include <QDir>
+#include <time.h>
 #include <QtSingleApplication>
 #include "BjutNet.h"
 #include "ServiceInterface.h"
@@ -15,18 +16,14 @@ int main(int argc, char *argv[])
         app.sendMessage("ShowMainWnd");
         return 0;
     }
-#ifdef QT_DEBUG
-    qDebug() << QtSingleApplication::applicationDirPath() << endl
-             << QDir::currentPath() << endl;
-#endif
     // change pwd
     QDir::setCurrent(app.applicationDirPath());
     // create temp file.
-    QString tmpName = QDir::temp().absoluteFilePath("BjutNetLogin_.tmp");
-    for(int i =0; i < 30; ++i)
+    auto timeSince1970 = time(nullptr);
+    QString tmpName = QDir::temp().absoluteFilePath(
+                QString("BjutNetLogin_%1.tmp").arg(timeSince1970));
+    for(int i =0; i < 255; ++i)
     {
-        QString rs = RandString(6);
-        tmpName = QDir::temp().absoluteFilePath("BjutNetLogin_" + rs + ".tmp");
         QDir tmpDir(tmpName);
         if(tmpDir.exists()){
             if(!tmpDir.rmpath(tmpName) && i > 10)
@@ -35,13 +32,34 @@ int main(int argc, char *argv[])
         if(!tmpDir.exists()){
             break;
         }
+        QString rs = RandString(6);
+        tmpName = QDir::temp().absoluteFilePath(
+                    QString("BjutNetLogin_%1_%2.tmp").arg(timeSince1970).arg(rs));
     }
     g_strAppTempPath = tmpName;
     QDir("/").mkpath(g_strAppTempPath);
-    InitDebugFile(QDir(g_strAppTempPath).absoluteFilePath("bnl.log"));
+    g_debugTool.init(QDir(g_strAppTempPath).absoluteFilePath("bnl.log"));
+
+#ifdef QT_DEBUG
+    g_bAppDebug = true;
+    qDebug() << " Application information (DEBUG MODE):" << endl
+             << "   DirPath: " << QtSingleApplication::applicationDirPath() << endl
+             << "   FilePath" << QtSingleApplication::applicationFilePath() << endl
+             << "   DisplayName: " << QtSingleApplication::applicationDisplayName() << endl
+             << "   Name: " << QtSingleApplication::applicationName() << endl
+             << "   Version: " << QtSingleApplication::applicationVersion() << endl
+             << "   Pid: " << QtSingleApplication::applicationPid() << endl
+             << "   CurrentPath: " << QDir::currentPath() << endl
+             << "   TempPath: " << g_strAppTempPath << endl
+             << "   LogFile: " << g_debugTool.fileName() << endl
+             << " ######################################################################" << endl
+             << " Running..." << endl;
+#endif
+
     bna::BjutNet bjutnet;
     bna::ServiceInterface si(&bjutnet);
 
+    bjutnet.loadAccount();
     if(si.Initilize()){
         return app.exec();
     }

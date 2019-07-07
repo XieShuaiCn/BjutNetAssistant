@@ -19,6 +19,34 @@ const QByteArray g_acbACK(1, CHAR_ACK);
 const QByteArray g_acbNAK(1, CHAR_NAK);
 const QByteArray g_acbSYN(1, CHAR_SYN);
 
+inline QByteArray __ServiceInterface_ErrMsgToByteArray(const QString &msg, int seed)
+{
+    return QString("{\"type\":%1,\"msg\":\"%2\",\"seed\":%3}")
+            .arg(MessageValue::ERR).arg(msg).arg(seed)
+            .toUtf8();
+}
+
+inline QByteArray __ServiceInterface_AckDataToByteArray(const QString &data, int seed)
+{
+    return QString("{\"type\":%1,\"data\":%2,\"seed\":%3}")
+            .arg(MessageValue::ACK).arg(data).arg(seed)
+            .toUtf8();
+}
+
+inline QByteArray __ServiceInterface_PushDataToByteArray(int type, const QString &data, int seed)
+{
+    return QString("{\"type\":%1,\"data\":%2,\"seed\":%3}")
+            .arg(type).arg(data).arg(seed)
+            .toUtf8();
+}
+
+inline QByteArray __ServiceInterface_AckSuccToByteArray(int seed, bool succ = true)
+{
+    return QString("{\"type\":%1,\"succ\":%2,\"seed\":%3}")
+            .arg(MessageValue::ACK).arg(succ?1:0).arg(seed)
+            .toUtf8();
+}
+
 ServiceInterface::ServiceInterface(BjutNet *bjutNet)
     : m_remoteHost(QHostAddress::Null),
       m_remotePort(0),
@@ -89,34 +117,6 @@ void ServiceInterface::ReadSocketData()
             ProcessCommand(arrData, address, port);
         }
     }
-}
-
-inline QByteArray __ServiceInterface_ErrMsgToByteArray(const QString &msg, int seed)
-{
-    return QString("{\"type\":%1,\"msg\":\"%2\",\"seed\":%3}")
-            .arg(MessageValue::ERR).arg(msg).arg(seed)
-            .toUtf8();
-}
-
-inline QByteArray __ServiceInterface_AckDataToByteArray(const QString &data, int seed)
-{
-    return QString("{\"type\":%1,\"data\":%2,\"seed\":%3}")
-            .arg(MessageValue::ACK).arg(data).arg(seed)
-            .toUtf8();
-}
-
-inline QByteArray __ServiceInterface_PushDataToByteArray(int type, const QString &data, int seed)
-{
-    return QString("{\"type\":%1,\"data\":%2,\"seed\":%3}")
-            .arg(type).arg(data).arg(seed)
-            .toUtf8();
-}
-
-inline QByteArray __ServiceInterface_AckSuccToByteArray(int seed, bool succ = true)
-{
-    return QString("{\"type\":%1,\"succ\":%2,\"seed\":%3}")
-            .arg(MessageValue::ACK).arg(succ?1:0).arg(seed)
-            .toUtf8();
 }
 
 void ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAddress &address, quint16 port)
@@ -262,7 +262,7 @@ void ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAddress 
                         strTemp = "[";
                         for(const auto &dev : list){
                             strTemp += QString("{\"id\":%1,\"ipv4\":\"%2\",\"ipv6\":\"%3\"},")
-                                    .arg(dev.strID).arg(dev.strIPv4).arg(dev.strIPv6);
+                                    .arg(dev.nID).arg(dev.strIPv4).arg(dev.strIPv6);
                         }
                         if(strTemp.endsWith(',')){
                             strTemp.remove(strTemp.size()-1, 1);
@@ -336,11 +336,21 @@ void ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAddress 
                     break;
                 case MessageValue::SET_BOOK_SERVICE:
                     if(jo.contains("data")){
-                        //{\"n\":\"%1\",\"p\":\"%2\",\"t\":%3}
                         QJsonObject data = jo["data"].toObject();
                         if(data.contains("id")){
                             buffer = __ServiceInterface_AckSuccToByteArray(seed,
-                                    jfself.submitBookService(data["id"].toString()));
+                                    jfself.submitBookService(data["id"].toInt()));
+                            break;
+                        }
+                    }
+                    buffer = __ServiceInterface_AckSuccToByteArray(seed, false);
+                    break;
+                case MessageValue::SET_OFFLINE_DEVICE:
+                    if(jo.contains("data")){
+                        QJsonObject data = jo["data"].toObject();
+                        if(data.contains("id")){
+                            buffer = __ServiceInterface_AckSuccToByteArray(seed,
+                                    jfself.toOffline(data["id"].toInt()));
                             break;
                         }
                     }

@@ -46,6 +46,7 @@ public:
 
     bool sendSetAccount(const std::string name, const std::string passwd, int type);
     bool sendSetBookedService(int id);
+    bool SendSetOfflineDevice(int id);
 
     bool parseJson(const std::string &json, int seed, boost::property_tree::ptree &tree);
     bool parseJsonAndVarify(const std::string &json, int seed);

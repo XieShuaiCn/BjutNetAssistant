@@ -14,6 +14,7 @@ BjutNet::BjutNet():
     connect(&m_webJfself, &WebJfself::message, this, &BjutNet::message);
     connect(&m_tmCheckLgn, &QTimer::timeout, this, &BjutNet::checkLgn);
     connect(&m_tmCheckOnline, &QTimer::timeout, this, &BjutNet::checkOnline);
+    connect(this, &BjutNet::debug_info, &g_debugTool, &DebugTool::writeInfo);
 }
 
 
@@ -88,15 +89,22 @@ bool BjutNet::loadAccount(const QString path)
             {
                 m_loginType = WebLgn::LoginType(m_loginType & ((jo["ipv6"].toInt() % 2) * int(WebLgn::IPv6)));
             }
+            if(jo.contains("autologin"))
+            {
+                m_bAutoLogin = jo["autologin"].toBool();
+            }
             synchronizeAccount();
+            if(m_bAutoLogin){
+                start_monitor();
+            }
             return true;
         }
         else{
             emit message(QDateTime::currentDateTime(), jp_err.errorString());
             if(g_bAppDebug)
             {
-                WriteDebugInfo(DEBUG_FAIL, QString("Load account json:") + f.fileName());
-                WriteDebugInfo(jp_err.errorString(), false);
+                emit debug_info(DebugTool::STATUS_FAIL, QString("Load account json:") + f.fileName(), true, true);
+                emit debug_info(DebugTool::STATUS_FAIL, jp_err.errorString(), false, true);
             }
             return false;
         }
@@ -142,6 +150,7 @@ bool BjutNet::saveAccount(const QString path)
         jo.insert("account", m_strAccount);
         jo.insert("password", m_strPassword);
         jo.insert("type", int(m_loginType) - 1);
+        jo.insert("autologin", m_bAutoLogin);
         QJsonDocument jd;
         jd.setObject(jo);
         QByteArray data= jd.toJson(QJsonDocument::Compact);
@@ -149,13 +158,13 @@ bool BjutNet::saveAccount(const QString path)
         f.close();
         if(g_bAppDebug)
         {
-            WriteDebugInfo(DEBUG_SUCCESS, QString("Save account json:") + f.fileName());
+            emit debug_info(DebugTool::STATUS_SUCCESS, QString("Save account json:") + f.fileName(), true, true);
         }
         return true;
     }
     else if(g_bAppDebug)
     {
-        WriteDebugInfo(DEBUG_FAIL, QString("Save account json:") + f.fileName());
+        emit debug_info(DebugTool::STATUS_FAIL, QString("Save account json:") + f.fileName(), true, true);
     }
     return false;
 }
@@ -255,7 +264,7 @@ bool BjutNet::start_monitor()
 //    if(!this->isRunning())
 //    {    //启动线程
 //        this->start(IdlePriority);
-        connect(&m_netCfgMan, &QNetworkConfigurationManager::onlineStateChanged, &m_webLgn, &WebLgn::online_status_change);
+        connect(&m_netCfgMan, &QNetworkConfigurationManager::onlineStateChanged, &m_webLgn, &WebLgn::network_status_change);
 //    }
     return true;
 }
@@ -270,7 +279,7 @@ bool BjutNet::stop_monitor()
 //        //this->quit();
 //        this->wait();
 //        //this->terminate();
-        disconnect(&m_netCfgMan, &QNetworkConfigurationManager::onlineStateChanged, &m_webLgn, &WebLgn::online_status_change);
+        disconnect(&m_netCfgMan, &QNetworkConfigurationManager::onlineStateChanged, &m_webLgn, &WebLgn::network_status_change);
 //    }
     return true;
 }

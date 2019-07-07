@@ -4,6 +4,10 @@
 
 namespace bna{
 
+bool g_bAppDebug = false;
+
+DebugTool g_debugTool;
+
 QString g_strAppTempPath;
 
 QString RandString(int length)

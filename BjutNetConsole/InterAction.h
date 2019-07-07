@@ -7,7 +7,7 @@ namespace bna{
 
 class InterAction{
 public:
-    void SetHost(const std::string &host);
+    bool SetHost(const std::string &host);
 
     void ShowVersion();
 
@@ -17,21 +17,25 @@ public:
 
     bool Connected();
 
-    void ShowStatus();
+    bool ShowStatus();
 
-    void RefreshNet();
+    bool RefreshNet();
 
-    void LoginBjut();
+    bool LoginBjut();
 
-    void LogoutBjut();
+    bool LogoutBjut();
 
-    void ShowOnline();
+    bool ShowOnline();
 
-    void ReloadAccount();
+    bool OfflineDevice();
 
-    void SetNewAccount();
+    bool ReloadAccount();
 
-    void BookService();
+    bool SetNewAccount();
+
+    bool ShowCurrentService();
+
+    bool BookService();
 
     static void InputPasswd(std::string &passwd, char echo);
 
