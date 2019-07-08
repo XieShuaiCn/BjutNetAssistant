@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QString>
 #include <QException>
+#include "Version.h"
 #include "DebugInfo.h"
 
 #ifndef UNUSED

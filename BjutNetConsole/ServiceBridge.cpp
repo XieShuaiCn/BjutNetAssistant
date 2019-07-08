@@ -37,6 +37,19 @@ bool ServiceBridge::setHost(const std::string &host)
     return m_socket->setRemoteHost(host, MessageValue::ServerPort);
 }
 
+const string ServiceBridge::getHost()
+{
+    string address;
+    unsigned short port = 0;
+    m_socket->getRemoteHost(address, port);
+    return address;
+}
+
+void ServiceBridge::getMyAddress(std::vector<std::string> &ip)
+{
+    UdpSocket::myAddress(ip);
+}
+
 bool ServiceBridge::sendSYN()
 {
     char ch(CHAR_SYN);
@@ -351,13 +364,28 @@ bool ServiceBridge::sendSetBookedService(int id)
     return parseJsonAndVarify(buf, seed);
 }
 
-bool ServiceBridge::SendSetOfflineDevice(int id)
+bool ServiceBridge::sendSetOfflineDevice(int id)
 {
     stringstream ssbuf;
     int seed = rand();
     ssbuf << "{\"type\":" << MessageValue::SET
           << ",\"act\":" << MessageValue::SET_OFFLINE_DEVICE
           << ",\"data\":{\"id\":" << id
+          << "},\"seed\":" << seed << "}";
+    string buf;
+    if(!__ServiceBridge_SendAndReceive(m_socket, ssbuf.str(), buf)) {
+        return false;
+    }
+    return parseJsonAndVarify(buf, seed);
+}
+
+bool ServiceBridge::sendSetAutoStart(bool autorun)
+{
+    stringstream ssbuf;
+    int seed = rand();
+    ssbuf << "{\"type\":" << MessageValue::SET
+          << ",\"act\":" << MessageValue::SET_AUTO_START
+          << ",\"data\":{\"v\":" << static_cast<int>(autorun)
           << "},\"seed\":" << seed << "}";
     string buf;
     if(!__ServiceBridge_SendAndReceive(m_socket, ssbuf.str(), buf)) {

@@ -6,6 +6,17 @@ CONFIG -= qt
 
 INCLUDEPATH += ../BjutNetService/
 
+# BUild binary file for developer
+DEFINES += BUILD_DEVELOP
+
+CONFIG(debug, debug|release){
+DEFINES += _DEBUG
+DEFINES += DEBUG
+}else{
+DEFINES += NDEBUG
+DEFINES += NO_DEBUG
+}
+
 win32{
 INCLUDEPATH += E:\Programs\Boost-1.69\include
 LIBS += -LE:\Programs\Boost-1.69\lib \

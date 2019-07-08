@@ -25,10 +25,12 @@ public:
 
     enum ActionSync{
         HELLO=0,
-        REGIST_MESSAGE=1,
-        MESSAGE_CHANGE=2,
-        REGIST_STATUS=3,
-        STATUS_CHANGE=4,
+        REGIST_DEVELOP,
+        CONNECT_DEVELOP,
+        REGIST_MESSAGE,
+        MESSAGE_CHANGE,
+        REGIST_STATUS,
+        STATUS_CHANGE,
     };
 
     enum ActionAct{
@@ -40,7 +42,9 @@ public:
         ACT_LOGOUT_JFSELF=6,
         ACT_REFRESH_NET=7,
         ACT_REFRESH_JFSELF_ACCOUNT=8,
-        ACT_REFRESH_ONLINE=9
+        ACT_REFRESH_ONLINE=9,
+        ACT_ENTER_DEBUG_MODE,
+        ACT_LEAVE_DEBUG_MODE,
     };
 
     enum ActionGet{
@@ -53,13 +57,15 @@ public:
         GET_DEVICE_ONLINE=7,
         GET_FLOW_SERVICE=8,
         GET_BOOKED_SERVICE=9,
-        GET_ALL_SERVICES=10
+        GET_ALL_SERVICES=10,
+        GET_AUTO_START
     };
 
     enum ActionSet{
         SET_ACCOUNT=1,
         SET_BOOK_SERVICE=2,
-        SET_OFFLINE_DEVICE=3
+        SET_OFFLINE_DEVICE=3,
+        SET_AUTO_START
     };
 
     template<typename _Tp>

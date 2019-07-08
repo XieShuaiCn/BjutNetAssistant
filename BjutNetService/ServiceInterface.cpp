@@ -4,13 +4,10 @@
 #include <QHostAddress>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include "common.h"
 #include "BjutNet.h"
-#include "Version.h"
 #include "MessageValue.h"
-
-#ifndef QT_DEBUG
-#define QT_DEBUG
-#endif
+#include "Setting.h"
 
 namespace bna{
 
@@ -83,13 +80,13 @@ void ServiceInterface::ReadSocketData()
         if(arrData.size() == 1) {
             if(arrData == g_acbACK) {
                 // recive 'ACK'
-#ifdef QT_DEBUG
+#ifdef BUILD_DEVELOP
                 qDebug() << "==> ACK" << endl;
 #endif
             }
             else if(arrData == g_acbSYN) {
                 m_socket->writeDatagram(g_acbACK, address, port);
-#ifdef QT_DEBUG
+#ifdef BUILD_DEVELOP
                 qDebug() << "==> SYN" << endl;
                 qDebug() << "<== ACK" << endl;
 #endif
@@ -99,7 +96,7 @@ void ServiceInterface::ReadSocketData()
                 QByteArray array;
                 array.append(chVersion);
                 m_socket->writeDatagram(array, address, port);
-#ifdef QT_DEBUG
+#ifdef BUILD_DEVELOP
                 qDebug() << "==> ENQ" << endl;
                 qDebug() << "<== " << chVersion << endl;
 #endif
@@ -111,7 +108,7 @@ void ServiceInterface::ReadSocketData()
         else if(arrData.size() > 1){
             // reply 'ACK'
             //m_socket->writeDatagram(cbACK, address, port);
-#ifdef QT_DEBUG
+#ifdef BUILD_DEVELOP
                 qDebug() << "==> " << arrData << endl;
 #endif
             ProcessCommand(arrData, address, port);
@@ -188,11 +185,11 @@ void ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAddress 
                     break;
                 case MessageValue::ACT_LOGIN_BJUT:
                     buffer = __ServiceInterface_AckSuccToByteArray(seed,
-                                    m_bjutnet->start_monitor());
+                                    lgn.login() && m_bjutnet->start_monitor());
                     break;
                 case MessageValue::ACT_LOGOUT_BJUT:
                     buffer = __ServiceInterface_AckSuccToByteArray(seed,
-                                    m_bjutnet->stop_monitor());
+                                    m_bjutnet->stop_monitor() && lgn.logout());
                     break;
                 case MessageValue::ACT_LOGIN_JFSELF:
                     buffer = __ServiceInterface_AckSuccToByteArray(seed,
@@ -212,6 +209,14 @@ void ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAddress 
                 case MessageValue::ACT_REFRESH_ONLINE:
                     buffer = __ServiceInterface_AckSuccToByteArray(seed,
                                 jfself.refreshOnline());
+                    break;
+                case MessageValue::ACT_ENTER_DEBUG_MODE:
+                    g_bAppDebug = true;
+                    buffer = __ServiceInterface_AckSuccToByteArray(seed, g_bAppDebug);
+                    break;
+                case MessageValue::ACT_LEAVE_DEBUG_MODE:
+                    g_bAppDebug = false;
+                    buffer = __ServiceInterface_AckSuccToByteArray(seed, !g_bAppDebug);
                     break;
                 default:
                     buffer = __ServiceInterface_ErrMsgToByteArray("Bad act", seed);
@@ -279,6 +284,10 @@ void ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAddress 
                                 seed);
                     break;
                 case MessageValue::GET_BOOKED_SERVICE:
+                    if(!jfself.refreshBookService()){
+                        buffer = __ServiceInterface_ErrMsgToByteArray("Fail to refresh all services.", seed);
+                        break;
+                    }
                     buffer = __ServiceInterface_AckDataToByteArray(
                                 QString("{\"n\":\"%1\"}")
                                 .arg(jfself.getCurrentBookService()),
@@ -302,6 +311,12 @@ void ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAddress 
                         strTemp+="]";
                         buffer = __ServiceInterface_AckDataToByteArray(strTemp, seed);
                     }
+                    break;
+                case MessageValue::GET_AUTO_START:
+                    buffer = __ServiceInterface_AckDataToByteArray(
+                                QString("{\"v\":%1}")
+                                .arg(static_cast<int>(Setting::getAutoRun())),
+                                seed);
                     break;
                 default:
                     buffer = __ServiceInterface_ErrMsgToByteArray("Bad act", seed);
@@ -356,6 +371,17 @@ void ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAddress 
                     }
                     buffer = __ServiceInterface_AckSuccToByteArray(seed, false);
                     break;
+                case MessageValue::SET_AUTO_START:
+                    if(jo.contains("data")){
+                        QJsonObject data = jo["data"].toObject();
+                        if(data.contains("v")){
+                            buffer = __ServiceInterface_AckSuccToByteArray(seed,
+                                    Setting::setAutoRun(data["v"].toInt() != 0));
+                            break;
+                        }
+                    }
+                    buffer = __ServiceInterface_AckSuccToByteArray(seed, false);
+                    break;
                 default:
                     buffer = __ServiceInterface_ErrMsgToByteArray("Bad act", seed);
                     break;
@@ -365,20 +391,20 @@ void ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAddress 
             else{
                 buffer = __ServiceInterface_ErrMsgToByteArray("Bad type", seed);
             }
-#ifdef QT_DEBUG
+#ifdef BUILD_DEVELOP
             qDebug() << "<==" << buffer << endl;
 #endif
             m_socket->writeDatagram(buffer.data(), buffer.size(), address, port);
         }
         else {
-    #ifdef QT_DEBUG
+    #ifdef BUILD_DEVELOP
             qDebug() << "Incomplete json content: " << cmd << endl;
     #endif
             m_socket->writeDatagram(g_acbNAK, address, port);
         }
     }
     else {
-#ifdef QT_DEBUG
+#ifdef BUILD_DEVELOP
         qDebug() << "Error json format: " << cmd << endl;
 #endif
         m_socket->writeDatagram(g_acbNAK, address, port);

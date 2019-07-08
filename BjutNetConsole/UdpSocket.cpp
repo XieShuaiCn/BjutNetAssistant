@@ -44,6 +44,13 @@ bool UdpSocket::setRemoteHost(const std::string &address, unsigned short port)
     return true;
 }
 
+bool UdpSocket::getRemoteHost(std::string &address, unsigned short &port)
+{
+    address = m_remote_endpoint.address().to_string();
+    port = m_remote_endpoint.port();
+    return true;
+}
+
 bool UdpSocket::send(const std::string &data)
 {
     try{
@@ -131,6 +138,19 @@ void UdpSocket::handle_receive(const boost::system::error_code& ec, std::size_t 
 {
     *out_ec = ec;
     *out_length = length;
+}
+
+void UdpSocket::myAddress(std::vector<std::string> &ip)
+{
+    asio::io_context ip_context;
+    udp::resolver ipresolver(ip_context);
+    udp::resolver::query query(asio::ip::host_name(), "");
+    udp::resolver::iterator it = ipresolver.resolve(query);
+    udp::resolver::iterator end;
+    for(; it != end; ++it){
+        udp::endpoint endpoint = *it;
+        ip.emplace_back(endpoint.address().to_string());
+    }
 }
 
 }

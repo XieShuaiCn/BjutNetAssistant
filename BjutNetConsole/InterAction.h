@@ -7,15 +7,14 @@ namespace bna{
 
 class InterAction{
 public:
-    bool SetHost(const std::string &host);
-
-    void ShowVersion();
 
     void ShowMenu();
 
     bool Process();
 
     bool Connected();
+
+    void ShowVersion();
 
     bool ShowStatus();
 
@@ -36,6 +35,18 @@ public:
     bool ShowCurrentService();
 
     bool BookService();
+
+    bool SetAutoStart();
+
+    bool EnterDebugMode();
+
+    bool LeaveDebugMode();
+
+    bool SetAnotherHost();
+
+    bool ShowMyAddress();
+
+    bool SetHost(const std::string &host);
 
     static void InputPasswd(std::string &passwd, char echo);
 

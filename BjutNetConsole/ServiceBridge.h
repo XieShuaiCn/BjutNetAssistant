@@ -17,6 +17,8 @@ public:
     ServiceBridge();
 
     bool setHost(const std::string &host);
+    const std::string getHost();
+    void getMyAddress(std::vector<std::string> &ip);
 
     bool sendSYN();
     bool sendENQ();
@@ -32,6 +34,8 @@ public:
     bool sendActRefreshNet();
     bool sendActRefreshJfselfAccount();
     bool sendActRefreshOnline();
+    bool sendActEnterDebugMode();
+    bool sendActLeaveDebugMode();
 
     bool sendGetVersion(std::string &ver, int &inner_ver);
     bool sendGetAccount(std::string &name, std::string &password, int &type);
@@ -46,7 +50,8 @@ public:
 
     bool sendSetAccount(const std::string name, const std::string passwd, int type);
     bool sendSetBookedService(int id);
-    bool SendSetOfflineDevice(int id);
+    bool sendSetOfflineDevice(int id);
+    bool sendSetAutoStart(bool autorun);
 
     bool parseJson(const std::string &json, int seed, boost::property_tree::ptree &tree);
     bool parseJsonAndVarify(const std::string &json, int seed);
@@ -102,6 +107,16 @@ inline bool ServiceBridge::sendActRefreshJfselfAccount()
 inline bool ServiceBridge::sendActRefreshOnline()
 {
     return sendAct_common(MessageValue::ACT_REFRESH_ONLINE);
+}
+
+inline bool ServiceBridge::sendActEnterDebugMode()
+{
+    return sendAct_common(MessageValue::ACT_ENTER_DEBUG_MODE);
+}
+
+inline bool ServiceBridge::sendActLeaveDebugMode()
+{
+    return sendAct_common(MessageValue::ACT_LEAVE_DEBUG_MODE);
 }
 
 }

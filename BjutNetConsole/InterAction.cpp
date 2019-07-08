@@ -12,25 +12,34 @@ namespace bna{
 void InterAction::ShowMenu()
 {
     cout << endl;
-    cout << "================================================" << endl;
-    cout << "              Menu                              " << endl;
-    cout << "================================================" << endl;
-    cout << "command |        description                    " << endl;
-    cout << "------------------------------------------------" << endl;
-    cout << "  q     |  Quit this session.                   " << endl;
-    cout << "  s     |  Show the status of login.            " << endl;
-    cout << "  r     |  Refresh all status.                  " << endl;
-    cout << "  v     |  Version information.                 " << endl;
-    cout << "  li    |  Login BJUT net now.                  " << endl;
-    cout << "  lo    |  Logout BJUT net now.                 " << endl;
-    cout << "  ol    |  List online devices.                 " << endl;
-    cout << "  onl   |  List online devices.                 " << endl;
-    cout << "  ofl   |  Offline devices.                     " << endl;
-    cout << "  lda   |  Reload account profile.              " << endl;
-    cout << "  sna   |  Set new account profile.             " << endl;
-    cout << "  csv   |  Show the current service             " << endl;
-    cout << "  bsv   |  Book the service of next month.      " << endl;
-    cout << "================================================" << endl;
+    cout << "  ================================================" << endl;
+    cout << "                       Menu                       " << endl;
+    cout << "  ================================================" << endl;
+    cout << "  command |        description                    " << endl;
+    cout << "  ------------------------------------------------" << endl;
+    cout << "    q     |  Quit this session.                   " << endl;
+    cout << "    s     |  Show the status of login.            " << endl;
+    cout << "    r     |  Refresh all status.                  " << endl;
+    cout << "    v     |  Version information.                 " << endl;
+    cout << "    li    |  Login BJUT net now.                  " << endl;
+    cout << "    lo    |  Logout BJUT net now.                 " << endl;
+    cout << "    ol    |  List online devices.                 " << endl;
+    cout << "    onl   |  List online devices.                 " << endl;
+    cout << "    ofl   |  Offline devices.                     " << endl;
+    cout << "    lda   |  Reload account profile.              " << endl;
+    cout << "    sna   |  Set new account profile.             " << endl;
+    cout << "    csv   |  Show the current service             " << endl;
+    cout << "    bsv   |  Book the service of next month.      " << endl;
+    cout << "    ats   |  Auto start service when power on.    " << endl;
+    cout << "    addr  |  Show my ip address.                  " << endl;
+    cout << "  ================================================" << endl;
+#if defined(_DEBUG) || defined(BUILD_DEVELOP)
+    cout << "    enter_debug     Enter debug mode.             " << endl;
+    cout << "    leave_debug     Leave debug mode.             " << endl;
+    cout << "    set_host        Set host address.             " << endl;
+    cout << "    my_host         Show host address.            " << endl;
+    cout << "  ================================================" << endl;
+#endif
     cout << "Input your command: ";
     cout.flush();
 }
@@ -84,7 +93,7 @@ bool InterAction::Process()
             if(cmd == "onl") {
                 ShowOnline();
             }
-            if(cmd == "ofl") {
+            else if(cmd == "ofl") {
                 OfflineDevice();
             }
             else if(cmd == "lda"){
@@ -99,10 +108,36 @@ bool InterAction::Process()
             else if(cmd == "bsv") {
                 BookService();
             }
+            else if(cmd == "ats") {
+                SetAutoStart();
+            }
             else{
                 processed = false;
             }
         }
+        else if(cmd.size() == 4){
+            if(cmd == "addr") {
+                ShowMyAddress();
+            }
+            else{
+                processed = false;
+            }
+        }
+        else if(cmd == "report_debug"){}
+#if defined(_DEBUG) || defined(BUILD_DEVELOP)
+        else if(cmd == "set_host"){
+            SetAnotherHost();
+        }
+        else if(cmd == "my_host"){
+            cout << endl << " " << m_service.getHost() << endl;
+        }
+        else if(cmd == "enter_debug"){
+            EnterDebugMode();
+        }
+        else if(cmd == "leave_debug"){
+            LeaveDebugMode();
+        }
+#endif
         else{
             processed = false;
         }
@@ -213,6 +248,11 @@ bool InterAction::LogoutBjut()
 bool InterAction::ShowOnline()
 {
     if(Connected()){
+        if(!m_service.sendActRefreshOnline()){
+            cout << m_service.getLastError() << endl;
+            cout << " Fail to refresh the list of online devices." << endl;
+            return false;
+        }
         vector<array<string, 4>> devices;
         if(m_service.sendGetOnlineDevices(devices))
         {
@@ -252,7 +292,7 @@ bool InterAction::OfflineDevice()
             cout << "Invalid number." << endl;
             return false;
         }
-        if(m_service.SendSetOfflineDevice(id))
+        if(m_service.sendSetOfflineDevice(id))
         {
             cout << "Success to offline device:" << id << endl;
             return true;
@@ -414,14 +454,87 @@ bool InterAction::BookService()
     return false;
 }
 
+bool InterAction::SetAutoStart()
+{
+    cout << " Do you want to start <BjutNetService> automatically (y/n)? ";
+    string input;
+    cin >> input;
+    bool succ = false;
+    if(input == "y" || input == "yes"){
+        succ = m_service.sendSetAutoStart(true);
+    }
+    else if(input == "n" || input == "no"){
+        succ = m_service.sendSetAutoStart(false);
+    }
+    if(!succ){
+        cout << m_service.getLastError() << endl;
+        cout << " Fail to change setting." << endl;
+    }
+    return succ;
+}
+
+bool InterAction::EnterDebugMode()
+{
+    if(Connected()){
+        if(m_service.sendActEnterDebugMode()){
+            cout << " Enter DEBUG mode!!!!!!" << endl;
+            return true;
+        }
+        cout << " Fail to enter DEBUG mode." << endl;
+    }
+    return false;
+}
+
+bool InterAction::LeaveDebugMode()
+{
+    if(Connected()){
+        if(m_service.sendActLeaveDebugMode()){
+            cout << " Leave DEBUG mode!!!!!!" << endl;
+            return true;
+        }
+        cout << " Fail to leave DEBUG mode." << endl;
+    }
+    return false;
+}
+
+bool InterAction::SetAnotherHost()
+{
+    string address;
+    cout << " Input the host address: ";
+    cin >> address;
+    if(!SetHost(address)){
+        return false;
+    }
+    if(!Connected()){
+        return false;
+    }
+    if(!m_service.sendSyncHello()){
+        cout << m_service.getLastError() << endl;
+        return false;
+    }
+    cout << " Connected to " << address << endl;
+    return true;
+}
+
+bool InterAction::ShowMyAddress()
+{
+    std::vector<string> ip;
+    m_service.getMyAddress(ip);
+    cout << " IP address list: " << endl;
+    for(const auto &a : ip){
+        cout << "   " << a << endl;
+    }
+    return !ip.empty();
+}
+
 bool InterAction::SetHost(const string &host)
 {
     if(m_service.setHost(host)){
-        cout << "Host address is " << host << " now." << endl;
+        cout << " Host address is " << host << " now." << endl;
         return true;
     }
     else{
-        cout << "Invalid host address: " << host << endl;
+        cout << " Invalid host address: " << host << endl;
     }
     return false;
 }
