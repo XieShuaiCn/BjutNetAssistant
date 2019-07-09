@@ -140,17 +140,4 @@ void UdpSocket::handle_receive(const boost::system::error_code& ec, std::size_t 
     *out_length = length;
 }
 
-void UdpSocket::myAddress(std::vector<std::string> &ip)
-{
-    asio::io_context ip_context;
-    udp::resolver ipresolver(ip_context);
-    udp::resolver::query query(asio::ip::host_name(), "");
-    udp::resolver::iterator it = ipresolver.resolve(query);
-    udp::resolver::iterator end;
-    for(; it != end; ++it){
-        udp::endpoint endpoint = *it;
-        ip.emplace_back(endpoint.address().to_string());
-    }
-}
-
 }

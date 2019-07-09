@@ -26,8 +26,6 @@ public:
     static void handle_receive(const boost::system::error_code& ec, std::size_t length,
                                boost::system::error_code* out_ec, std::size_t* out_length);
 
-    static void myAddress(std::vector<std::string> &ip);
-
 private:
     void check_deadline();
 

@@ -375,8 +375,12 @@ void ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAddress 
                     if(jo.contains("data")){
                         QJsonObject data = jo["data"].toObject();
                         if(data.contains("v")){
-                            buffer = __ServiceInterface_AckSuccToByteArray(seed,
-                                    Setting::setAutoRun(data["v"].toInt() != 0));
+                            if(Setting::setAutoRun(data["v"].toInt() != 0)){
+                                buffer = __ServiceInterface_AckSuccToByteArray(seed, true);
+                            }
+                            else{
+                                buffer = __ServiceInterface_ErrMsgToByteArray(g_debugTool.lastErrorString(), seed);
+                            }
                             break;
                         }
                     }

@@ -11,6 +11,8 @@ void DebugTool::init(const QString &name)
 {
     m_file.setFileName(name);
     m_file.open(QFile::ReadWrite);
+    m_strLastError.clear();
+    m_nLastError = 0;
 }
 
 void DebugTool::release()
@@ -18,8 +20,22 @@ void DebugTool::release()
     if(m_file.isOpen()) m_file.close();
 }
 
+void DebugTool::setInfo(const QString &content, bool with_time)
+{
+    m_strLastError.clear();
+    QDateTime timeNow = QDateTime::currentDateTime();
+    if (with_time)
+    {
+        QString strCurrentTime = timeNow.toString("[yyyy-MM-dd hh:mm:ss:zzz] ");
+        m_strLastError.append(strCurrentTime);
+    }
+    m_strLastError.append(content);
+}
+
 void DebugTool::writeInfo(DebugStatus status, const QString &content, bool with_time, bool end_line)
 {
+    setInfo(content, with_time);
+
     if(!m_file.isOpen())
         return;
     qint64 num = 0;

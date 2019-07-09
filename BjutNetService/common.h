@@ -32,6 +32,8 @@ extern DebugTool g_debugTool;
 
 extern QString g_strAppTempPath;
 
+extern QString g_strAppDirPath;
+
 QString RandString(int length);
 }
 #endif // COMMON_H

@@ -390,9 +390,6 @@ bool WebLgn::checkLoginStatus(LoginType type)
                 emit debug_info(DebugTool::STATUS_FAIL, QString("Check IPv4: No Time"));
                 emit debug_info(DebugTool::STATUS_DATA, content);
             }
-#ifdef QT_DEBUG
-            qDebug() << content << endl;
-#endif
             m_isOnline = false;
             emit status_update(false, m_nTime, m_nFlow, m_nFee);
             return false;

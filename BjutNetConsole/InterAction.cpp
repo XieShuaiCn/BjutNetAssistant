@@ -1,9 +1,9 @@
 #include "InterAction.h"
 #include <iostream>
 #include <iomanip>
-#include <conio.h>
 #include <string>
 #include "Version.h"
+#include "Utility.h"
 
 using namespace std;
 
@@ -357,7 +357,7 @@ bool InterAction::SetNewAccount()
         }while(name.size()==0);
         do{
             cout << " Input your password: ";
-            InputPasswd(passwd, '*');
+            ConsoleInputPasswd(passwd, '*');
         }while(passwd.size()==0);
         do{
             cout << " Login type:" << endl
@@ -456,21 +456,27 @@ bool InterAction::BookService()
 
 bool InterAction::SetAutoStart()
 {
-    cout << " Do you want to start <BjutNetService> automatically (y/n)? ";
-    string input;
-    cin >> input;
-    bool succ = false;
-    if(input == "y" || input == "yes"){
-        succ = m_service.sendSetAutoStart(true);
+    if(Connected()){
+        cout << " Do you want to start <BjutNetService> automatically (y/n)? ";
+        string input;
+        cin >> input;
+        bool succ = false;
+        if(input == "y" || input == "yes"){
+            succ = m_service.sendSetAutoStart(true);
+        }
+        else if(input == "n" || input == "no"){
+            succ = m_service.sendSetAutoStart(false);
+        }
+        if(!succ){
+            cout << m_service.getLastError() << endl;
+            cout << " Fail to change setting." << endl;
+        }
+        else{
+            cout << " OK." << endl;
+        }
+        return succ;
     }
-    else if(input == "n" || input == "no"){
-        succ = m_service.sendSetAutoStart(false);
-    }
-    if(!succ){
-        cout << m_service.getLastError() << endl;
-        cout << " Fail to change setting." << endl;
-    }
-    return succ;
+    return false;
 }
 
 bool InterAction::EnterDebugMode()
@@ -537,29 +543,6 @@ bool InterAction::SetHost(const string &host)
         cout << " Invalid host address: " << host << endl;
     }
     return false;
-}
-
-void InterAction::InputPasswd(std::string &passwd, char echo)
-{
-    char ch;
-    while((ch=getch())!='\r')
-    {
-        if(ch!=8)//不是回撤就录入
-        {
-            passwd.push_back(ch);
-            putchar(echo);//并且输出*号
-        }
-        else if(passwd.size())
-        {
-            putchar('\b');//这里是删除一个，我们通过输出回撤符 /b，回撤一格，
-            putchar(' ');//再显示空格符把刚才的*给盖住，
-            putchar('\b');//然后再 回撤一格等待录入。
-            passwd.pop_back();
-        }
-    }
-    passwd.push_back('\0');
-    putchar('\r');
-    putchar('\n');
 }
 
 void InterAction::ShowVersion()

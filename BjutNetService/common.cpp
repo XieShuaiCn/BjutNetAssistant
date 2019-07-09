@@ -10,6 +10,8 @@ DebugTool g_debugTool;
 
 QString g_strAppTempPath;
 
+QString g_strAppDirPath;
+
 QString RandString(int length)
 {
     qsrand(QTime::currentTime().msec()

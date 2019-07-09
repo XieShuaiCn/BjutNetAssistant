@@ -47,7 +47,10 @@ const string ServiceBridge::getHost()
 
 void ServiceBridge::getMyAddress(std::vector<std::string> &ip)
 {
-    UdpSocket::myAddress(ip);
+    if(!ListLocalIpAddress(ip)){
+        ip.clear();
+    }
+
 }
 
 bool ServiceBridge::sendSYN()
@@ -269,8 +272,8 @@ bool ServiceBridge::sendGetFlowService(std::string &name, int &totalFlow)
     boost::property_tree::ptree data;
     if (parseJson(buf, seed, data))
     {
-        string utf8str = data.get<char>("n", "");
-        if(!CheckUtf8ToMultiBytes(utf8str, name)) {
+        name = data.get<char>("n", "");
+        if(!CheckUtf8ToMultiBytes(name)) {
             m_strLastError = "Fail to convert UTF8 to Locale.";
         }
         totalFlow = data.get<int>("v", 0);
@@ -292,8 +295,8 @@ bool ServiceBridge::sendGetBookedService(std::string &name)
     boost::property_tree::ptree data;
     if (parseJson(buf, seed, data))
     {
-        string utf8str = data.get<char>("n", "");
-        if(!CheckUtf8ToMultiBytes(utf8str, name)) {
+        name = data.get<char>("n", "");
+        if(!CheckUtf8ToMultiBytes(name)) {
             m_strLastError = "Fail to convert UTF8 to Locale.";
         }
         return true;
@@ -317,13 +320,12 @@ bool ServiceBridge::sendGetAllServices(std::vector<std::tuple<int, std::string, 
         if(data.size()){
             for(auto &d : data){
                 auto id = d.second.get<int>("id", 0);
-                string name, msg;
-                string utf8str = d.second.get<char>("n", "");
-                if(!CheckUtf8ToMultiBytes(utf8str, name)) {
+                string name = d.second.get<char>("n", "");
+                if(!CheckUtf8ToMultiBytes(name)) {
                     m_strLastError = "Fail to convert UTF8 to Locale.";
                 }
-                utf8str = d.second.get<char>("m", "");
-                if(!CheckUtf8ToMultiBytes(utf8str, msg)) {
+                string msg = d.second.get<char>("m", "");
+                if(!CheckUtf8ToMultiBytes(msg)) {
                     m_strLastError = "Fail to convert UTF8 to Locale.";
                 }
                 services.emplace_back(id, name, msg);

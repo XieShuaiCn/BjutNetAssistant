@@ -1,6 +1,6 @@
 #include <iostream>
 #include "ParamParse.h"
-#include "Interaction.h"
+#include "InterAction.h"
 
 using namespace std;
 using namespace bna;

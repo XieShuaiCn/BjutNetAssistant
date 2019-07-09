@@ -39,6 +39,7 @@ int main(int argc, char *argv[])
     g_strAppTempPath = tmpName;
     QDir("/").mkpath(g_strAppTempPath);
     g_debugTool.init(QDir(g_strAppTempPath).absoluteFilePath("bnl.log"));
+    g_strAppDirPath = QtSingleApplication::applicationDirPath();
 
 #ifdef BUILD_DEVELOP
     g_bAppDebug = true;

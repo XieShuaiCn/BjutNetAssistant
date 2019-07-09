@@ -48,8 +48,6 @@ public:
 
     bool SetHost(const std::string &host);
 
-    static void InputPasswd(std::string &passwd, char echo);
-
 private:
     ServiceBridge m_service;
 };
