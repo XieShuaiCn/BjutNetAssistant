@@ -6,10 +6,12 @@
 #include <QSettings>
 #include <QApplication>
 #include <QDebug>
+#include <QProcess>
 
 namespace bna{
 
 #define BNA_AUTOSTART_LINUX_FILENAME "BjutNetService.sh.desktop"
+#define BNA_AUTOSTART_MAC_FILENAME "BjutNetService.plist"
 
 bool Setting::setAutoRun(bool bAutoRun)
 {
@@ -57,8 +59,83 @@ bool Setting::setAutoRun(bool bAutoRun)
             }
         }
 #elif defined(Q_OS_MAC)
-#else
+        QDir autoStart = QDir::home();
+        if(autoStart.mkpath("Library/LaunchAgents")) {
+            if(autoStart.cd("Library/LaunchAgents")) {
+                QFile startScriptNew(autoStart.absoluteFilePath(BNA_AUTOSTART_MAC_FILENAME));
+                if(bAutoRun){
+                    // create desktop file in autostart folder
+                    if(startScriptNew.exists()){
+                        autoStart.remove(startScriptNew.fileName());
+                    }
+                    if(!startScriptNew.open(QFile::WriteOnly)){
+                        g_debugTool.setInfo("Can not create script file.");
+                        if(g_bAppDebug){
+                            g_debugTool.writeInfo(DebugTool::STATUS_FAIL, "Can not open file:"+startScriptNew.fileName());
+                        }
+                        return false;
+                    }
+                    QString content(
+                                  "<?xml version=\"1.0\"encoding=\"utf-8\"?>\n"
+                                  "<!DOCTYPE plist PUBLIC\"-//Apple//DTD PLIST 1.0//EN\"\n"
+                                  "\"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n"
+                                  "<plist version=\"1.0\">\n"
+                                  "    <dict>\n"
+                                  "       <key>KeepAlive</key>\n"
+                                  "       <true/>\n"
+                                  "       <key>RunAtLoad</key>\n"
+                                  "       <true/>\n"
+                                  "       <key>Label</key>\n"
+                                  "       <string>BjutNetAssistant</string>\n"
+                                  "        <key>ProgramArguments</key>\n"
+                                  "        <array>\n"
+                                  "            <string>"+QApplication::applicationFilePath()+"</string>\n"
+                                  "        </array>\n"
+                                  "        <key>WorkingDirectory</key>\n"
+                                  "        <string>/Users/Roy/Downloads</string>\n"
+                                  "    </dict>\n"
+                                  "</plist>"
+                                );
+                    startScriptNew.write(content.toUtf8());
+                    startScriptNew.close();
+                    QProcess procRegPlist;
+                    QStringList procArg;
+                    procArg.append("load");
+                    procArg.append(startScriptNew.fileName());
+                    procRegPlist.setProgram("launchctl");
+                    procRegPlist.start("launchctl", procArg);
+                    if(!procRegPlist.waitForFinished()){
+                        g_debugTool.setInfo("Can not regist autostart.");
+                        if(g_bAppDebug){
+                            g_debugTool.writeInfo(DebugTool::STATUS_FAIL, "Can not regist autostart:"+startScriptNew.fileName());
+                        }
+                        return false;
+                    }
 
+                    return true;
+                }
+                else{
+                    if(startScriptNew.exists()){
+                        QProcess procRegPlist;
+                        QStringList procArg;
+                        procArg.append("unload");
+                        procArg.append(startScriptNew.fileName());
+                        procRegPlist.setProgram("launchctl");
+                        procRegPlist.start("launchctl", procArg);
+                        if(!procRegPlist.waitForFinished()){
+                            g_debugTool.setInfo("Can not unregist autostart.");
+                            if(g_bAppDebug){
+                                g_debugTool.writeInfo(DebugTool::STATUS_FAIL, "Can not unregist autostart:"+startScriptNew.fileName());
+                            }
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            }
+        }
+#else
+    (void)bAutoRun;
 #endif
     }
     catch(...){ }
@@ -75,7 +152,12 @@ bool Setting::getAutoRun()
 #elif defined(Q_OS_LINUX)
         QDir autoStart = QDir::home();
         if(autoStart.cd(".config/autostart")) {
-            return QDir(autoStart.filePath(BNA_AUTOSTART_LINUX_FILENAME)).exists();
+            return QFileInfo(autoStart.filePath(BNA_AUTOSTART_LINUX_FILENAME)).exists();
+        }
+#elif defined(Q_OS_MAC)
+        QDir autoStart = QDir::home();
+        if(autoStart.cd("Library/LaunchAgents")) {
+            return QFileInfo(autoStart.filePath(BNA_AUTOSTART_MAC_FILENAME)).exists();
         }
 #else
 

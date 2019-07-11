@@ -164,7 +164,7 @@ bool InterAction::Connected()
 
 bool InterAction::ShowStatus()
 {
-    if(Connected()){
+    if(RefreshNet()){
         int allFlow = 0;
         int flow = 0;
         int time = 0;
@@ -278,10 +278,7 @@ bool InterAction::ShowOnline()
 
 bool InterAction::OfflineDevice()
 {
-    if(Connected()){
-        if(!ShowOnline()){
-            return false;
-        }
+    if(ShowOnline()){
         int id;
         cout << "Input the ID of device which you want to offline: ";
         string data;
@@ -356,8 +353,7 @@ bool InterAction::SetNewAccount()
             cin >> name;
         }while(name.size()==0);
         do{
-            cout << " Input your password: ";
-            ConsoleInputPasswd(passwd, '*');
+            ConsoleInputPasswd(" Input your password: ", passwd, '*');
         }while(passwd.size()==0);
         do{
             cout << " Login type:" << endl

@@ -20,6 +20,13 @@ WebJfself::WebJfself()
 
 bool WebJfself::login()
 {
+    if(m_strAccount.size() == 0 || m_strPassword.size() == 0){
+        if(g_bAppDebug)
+        {
+            emit debug_info(DebugTool::STATUS_FAIL, QString("Please set account before logining jfself."));
+        }
+        return false;
+    }
     QString content;
     QByteArray data;
     int status = m_http.getUrlHtml(QUrl("https://jfself.bjut.edu.cn/nav_login"), content);

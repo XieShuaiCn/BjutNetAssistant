@@ -24,7 +24,7 @@ bool ConvertUtf8ToMultiBytes(const char *src, int srclen, char *&dst, int &dstle
 
 bool CheckUtf8ToMultiBytes(std::string &src_dst);
 
-void ConsoleInputPasswd(std::string &passwd, char echo);
+void ConsoleInputPasswd(const std::string &tip, std::string &passwd, char echo);
 
 bool ListLocalIpAddress(std::vector<std::string> &ip);
 

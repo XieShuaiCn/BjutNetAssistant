@@ -76,10 +76,11 @@ bool CheckUtf8ToMultiBytes(std::string &src)
 
 #endif
 
-void ConsoleInputPasswd(std::string &passwd, char echo)
+void ConsoleInputPasswd(const std::string &tip, std::string &passwd, char echo)
 {
 #ifdef BNA_OS_WIN
     // Windows system
+    puts(tip.c_str());
     char ch;
     while((ch=getch())!='\r')
     {
@@ -100,56 +101,11 @@ void ConsoleInputPasswd(std::string &passwd, char echo)
     putchar('\r');
     putchar('\n');
 
-#elif defined(BNA_OS_LINUX)
-
-#if 1
-    // linux system, using getpass function in sytem library
+#elif defined(BNA_OS_LINUX) || defined(BNA_OS_MAC)
+    // linux and osx, using getpass function in sytem library
     (void)echo;
-    passwd.assign(getpass(""));
-#else
-    // linux system, by changing terminal attribute in sytem library
-    #define TERM_ECHOFLAGS (ECHO|ECHOE|ECHOK|ECHONL)
-    char ch;
-    struct termios termios_buf;
-    tcgetattr(STDIN_FILENO,&termios_buf);
-    termios_buf.c_lflag &= ~TERM_ECHOFLAGS;
-    tcsetattr(STDIN_FILENO,TCSAFLUSH,&termios_buf);
-    fflush(stdout);
-    fflush(stdin);
-    //TODO: 第一个字符总是\n，怎么办
-    while((ch=getchar())!='\r' && ch!='\n')
-    {
-        tcgetattr(STDIN_FILENO,&termios_buf);
-        termios_buf.c_lflag |= TERM_ECHOFLAGS;
-        tcsetattr(STDIN_FILENO,TCSAFLUSH,&termios_buf);
-        if(ch!=8)//不是回撤就录入
-        {
-            passwd.push_back(ch);
-            putchar(echo);//并且输出*号
-        }
-        else if(passwd.size())
-        {
-            putchar('\b');//这里是删除一个，我们通过输出回撤符 /b，回撤一格，
-            putchar(' ');//再显示空格符把刚才的*给盖住，
-            putchar('\b');//然后再 回撤一格等待录入。
-            passwd.pop_back();
-        }
-        tcgetattr(STDIN_FILENO,&termios_buf);
-        termios_buf.c_lflag &= ~TERM_ECHOFLAGS;
-        tcsetattr(STDIN_FILENO,TCSAFLUSH,&termios_buf);
-    }
-    tcgetattr(STDIN_FILENO,&termios_buf);
-    termios_buf.c_lflag |= TERM_ECHOFLAGS;
-    tcsetattr(STDIN_FILENO,TCSAFLUSH,&termios_buf);
-    passwd.push_back('\0');
-    putchar('\r');
-    putchar('\n');
-    #undef TERM_ECHOFLAGS
-#endif
+    passwd.assign(getpass(tip.c_str()));
 
-#elif defined(BNA_OS_MAC)
-    (void)echo;
-    passwd.assign(getpass(""));
 #endif
 }
 

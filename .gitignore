@@ -2,6 +2,9 @@
 build-*/
 *.user
 
+# MAC os
+.DS_Store
+
 # Prerequisites
 *.d
 

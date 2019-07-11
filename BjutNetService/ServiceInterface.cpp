@@ -344,6 +344,7 @@ void ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAddress 
                             m_bjutnet->setLoginType(type);
                         }
                         m_bjutnet->synchronizeAccount();
+                        m_bjutnet->saveAccount();
                         buffer = __ServiceInterface_AckSuccToByteArray(seed);
                         break;
                     }

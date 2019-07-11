@@ -29,10 +29,13 @@ bool WebLgn::login()
 {
     if(m_strAccount.length() == 0)
     {
+        if(g_bAppDebug)
+        {
+            emit debug_info(DebugTool::STATUS_FAIL, QString("Please set account before logining bjut net."));
+        }
         emit message(QDateTime::currentDateTime(), QString("没有设置账户信息。"));
         return false;
     }
-
     QString test =  m_http.getUrlHtml(QUrl("http://lgn.bjut.edu.cn"));
     if(test.size() == 0)
     {
