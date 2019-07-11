@@ -33,7 +33,7 @@ bool UdpSocket::setRemoteHost(const std::string &address, unsigned short port)
 {
     boost::system::error_code err;
     auto addr = asio::ip::address::from_string(address, err);
-    if(err.failed()){
+    if(err){
         return false;
     }
     m_remote_endpoint = udp::endpoint(addr, port);
@@ -100,7 +100,7 @@ bool UdpSocket::receive_timeout(std::string &data, int milliseconds)
         // set timer
         system::error_code deadline_ec;
         m_deadline.expires_from_now(boost::posix_time::milliseconds(milliseconds), deadline_ec);
-        if(deadline_ec.failed()){
+        if(deadline_ec){
             return false;
         }
         // recevice data

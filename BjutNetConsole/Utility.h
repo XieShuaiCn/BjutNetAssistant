@@ -14,6 +14,8 @@
 #define BNA_OS_WIN
 #elif defined(linux) || defined(__linux) || defined(__linux__)
 #define BNA_OS_LINUX
+#elif defined(__APPLE__) && (defined(__GNUC__) || defined(__xlC__) || defined(__xlc__))
+#define BNA_OS_MAC
 #endif
 
 namespace bna{
@@ -28,7 +30,7 @@ bool ListLocalIpAddress(std::vector<std::string> &ip);
 
 ////////////////////////////implements/////////////////////////////////
 
-#ifdef BNA_OS_LINUX
+#ifndef BNA_OS_WIN
 inline bool CheckUtf8ToMultiBytes(std::string &src_dst) {(void)src_dst; return true;}
 #endif
 }

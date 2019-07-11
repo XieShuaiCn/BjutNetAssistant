@@ -56,6 +56,7 @@ bool Setting::setAutoRun(bool bAutoRun)
                 }
             }
         }
+#elif defined(Q_OS_MAC)
 #else
 
 #endif

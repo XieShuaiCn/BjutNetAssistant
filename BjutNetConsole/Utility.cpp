@@ -6,11 +6,14 @@
 #include <stdio.h>
 #include <string.h>
 
-#if defined(BNA_OS_WIN)
+#ifdef BNA_OS_WIN
 #include <conio.h>
-#elif defined(BNA_OS_LINUX)
-#include <unistd.h>
+#endif
+#ifdef BNA_OS_LINUX
 #include <termio.h>
+#endif
+#if defined(BNA_OS_LINUX) || defined(BNA_OS_MAC)
+#include <unistd.h>
 #include <unistd.h>
 #include <ifaddrs.h>
 #include <arpa/inet.h>
@@ -75,7 +78,7 @@ bool CheckUtf8ToMultiBytes(std::string &src)
 
 void ConsoleInputPasswd(std::string &passwd, char echo)
 {
-#if defined(_WIN32) || defined(WIN32) || defined(_WINDOWS)
+#ifdef BNA_OS_WIN
     // Windows system
     char ch;
     while((ch=getch())!='\r')
@@ -97,7 +100,7 @@ void ConsoleInputPasswd(std::string &passwd, char echo)
     putchar('\r');
     putchar('\n');
 
-#elif defined(linux) || defined(__linux) || defined(__linux__)
+#elif defined(BNA_OS_LINUX)
 
 #if 1
     // linux system, using getpass function in sytem library
@@ -144,12 +147,15 @@ void ConsoleInputPasswd(std::string &passwd, char echo)
     #undef TERM_ECHOFLAGS
 #endif
 
+#elif defined(BNA_OS_MAC)
+    (void)echo;
+    passwd.assign(getpass(""));
 #endif
 }
 
 bool ListLocalIpAddress(std::vector<std::string> &ip)
 {
-#ifdef BNA_OS_LINUX
+#if defined(BNA_OS_LINUX) || defined(BNA_OS_MAC)
     struct ifaddrs *ifap0=nullptr, *ifap=nullptr;
     void * tmpAddrPtr=nullptr;
     getifaddrs(&ifap0);
