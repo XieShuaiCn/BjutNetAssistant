@@ -164,7 +164,7 @@ bool InterAction::Connected()
 
 bool InterAction::ShowStatus()
 {
-    if(RefreshNet()){
+    if(Connected()){
         int allFlow = 0;
         int flow = 0;
         int time = 0;
@@ -195,7 +195,8 @@ bool InterAction::ShowStatus()
             ++timeUnitIdx;
             if(timeUnitIdx >= 1) break;
         }
-        cout << " Used flow: " << fixed << setprecision(3) << fflow << flowUnit[flowUnitIdx]
+        cout << endl
+             << " Used flow: " << fixed << setprecision(3) << fflow << flowUnit[flowUnitIdx]
              << "   | Used time: " << fixed << setprecision(2) << ftime << timeUnit[timeUnitIdx]
              << "   | Left fee: " << fixed << setprecision(2) << static_cast<double>(fee) / 100 << feeUnit[feeUnitIdx]
              << endl;

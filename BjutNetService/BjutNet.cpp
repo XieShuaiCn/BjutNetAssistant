@@ -69,6 +69,10 @@ bool BjutNet::loadAccount(const QString path)
         if(jp_err.error == QJsonParseError::NoError)
         {
             const QJsonObject jo = jd.object();
+            int version = 0;
+            if(jo.contains("version")){
+                version = jo["version"].toInt();
+            }
             if(jo.contains("account"))
             {
                 m_strAccount = jo["account"].toString();
@@ -77,9 +81,13 @@ bool BjutNet::loadAccount(const QString path)
             {
                 m_strPassword = jo["password"].toString();
             }
-            if(jo.contains("type"))
-            {
-                m_loginType = WebLgn::LoginType(jo["type"].toInt()+1);
+            if(jo.contains("type")){
+                if(version >= 2){
+                    m_loginType = WebLgn::LoginType(jo["type"].toInt());
+                }
+                else{
+                    m_loginType = WebLgn::LoginType(jo["type"].toInt()+1);
+                }
             }
             if(jo.contains("ipv4"))
             {
@@ -147,9 +155,10 @@ bool BjutNet::saveAccount(const QString path)
     if(f.isOpen() || f.open(QFile::WriteOnly))//文件已打开或打开成功
     {
         QJsonObject jo;
+        jo.insert("version", 2);
         jo.insert("account", m_strAccount);
         jo.insert("password", m_strPassword);
-        jo.insert("type", int(m_loginType) - 1);
+        jo.insert("type", int(m_loginType));
         jo.insert("autologin", m_bAutoLogin);
         QJsonDocument jd;
         jd.setObject(jo);

@@ -82,17 +82,17 @@ bool Setting::setAutoRun(bool bAutoRun)
                                   "<plist version=\"1.0\">\n"
                                   "    <dict>\n"
                                   "       <key>KeepAlive</key>\n"
-                                  "       <true/>\n"
+                                  "       <false/>\n"
                                   "       <key>RunAtLoad</key>\n"
                                   "       <true/>\n"
                                   "       <key>Label</key>\n"
-                                  "       <string>BjutNetAssistant</string>\n"
+                                  "       <string>com.hrrcn.xieshuai.BjutNetAssistant</string>\n"
                                   "        <key>ProgramArguments</key>\n"
                                   "        <array>\n"
                                   "            <string>"+QApplication::applicationFilePath()+"</string>\n"
                                   "        </array>\n"
                                   "        <key>WorkingDirectory</key>\n"
-                                  "        <string>/Users/Roy/Downloads</string>\n"
+                                  "        <string>"+QApplication::applicationDirPath()+"</string>\n"
                                   "    </dict>\n"
                                   "</plist>"
                                 );
@@ -103,16 +103,20 @@ bool Setting::setAutoRun(bool bAutoRun)
                     procArg.append("load");
                     procArg.append(startScriptNew.fileName());
                     procRegPlist.setProgram("launchctl");
-                    procRegPlist.start("launchctl", procArg);
+                    procRegPlist.setArguments(procArg);
+                    procRegPlist.start();
                     if(!procRegPlist.waitForFinished()){
                         g_debugTool.setInfo("Can not regist autostart.");
+                        g_debugTool.setInfo(procRegPlist.errorString());
                         if(g_bAppDebug){
                             g_debugTool.writeInfo(DebugTool::STATUS_FAIL, "Can not regist autostart:"+startScriptNew.fileName());
+                            g_debugTool.writeInfo(DebugTool::STATUS_INFO, procRegPlist.errorString());
                         }
                         return false;
                     }
-
-                    return true;
+                    //std::string cmd("launchctl load "+startScriptNew.fileName());
+                    //system(cmd);
+                    return procRegPlist.exitCode() == 0;
                 }
                 else{
                     if(startScriptNew.exists()){

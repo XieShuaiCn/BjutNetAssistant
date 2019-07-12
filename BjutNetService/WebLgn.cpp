@@ -122,7 +122,12 @@ bool WebLgn::loginOnLAN(LoginType type)
     data.insert("v6ip", "");
     data.insert("f4serip", "172.30.201.10");
     data.insert("0MKKey", "");
-    QString content = m_http.postUrlHtml(QUrl(url), data);
+    QString content;
+    int ret_code = m_http.postUrlHtml(QUrl(url), data, content);
+    if(ret_code<100){
+        g_debugTool.setInfo("Can not post data to server.");
+        return false;
+    }
     //若返回跳转网页，继续解析跳转网页
     QRegExp regKeyValue("name='?(\\w*)'? value='([:\\w]*)'",  Qt::CaseInsensitive);
     int pos = 0;
@@ -136,7 +141,11 @@ bool WebLgn::loginOnLAN(LoginType type)
             ++pos;
             pos = content.indexOf(regKeyValue, pos);
         }while (pos >= 0);
-        content = m_http.postUrlHtml(QUrl(url), data);
+        ret_code = m_http.postUrlHtml(QUrl(url), data, content);
+    }
+    if(ret_code<100){
+        g_debugTool.setInfo("Can not post data to server.");
+        return false;
     }
     if(content.contains("<title>登录成功窗</title>"))
     {
