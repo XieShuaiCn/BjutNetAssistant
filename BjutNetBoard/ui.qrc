@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/png">
+        <file alias="BtnClose">res/BtnClose.png</file>
+        <file alias="BtnMin">res/BtnMin.png</file>
+        <file alias="BtnMax">res/BtnMax.png</file>
+        <file alias="BtnMenu">res/BtnMenu.png</file>
+        <file alias="BtnRestore">res/BtnRestore.png</file>
+        <file alias="BtnSkin">res/BtnSkin.png</file>
+        <file alias="BtnHelp">res/BtnHelp.png</file>
+        <file alias="BtnSetting">res/BtnSetting.png</file>
+        <file alias="Shadow">res/Shadow.png</file>
+    </qresource>
+</RCC>

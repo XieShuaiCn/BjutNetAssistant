@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/icon">
+        <file>logo.ico</file>
+    </qresource>
+    <qresource prefix="/png">
+        <file alias="BtnRefresh">res/BtnRefresh.png</file>
+        <file alias="Online">res/Online.png</file>
+        <file alias="Offline">res/Offline.png</file>
+    </qresource>
+</RCC>
