@@ -1,11 +1,14 @@
 #include "WndTrayIcon.h"
-#include "WndMain.h"
-#include "WndSetting.h"
 #include <QMenu>
 #include <QApplication>
 #include <QLocalSocket>
+#include "BjutNet.h"
+#include "WndMain.h"
+#include "WndSetting.h"
 
-namespace bna{
+namespace bna {
+
+namespace gui {
 
 WndTrayIcon::WndTrayIcon(QApplication *app,QObject *parent):
     QSystemTrayIcon(parent),
@@ -45,21 +48,23 @@ WndTrayIcon::WndTrayIcon(QApplication *app,QObject *parent):
     connect(m_actMenuQuit, &QAction::triggered, this, &WndTrayIcon::cmdExitApp);
     connect(&m_tmClick, &QTimer::timeout, this, &WndTrayIcon::on_clicked);
 
-    m_service = new QServiceBridge;
-    //启动网关监控
-    if(m_service->sendActLoadAccount())
-    {
-        m_service->sendActLoginBjut();
-    }
+    m_bjutnet = new BjutNet;
+    Q_ASSERT(m_bjutnet!=nullptr);
+    m_bjutnet->start();
 }
 
 WndTrayIcon::~WndTrayIcon()
 {
-    if(m_service)
+    if(m_bjutnet)
     {
-        m_service->sendActLogoutBjut();
-        m_service->deleteLater();
-        m_service = Q_NULLPTR;
+        if(m_bjutnet->isRunning()){
+            m_bjutnet->stop();
+            if(!m_bjutnet->wait(500)){ // ms
+                m_bjutnet->terminate();
+            }
+        }
+        m_bjutnet->deleteLater();
+        m_bjutnet = Q_NULLPTR;
     }
     if(m_wndSetting)
     {
@@ -75,14 +80,13 @@ WndTrayIcon::~WndTrayIcon()
 void WndTrayIcon::on_clicked()
 {
     QString status;
+    bool online;
     int time;
     int flow;
     int fee;
     const char* flowUnit[] = {"KB", "MB", "GB", "TB"};
     int flowUnitIndex = 0;
-    m_service->sendGetUsedTime(time);
-    m_service->sendGetUsedFlow(flow);
-    m_service->sendGetLeftFee(fee);
+    m_bjutnet->getNetInfo(online, flow, time, fee);
     float ftime = float(time) / 60;
     float fflow = float(flow);
     while(fflow > 1024)
@@ -90,7 +94,7 @@ void WndTrayIcon::on_clicked()
         fflow /= 1024;
         ++flowUnitIndex;
     }
-    float ffee = float(lgn.getFee()) / 100;
+    float ffee = float(fee) / 100;
     status.sprintf("已用时间：%.2f小时，已用流量：%.2f%s，剩余金额：%.2f元", ftime, fflow, flowUnit[flowUnitIndex], ffee);
     //return status;
     this->showMessage("北工大校园网助手", status, QSystemTrayIcon::NoIcon);
@@ -125,20 +129,27 @@ void WndTrayIcon::cmdExitApp()
 
 void WndTrayIcon::cmdLoginLgn()
 {
-    m_service->sendActLogoutBjut();
-    m_service->sendActLoginBjut();
+    m_bjutnet->sendLogin();
 }
 
 void WndTrayIcon::cmdLogoutLgn()
 {
-    m_service->sendActLogoutBjut();
+    m_bjutnet->sendLogout();
 }
 
 void WndTrayIcon::on_actived(QSystemTrayIcon::ActivationReason reason)
 {
     switch (reason) {
     case QSystemTrayIcon::Context:
-        m_menuTray->exec();
+        if(m_tmClick.isActive())
+        {//双击
+            m_tmClick.stop();
+            m_menuTray->exec();
+        }
+        else
+        {//单击计时器
+            m_tmClick.start();
+        }
         break;
     case QSystemTrayIcon::DoubleClick:
         cmdShowMainWnd();
@@ -172,5 +183,4 @@ void WndTrayIcon::reciveMessage(const QString &msg)
         cmdExitApp();
     }
 }
-
-}
+}}

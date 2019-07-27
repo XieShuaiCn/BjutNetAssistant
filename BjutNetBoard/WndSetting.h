@@ -13,8 +13,8 @@ class QCheckBox;
 class QLabel;
 class QComboBox;
 
-namespace bna{
-
+namespace bna {
+namespace gui {
 class WndTrayIcon;
 class HPanel;
 
@@ -33,6 +33,9 @@ public slots:
     void on_chkDebug_clicked(bool checked);
     void on_btnApply_clicked();
     void on_btnApplyLogin_clicked();
+    void on_account(const QString &name, const QString &passwd, int type);
+    //
+    void on_autoStart(bool autostart);
 
 private:
     WndTrayIcon *m_tray;
@@ -58,5 +61,7 @@ private:
 };
 
 }
+}
+
 
 #endif // WNDSETTING_H

@@ -1,14 +1,16 @@
-#include "QServiceBridge.h"
+#include "ServiceBridge.h"
 #include <QUdpSocket>
 #include <QDateTime>
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QException>
+#include "Utility.h"
 
-namespace bna{
+namespace bna {
+namespace gui {
 
-bool QServiceBridge::doSendAndReceive(const QString &sdata, QString &rdata)
+bool ServiceBridge::doSendAndReceive(const QString &sdata, QString &rdata)
 {
     rdata.clear();
     while(m_socket.bytesAvailable()){
@@ -21,18 +23,19 @@ bool QServiceBridge::doSendAndReceive(const QString &sdata, QString &rdata)
         QByteArray arr;
         QHostAddress address;
         quint16 port;
-        arr.resize(m_socket.bytesAvailable()+1);
+        arr.resize(m_socket.bytesAvailable());
         if(m_socket.readDatagram(arr.data(), arr.size(), &address, &port) <= 0) {
             return false;
         }
-        if(address == m_host && port == m_port)
-        rdata.append(arr);
-        return true;
+        if(port == m_port && m_host.isEqual(address, QHostAddress::TolerantConversion)){
+            rdata.append(arr);
+            return true;
+        }
     }
     return false;
 }
 
-QServiceBridge::QServiceBridge()
+ServiceBridge::ServiceBridge()
     : m_host("127.0.0.1"),
       m_port(6350),
       m_nMsgVersion(MessageValue::Version)
@@ -40,23 +43,22 @@ QServiceBridge::QServiceBridge()
     qsrand(uint(QDateTime::currentMSecsSinceEpoch()));
 }
 
-bool QServiceBridge::setHost(const QString &host)
+bool ServiceBridge::setHost(const QString &host)
 {
     return m_host.setAddress(host);
 }
 
-const QString QServiceBridge::getHost()
+const QString ServiceBridge::getHost()
 {
     return m_host.toString();
 }
 
-void QServiceBridge::getMyAddress(std::vector<std::string> &ip)
+void ServiceBridge::getMyAddress(QVector<QHostAddress> &addrs)
 {
-    //TODO: ListLocalIpAddress
-    throw 1;
+    ListLocalIpAddress(addrs);
 }
 
-bool QServiceBridge::sendSYN()
+bool ServiceBridge::sendSYN()
 {
     char ch(CHAR_SYN);
     while(m_socket.bytesAvailable()){
@@ -76,7 +78,7 @@ bool QServiceBridge::sendSYN()
     return false;
 }
 
-bool QServiceBridge::sendENQ()
+bool ServiceBridge::sendENQ()
 {
     char ch(CHAR_ENQ);
     while(m_socket.bytesAvailable()){
@@ -94,12 +96,13 @@ bool QServiceBridge::sendENQ()
         m_nMsgVersion = static_cast<int>(static_cast<unsigned char>(arr[0]));
         return m_nMsgVersion <= MessageValue::Version;
     }
+    return false;
 }
 
-bool QServiceBridge::sendSyncHello()
+bool ServiceBridge::sendSyncHello()
 {
     int seed = qrand();
-    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3")
+    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3}")
             .arg(MessageValue::SYNC).arg(MessageValue::HELLO).arg(seed);
     QString buf;
     if(!doSendAndReceive(sdata, buf)) {
@@ -108,10 +111,10 @@ bool QServiceBridge::sendSyncHello()
     return parseJsonAndVarify(buf, seed);
 }
 
-bool QServiceBridge::sendAct_common(MessageValue::ActionAct type)
+bool ServiceBridge::sendAct_common(MessageValue::ActionAct type)
 {
     int seed = qrand();
-    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3")
+    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3}")
             .arg(MessageValue::ACT).arg(type).arg(seed);
     QString buf;
     if(!doSendAndReceive(sdata, buf)) {
@@ -120,10 +123,10 @@ bool QServiceBridge::sendAct_common(MessageValue::ActionAct type)
     return parseJsonAndVarify(buf, seed);
 }
 
-bool QServiceBridge::sendGetVersion(QString &var, int &inner_ver)
+bool ServiceBridge::sendGetVersion(QString &var, int &inner_ver)
 {
     int seed = qrand();
-    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3")
+    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3}")
             .arg(MessageValue::GET).arg(MessageValue::GET_VERSION).arg(seed);
     QString buf;
     if(!doSendAndReceive(sdata, buf)) {
@@ -144,10 +147,10 @@ bool QServiceBridge::sendGetVersion(QString &var, int &inner_ver)
     return false;
 }
 
-bool QServiceBridge::sendGetAccount(QString &name, QString &password, int &type)
+bool ServiceBridge::sendGetAccount(QString &name, QString &password, int &type)
 {
     int seed = qrand();
-    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3")
+    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3}")
             .arg(MessageValue::GET).arg(MessageValue::GET_ACCOUNT).arg(seed);
     QString buf;
     if(!doSendAndReceive(sdata, buf)) {
@@ -168,10 +171,10 @@ bool QServiceBridge::sendGetAccount(QString &name, QString &password, int &type)
     }
     return false;
 }
-bool QServiceBridge::sendGetUsedFlow(int &value)
+bool ServiceBridge::sendGetUsedFlow(int &value)
 {
     int seed = qrand();
-    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3")
+    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3}")
             .arg(MessageValue::GET).arg(MessageValue::GET_USED_FLOW).arg(seed);
     QString buf;
     if(!doSendAndReceive(sdata, buf)) {
@@ -190,10 +193,10 @@ bool QServiceBridge::sendGetUsedFlow(int &value)
     }
     return false;
 }
-bool QServiceBridge::sendGetUsedTime(int &value)
+bool ServiceBridge::sendGetUsedTime(int &value)
 {
     int seed = qrand();
-    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3")
+    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3}")
             .arg(MessageValue::GET).arg(MessageValue::GET_USED_TIME).arg(seed);
     QString buf;
     if(!doSendAndReceive(sdata, buf)) {
@@ -212,10 +215,10 @@ bool QServiceBridge::sendGetUsedTime(int &value)
     }
     return false;
 }
-bool QServiceBridge::sendGetLeftFee(int &value)
+bool ServiceBridge::sendGetLeftFee(int &value)
 {
     int seed = qrand();
-    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3")
+    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3}")
             .arg(MessageValue::GET).arg(MessageValue::GET_LEFT_FEE).arg(seed);
     QString buf;
     if(!doSendAndReceive(sdata, buf)) {
@@ -234,10 +237,10 @@ bool QServiceBridge::sendGetLeftFee(int &value)
     }
     return false;
 }
-bool QServiceBridge::sendGetAllFlow(int &value)
+bool ServiceBridge::sendGetAllFlow(int &value)
 {
     int seed = qrand();
-    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3")
+    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3}")
             .arg(MessageValue::GET).arg(MessageValue::GET_ALL_FLOW).arg(seed);
     QString buf;
     if(!doSendAndReceive(sdata, buf)) {
@@ -256,10 +259,10 @@ bool QServiceBridge::sendGetAllFlow(int &value)
     }
     return false;
 }
-bool QServiceBridge::sendGetOnlineDevices(std::vector<std::array<QString, 4>> &devices)
+bool ServiceBridge::sendGetOnlineDevices(std::vector<std::array<QString, 4>> &devices)
 {
     int seed = qrand();
-    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3")
+    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3}")
             .arg(MessageValue::GET).arg(MessageValue::GET_DEVICE_ONLINE).arg(seed);
     QString buf;
     if(!doSendAndReceive(sdata, buf)) {
@@ -269,6 +272,7 @@ bool QServiceBridge::sendGetOnlineDevices(std::vector<std::array<QString, 4>> &d
     if(parseJson(buf, seed, jdata))
     {
         if(jdata.isArray()){
+            devices.clear();
             QJsonArray arr = jdata.toArray();
             for(const auto &a : arr){
                 if(a.isObject()){
@@ -276,7 +280,7 @@ bool QServiceBridge::sendGetOnlineDevices(std::vector<std::array<QString, 4>> &d
                     auto id = obj["id"].toInt();
                     auto ipv4 = obj["ipv4"].toString();
                     auto ipv6 = obj["ipv6"].toString();
-                    devices.emplace_back(std::array<std::string, 4>{QString().setNum(id), ipv4, ipv6, QString("")});
+                    devices.emplace_back(std::array<QString, 4>{QString().setNum(id), ipv4, ipv6, QString("")});
                 }
             }
             return true;
@@ -284,10 +288,10 @@ bool QServiceBridge::sendGetOnlineDevices(std::vector<std::array<QString, 4>> &d
     }
     return false;
 }
-bool QServiceBridge::sendGetFlowService(QString &name, int &totalFlow)
+bool ServiceBridge::sendGetFlowService(QString &name, int &totalFlow)
 {
     int seed = qrand();
-    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3")
+    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3}")
             .arg(MessageValue::GET).arg(MessageValue::GET_FLOW_SERVICE).arg(seed);
     QString buf;
     if(!doSendAndReceive(sdata, buf)) {
@@ -309,10 +313,10 @@ bool QServiceBridge::sendGetFlowService(QString &name, int &totalFlow)
     }
     return false;
 }
-bool QServiceBridge::sendGetBookedService(QString &name)
+bool ServiceBridge::sendGetBookedService(QString &name)
 {
     int seed = qrand();
-    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3")
+    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3}")
             .arg(MessageValue::GET).arg(MessageValue::GET_BOOKED_SERVICE).arg(seed);
     QString buf;
     if(!doSendAndReceive(sdata, buf)) {
@@ -331,10 +335,10 @@ bool QServiceBridge::sendGetBookedService(QString &name)
     }
     return false;
 }
-bool QServiceBridge::sendGetAllServices(std::vector<std::tuple<int, QString, QString>> &services)
+bool ServiceBridge::sendGetAllServices(std::vector<std::tuple<int, QString, QString>> &services)
 {
     int seed = qrand();
-    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3")
+    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3}")
             .arg(MessageValue::GET).arg(MessageValue::GET_ALL_SERVICES).arg(seed);
     QString buf;
     if(!doSendAndReceive(sdata, buf)) {
@@ -359,10 +363,10 @@ bool QServiceBridge::sendGetAllServices(std::vector<std::tuple<int, QString, QSt
     }
     return false;
 }
-bool QServiceBridge::sendGetAutoStart(bool &autorun)
+bool ServiceBridge::sendGetAutoStart(bool &autorun)
 {
     int seed = qrand();
-    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3")
+    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3}")
             .arg(MessageValue::GET).arg(MessageValue::GET_AUTO_START).arg(seed);
     QString buf;
     if(!doSendAndReceive(sdata, buf)) {
@@ -382,10 +386,10 @@ bool QServiceBridge::sendGetAutoStart(bool &autorun)
     return false;
 }
 
-bool QServiceBridge::sendSetAccount(const QString name, const QString passwd, int type)
+bool ServiceBridge::sendSetAccount(const QString name, const QString passwd, int type)
 {
     int seed = qrand();
-    QString sdata = QString("{\"type\":%1,\"act\":%2,\"data\":{\"n\":\"%4\",\"p\":\"%5\",\"t\":%6}\"seed\":%3")
+    QString sdata = QString("{\"type\":%1,\"act\":%2,\"data\":{\"n\":\"%4\",\"p\":\"%5\",\"t\":%6}\"seed\":%3}")
             .arg(MessageValue::SET).arg(MessageValue::SET_ACCOUNT).arg(seed)
             .arg(name).arg(passwd).arg(type);
     QString buf;
@@ -395,10 +399,10 @@ bool QServiceBridge::sendSetAccount(const QString name, const QString passwd, in
     return parseJsonAndVarify(buf, seed);
 }
 
-bool QServiceBridge::sendSetBookedService(int id)
+bool ServiceBridge::sendSetBookedService(int id)
 {
     int seed = qrand();
-    QString sdata = QString("{\"type\":%1,\"act\":%2,\"data\":{\"id\":\"%4\"}\"seed\":%3")
+    QString sdata = QString("{\"type\":%1,\"act\":%2,\"data\":{\"id\":\"%4\"}\"seed\":%3}")
             .arg(MessageValue::SET).arg(MessageValue::SET_BOOK_SERVICE).arg(seed)
             .arg(id);
     QString buf;
@@ -408,10 +412,10 @@ bool QServiceBridge::sendSetBookedService(int id)
     return parseJsonAndVarify(buf, seed);
 }
 
-bool QServiceBridge::sendSetOfflineDevice(int id)
+bool ServiceBridge::sendSetOfflineDevice(int id)
 {
     int seed = qrand();
-    QString sdata = QString("{\"type\":%1,\"act\":%2,\"data\":{\"id\":\"%4\"}\"seed\":%3")
+    QString sdata = QString("{\"type\":%1,\"act\":%2,\"data\":{\"id\":\"%4\"}\"seed\":%3}")
             .arg(MessageValue::SET).arg(MessageValue::SET_OFFLINE_DEVICE).arg(seed)
             .arg(id);
     QString buf;
@@ -421,10 +425,10 @@ bool QServiceBridge::sendSetOfflineDevice(int id)
     return parseJsonAndVarify(buf, seed);
 }
 
-bool QServiceBridge::sendSetAutoStart(bool autorun)
+bool ServiceBridge::sendSetAutoStart(bool autorun)
 {
     int seed = qrand();
-    QString sdata = QString("{\"type\":%1,\"act\":%2,\"data\":{\"v\":\"%4\"}\"seed\":%3")
+    QString sdata = QString("{\"type\":%1,\"act\":%2,\"data\":{\"v\":\"%4\"}\"seed\":%3}")
             .arg(MessageValue::SET).arg(MessageValue::SET_AUTO_START).arg(seed)
             .arg(static_cast<int>(autorun));
     QString buf;
@@ -434,7 +438,7 @@ bool QServiceBridge::sendSetAutoStart(bool autorun)
     return parseJsonAndVarify(buf, seed);
 }
 
-bool QServiceBridge::parseJson(const QString &json, int seed, QJsonValue &data)
+bool ServiceBridge::parseJson(const QString &json, int seed, QJsonValue &data)
 {
     try {
         if(json.size()==0){
@@ -443,7 +447,7 @@ bool QServiceBridge::parseJson(const QString &json, int seed, QJsonValue &data)
         }
 
         QJsonParseError err;
-        QJsonDocument jdoc = QJsonDocument::fromJson(json.toUtf8(), err);
+        QJsonDocument jdoc = QJsonDocument::fromJson(json.toUtf8(), &err);
         if(err.error != QJsonParseError::NoError){
             m_strLastError = err.errorString();
             return false;
@@ -458,7 +462,7 @@ bool QServiceBridge::parseJson(const QString &json, int seed, QJsonValue &data)
             int seed2 = jobj["seed"].toInt(0);
             if(seed == seed2){
                 if(type2==MessageValue::ACK) {
-                    if(!jobj.contains("data"))
+                    if(jobj.contains("data"))
                     {
                         data = jobj.value("data");
                         return true;
@@ -493,7 +497,7 @@ bool QServiceBridge::parseJson(const QString &json, int seed, QJsonValue &data)
     return false;
 }
 
-bool QServiceBridge::parseJsonAndVarify(const std::string &json, int seed)
+bool ServiceBridge::parseJsonAndVarify(const QString &json, int seed)
 {
     try {
         if(json.size()==0){
@@ -502,7 +506,7 @@ bool QServiceBridge::parseJsonAndVarify(const std::string &json, int seed)
         }
 
         QJsonParseError err;
-        QJsonDocument jdoc = QJsonDocument::fromJson(json.toUtf8(), err);
+        QJsonDocument jdoc = QJsonDocument::fromJson(json.toUtf8(), &err);
         if(err.error != QJsonParseError::NoError){
             m_strLastError = err.errorString();
             return false;
@@ -517,7 +521,7 @@ bool QServiceBridge::parseJsonAndVarify(const std::string &json, int seed)
             int seed2 = jobj["seed"].toInt(0);
             if(seed == seed2){
                 if(type2==MessageValue::ACK) {
-                    if(!jobj.contains("succ"))
+                    if(jobj.contains("succ"))
                     {
                         if(jobj.value("succ").toInt(0)==0){
                             m_strLastError = "Return failure.";
@@ -557,4 +561,4 @@ bool QServiceBridge::parseJsonAndVarify(const std::string &json, int seed)
     }
     return false;
 }
-}
+}}

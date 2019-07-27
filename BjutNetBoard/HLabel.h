@@ -5,6 +5,8 @@
 class QMouseEvent;
 
 namespace bna{
+namespace gui{
+
 class HLabel : public QLabel
 {
     Q_OBJECT
@@ -20,5 +22,6 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent *event);
     void mousePressEvent(QMouseEvent *event);
 };
+}
 }
 #endif // HLABEL_H

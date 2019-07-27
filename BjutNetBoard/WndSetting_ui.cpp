@@ -8,9 +8,7 @@
 #include <QLabel>
 #include <QComboBox>
 
-namespace bna{
-
-void WndSetting::initUI()
+void bna::gui::WndSetting::initUI()
 {
     QFont font_s11;
     font_s11.setPointSize(11);
@@ -22,7 +20,7 @@ void WndSetting::initUI()
     this->setFixedSize(300, 330);
     this->setFont(font_s11);
 
-    m_frmBasic = new HPanel(this);
+    m_frmBasic = new bna::gui::HPanel(this);
     m_frmBasic->setGeometry(QRect(10, 10, 280, 90));
     m_frmBasic->setFrameShape(QFrame::NoFrame);
     m_frmBasic->setFrameShadow(QFrame::Plain);
@@ -85,5 +83,4 @@ void WndSetting::initUI()
     m_btnApply->setText(QString("仅保存"));
 //    m_btnOK->setText(QStringLiteral("确定"));
 //    m_btnCancel->setText(QStringLiteral("取消"));
-}
 }

@@ -1,7 +1,8 @@
 #include "HLabel.h"
 #include <QMouseEvent>
 
-namespace bna{
+namespace bna {
+namespace gui {
 
 HLabel::HLabel(QWidget *parent, Qt::WindowFlags f):
     QLabel(parent, f)
@@ -22,4 +23,4 @@ void HLabel::mouseDoubleClickEvent(QMouseEvent *event)
     QLabel::mouseDoubleClickEvent(event);
     emit doubleClicked(event->button());
 }
-}
+}}

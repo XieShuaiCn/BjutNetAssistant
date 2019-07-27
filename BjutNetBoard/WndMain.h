@@ -23,9 +23,10 @@ class QPaintEvent;
 class QProgressDialog;
 
 namespace bna{
+namespace gui{
 
-class QServiceBridge;
 class WndTrayIcon;
+class BjutNet;
 
 class WndMain : public QWidget
 {
@@ -46,17 +47,22 @@ public slots:
     void on_btnLogin_clicked();
     void on_btnOffline1_clicked();
     void on_btnOffline2_clicked();
-    void on_lblClient1addr4_doubleClicked();
-    void on_lblClient1addr6_doubleClicked();
-    void on_lblClient2addr4_doubleClicked();
-    void on_lblClient2addr6_doubleClicked();
+    void on_lblClientaddr_doubleClicked();
     void on_btnOffcicalWeb_clicked();
     void on_btnRefreshBook_clicked();
     void on_btnSubmitBook_clicked();
     void on_lblVersion_clicked();
-    void on_txtMsg_message(const QDateTime& time, const QString& info);
-    void on_account_status(bool login, int time, int flow, int fee);
-    void on_online_status(const QVector<OnlineClientInfo> &info);
+    void on_txtMsg_message(const QString& info);
+    void on_account_status(bool login, int flow, int time, int fee);
+    void on_online_status(const QVariant &var_info);
+    // recive the info of account service
+    void on_serviceInfo(const QString &name, int totalFlow);
+    // recive the version of remote service
+    void on_remoteVersion(const QString &version, int inner_ver);
+    //
+    void on_allServices(const QVariant &services);
+    //
+    void on_bookedService(const QString &name);
 protected slots:
     void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
 protected:
@@ -93,13 +99,13 @@ private:
     QLabel *m_lblCopyTip;
     QLabel *m_lblClent1_ip4;
     QLabel *m_lblClent1_ip6;
-    HLabel *m_lblClent1_addr4;
-    HLabel *m_lblClent1_addr6;
+    bna::gui::HLabel *m_lblClent1_addr4;
+    bna::gui::HLabel *m_lblClent1_addr6;
     QPushButton *m_btnOffline1;
     QLabel *m_lblClent2_ip4;
     QLabel *m_lblClent2_ip6;
-    HLabel *m_lblClent2_addr4;
-    HLabel *m_lblClent2_addr6;
+    bna::gui::HLabel *m_lblClent2_addr4;
+    bna::gui::HLabel *m_lblClent2_addr6;
     QPushButton *m_btnOffline2;
 
     QFrame *m_frmOperation;
@@ -110,18 +116,21 @@ private:
     QPushButton *m_btnRefreshBook;
 
     QTextEdit *m_txtMsg;
-    HLabel *m_lblVersion;
+    bna::gui::HLabel *m_lblVersion;
 
     //逻辑控制所需变量
     bool m_bShowDetail = false;
     bool m_bApplyLogin;
     bool m_bNeedUpdate;
-    QString m_strOnlineID[2];
-    Updater m_updater;
+    int m_strOnlineID[2];
+    bna::gui::Updater m_updater;
     QProgressDialog *m_dlgProgress;
     WndTrayIcon *m_tray;
-    QServiceBridge *m_service;
+    BjutNet *m_net;
 
 };
-}
+
+}}
+
+
 #endif // MAINWND_H

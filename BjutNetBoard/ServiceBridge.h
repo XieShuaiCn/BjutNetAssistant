@@ -10,17 +10,18 @@
 #include <QUdpSocket>
 #include "../BjutNetService/MessageValue.h"
 
+namespace bna {
 
-namespace bna{
+namespace gui {
 
-class QServiceBridge : QObject
+class ServiceBridge : public QObject
 {
     Q_OBJECT
 public:
-    QServiceBridge();
+    ServiceBridge();
     bool setHost(const QString &host);
     const QString getHost();
-    void getMyAddress(std::vector<QString> &ip);
+    void getMyAddress(QVector<QHostAddress> &addrs);
 
     bool sendSYN();
     bool sendENQ();
@@ -46,8 +47,8 @@ public:
     bool sendGetLeftFee(int &value);
     bool sendGetAllFlow(int &value);
     bool sendGetOnlineDevices(std::vector<std::array<QString, 4>> &devices);
-    bool sendGetFlowService(std::string &name, int &totalFlow);
-    bool sendGetBookedService(std::string &name);
+    bool sendGetFlowService(QString &name, int &totalFlow);
+    bool sendGetBookedService(QString &name);
     bool sendGetAllServices(std::vector<std::tuple<int, QString, QString>> &services);
     bool sendGetAutoStart(bool &autorun);
 
@@ -59,11 +60,11 @@ public:
     bool parseJson(const QString &json, int seed, QJsonValue &data);
     bool parseJsonAndVarify(const QString &json, int seed);
 
-    const QString &getLastError();
+    const QString &getLastError() const;
 
 private:
     bool doSendAndReceive(const QString &sdata, QString &rdata);
-    bool sendAct_common(MessageValue::ActionAct type);
+    bool sendAct_common(bna::MessageValue::ActionAct type);
 
     QUdpSocket m_socket;
     QHostAddress m_host;
@@ -72,58 +73,57 @@ private:
     QString m_strLastError;
 };
 
-inline const std::string &QServiceBridge::getLastError()
+inline const QString &ServiceBridge::getLastError() const
 {
     return m_strLastError;
 }
 
-inline bool QServiceBridge::sendActLoadAccount()
+inline bool ServiceBridge::sendActLoadAccount()
 {
-    return sendAct_common(MessageValue::ACT_LOAD_ACCOUNT);
+    return sendAct_common(bna::MessageValue::ACT_LOAD_ACCOUNT);
 }
-inline bool QServiceBridge::sendActSaveAccount()
+inline bool ServiceBridge::sendActSaveAccount()
 {
-    return sendAct_common(MessageValue::ACT_SAVE_ACCOUNT);
+    return sendAct_common(bna::MessageValue::ACT_SAVE_ACCOUNT);
 }
 
-inline bool QServiceBridge::sendActLoginBjut()
+inline bool ServiceBridge::sendActLoginBjut()
 {
-    return sendAct_common(MessageValue::ACT_LOGIN_BJUT);
+    return sendAct_common(bna::MessageValue::ACT_LOGIN_BJUT);
 }
-inline bool QServiceBridge::sendActLogoutBjut()
+inline bool ServiceBridge::sendActLogoutBjut()
 {
-    return sendAct_common(MessageValue::ACT_LOGOUT_BJUT);
+    return sendAct_common(bna::MessageValue::ACT_LOGOUT_BJUT);
 }
-inline bool QServiceBridge::sendActLoginJfself()
+inline bool ServiceBridge::sendActLoginJfself()
 {
-    return sendAct_common(MessageValue::ACT_LOGIN_JFSELF);
+    return sendAct_common(bna::MessageValue::ACT_LOGIN_JFSELF);
 }
-inline bool QServiceBridge::sendActLogoutJfself()
+inline bool ServiceBridge::sendActLogoutJfself()
 {
-    return sendAct_common(MessageValue::ACT_LOGOUT_JFSELF);
+    return sendAct_common(bna::MessageValue::ACT_LOGOUT_JFSELF);
 }
-inline bool QServiceBridge::sendActRefreshNet()
+inline bool ServiceBridge::sendActRefreshNet()
 {
-    return sendAct_common(MessageValue::ACT_REFRESH_NET);
+    return sendAct_common(bna::MessageValue::ACT_REFRESH_NET);
 }
-inline bool QServiceBridge::sendActRefreshJfselfAccount()
+inline bool ServiceBridge::sendActRefreshJfselfAccount()
 {
-    return sendAct_common(MessageValue::ACT_REFRESH_JFSELF_ACCOUNT);
+    return sendAct_common(bna::MessageValue::ACT_REFRESH_JFSELF_ACCOUNT);
 }
-inline bool QServiceBridge::sendActRefreshOnline()
+inline bool ServiceBridge::sendActRefreshOnline()
 {
-    return sendAct_common(MessageValue::ACT_REFRESH_ONLINE);
+    return sendAct_common(bna::MessageValue::ACT_REFRESH_ONLINE);
 }
 
-inline bool QServiceBridge::sendActEnterDebugMode()
+inline bool ServiceBridge::sendActEnterDebugMode()
 {
-    return sendAct_common(MessageValue::ACT_ENTER_DEBUG_MODE);
+    return sendAct_common(bna::MessageValue::ACT_ENTER_DEBUG_MODE);
 }
 
-inline bool QServiceBridge::sendActLeaveDebugMode()
+inline bool ServiceBridge::sendActLeaveDebugMode()
 {
-    return sendAct_common(MessageValue::ACT_LEAVE_DEBUG_MODE);
+    return sendAct_common(bna::MessageValue::ACT_LEAVE_DEBUG_MODE);
 }
-
-}
+}}
 #endif // SERVICEBRIDGE_H

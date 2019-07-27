@@ -12,10 +12,11 @@
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QTextEdit>
 #include <QtWidgets/QWidget>
+#include "HLabel.h"
+#include "HPanel.h"
 
-namespace bna{
 
-void WndMain::initUI()
+void bna::gui::WndMain::initUI()
 {
     QFont font_s100;
     font_s100.setPointSize(10);
@@ -125,10 +126,10 @@ void WndMain::initUI()
     m_lblClent1_ip6 = new QLabel(m_frmOnline);
     m_lblClent1_ip6->setGeometry(QRect(10, 40, 40, 20));
     m_lblClent1_ip6->setFont(font_s120);
-    m_lblClent1_addr4 = new HLabel(m_frmOnline);
+    m_lblClent1_addr4 = new bna::gui::HLabel(m_frmOnline);
     m_lblClent1_addr4->setGeometry(QRect(55, 10, 200, 20));
     m_lblClent1_addr4->setFont(font_s120);
-    m_lblClent1_addr6 = new HLabel(m_frmOnline);
+    m_lblClent1_addr6 = new bna::gui::HLabel(m_frmOnline);
     m_lblClent1_addr6->setGeometry(QRect(55, 40, m_frmOnline->width()-20, 20));
     m_lblClent1_addr6->setFont(font_s115);
     m_btnOffline1 = new QPushButton(m_frmOnline);
@@ -140,10 +141,10 @@ void WndMain::initUI()
     m_lblClent2_ip6 = new QLabel(m_frmOnline);
     m_lblClent2_ip6->setGeometry(QRect(10, 100, 40, 20));
     m_lblClent2_ip6->setFont(font_s120);
-    m_lblClent2_addr4 = new HLabel(m_frmOnline);
+    m_lblClent2_addr4 = new bna::gui::HLabel(m_frmOnline);
     m_lblClent2_addr4->setGeometry(QRect(55, 70, 200, 20));
     m_lblClent2_addr4->setFont(font_s120);
-    m_lblClent2_addr6 = new HLabel(m_frmOnline);
+    m_lblClent2_addr6 = new bna::gui::HLabel(m_frmOnline);
     m_lblClent2_addr6->setGeometry(QRect(55, 100, m_frmOnline->width()-20, 20));
     m_lblClent2_addr6->setFont(font_s115);
     m_btnOffline2 = new QPushButton(m_frmOnline);
@@ -180,7 +181,7 @@ void WndMain::initUI()
     m_txtMsg->setGeometry(QRect(15, 330, 540, 130));
     m_txtMsg->setReadOnly(true);
     //版本号
-    m_lblVersion = new HLabel(this);
+    m_lblVersion = new bna::gui::HLabel(this);
     m_lblVersion->setGeometry(QRect(10, this->height()-25, 250, 20));
     m_lblVersion->setFont(font_s100);
 
@@ -218,5 +219,4 @@ void WndMain::initUI()
     m_lblVersion->setText(QString("版本号：") + m_updater.getOldVersion());
     //根据objectName关联信号
     //QMetaObject::connectSlotsByName(this);
-}
 }

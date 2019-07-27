@@ -4,7 +4,8 @@
 #include <QPaintEvent>
 #include <QPen>
 
-namespace bna{
+namespace bna {
+namespace gui {
 
 HPanel::HPanel(QWidget* parent, Qt::WindowFlags f) :
     QFrame(parent, f),
@@ -72,4 +73,4 @@ void HPanel::paintEvent(QPaintEvent *event)
         }
     }
 }
-}
+}}

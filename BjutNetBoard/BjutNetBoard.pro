@@ -30,8 +30,13 @@ PRECOMPILED_HEADER  = common.h
 
 
 SOURCES += \
+    ../BjutNetService/MessageValue.cpp \
+    ../BjutNetService/ParamParse.cpp \
     common.cpp \
     main.cpp \
+    HttpClient.cpp \
+    ServiceBridge.cpp \
+    BjutNet.cpp \
     Updater.cpp \
     HPanel.cpp \
     HLabel.cpp \
@@ -40,22 +45,23 @@ SOURCES += \
     WndTrayIcon.cpp \
     WndSetting.cpp \
     WndSetting_ui.cpp \
-    ../BjutNetService/MessageValue.cpp \
-    ../BjutNetService/ParamParse.cpp \
-    QServiceBridge.cpp
+    Utility.cpp
 
 HEADERS += \
+    ../BjutNetService/MessageValue.h \
+    ../BjutNetService/ParamParse.h \
+    ../BjutNetService/Version.h \
     common.h \
+    HttpClient.h \
+    ServiceBridge.h \
+    BjutNet.h \
     Updater.h \
     HLabel.h \
     HPanel.h \
     WndMain.h \
     WndTrayIcon.h \
     WndSetting.h \
-    ../BjutNetService/MessageValue.h \
-    ../BjutNetService/ParamParse.h \
-    ../BjutNetService/Version.h \
-    QServiceBridge.h
+    Utility.h
 
 DISTFILES += \
     C:/Users/XIESHUAI/.bjutnet/account.json \

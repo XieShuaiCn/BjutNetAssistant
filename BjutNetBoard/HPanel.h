@@ -7,7 +7,7 @@
 #include <QLabel>
 
 namespace bna{
-
+namespace gui{
 class HPanel : public QFrame
 {
     Q_OBJECT
@@ -39,5 +39,5 @@ inline void HPanel::setBorderStyle(double width, double round, QColor color)
     m_dBorderRound = round;
     m_colorBorder = color;
 }
-}
+}}
 #endif // HPANEL_H

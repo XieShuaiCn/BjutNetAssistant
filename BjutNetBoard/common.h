@@ -5,7 +5,6 @@
 #include <QString>
 #include <QWidget>
 #include <QException>
-#include "DebugInfo.h"
 
 #ifndef UNUSED
 #define UNUSED(x) (void)x
@@ -24,11 +23,8 @@
     PROPERTY_READ(type, name, var) \
     PROPERTY_WRITE(type, name, var)
 
-namespace bna{
-
 extern QString g_strAppTempPath;
 
 QString RandString(int length);
 
-}
 #endif // COMMON_H

@@ -14,7 +14,7 @@
 #include <QtNetwork/QNetworkReply>
 
 namespace bna{
-
+namespace gui{
 
 Updater::Updater(QObject *parent) : QObject(parent),
     m_nNewVersion(0), m_nOldVersion(0),
@@ -133,19 +133,11 @@ bool Updater::downloadNewPackage()
             }
             fileTemp.close();
             ret = m_http.downloadFile(QUrl(m_strOnlineFileURL), QByteArray(), tempFile, false);
-            if(g_bAppDebug)
-            {
-                WriteDebugInfo(ret==200 ? DEBUG_SUCCESS : DEBUG_FAIL, QString("Download file.(%1)").arg(tempFile));
-            }
 
             bool suc = QFile(tempFile).setPermissions(QFile::Permission(0x7755));
 #ifdef QT_DEBUG
             if (!suc) qDebug() << "Change permission faild." << endl;
 #endif
-            if(!suc && g_bAppDebug)
-            {
-                WriteDebugInfo(DEBUG_FAIL, QString("Change permission faild.(%1)").arg(tempFile));
-            }
             return 200 == ret && doInstall(tempFile);
         }
         else {
@@ -181,4 +173,4 @@ bool Updater::runMaintainTool()
     return QProcess::startDetached(binFile);
 #endif
 }
-}
+}}

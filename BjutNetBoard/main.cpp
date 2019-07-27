@@ -56,21 +56,17 @@ int main(int argc, char *argv[])
             break;
         }
     }
-    bnm::g_strAppTempPath = tmpName;
+    g_strAppTempPath = tmpName;
     QDir("/").mkpath(g_strAppTempPath);
-    InitDebugFile(QDir(g_strAppTempPath).absoluteFilePath("bnl.log"));
-    g_bAppDebug = mapArgv.contains("debug");
 
-    WndTrayIcon wti(&app);
+    bna::gui::WndTrayIcon wti(&app);
     wti.show();
     if (!mapArgv.contains("tray"))
     {
         wti.cmdShowMainWnd();
     }
     //wti.cmdShowSettingWnd();
-    QObject::connect(&app, &QtSingleApplication::messageReceived, &wti, &WndTrayIcon::reciveMessage);
+    QObject::connect(&app, &QtSingleApplication::messageReceived, &wti, &bna::gui::WndTrayIcon::reciveMessage);
     int r = app.exec();
-    WriteDebugInfo(QString("Exit code:") + QString(std::to_string(r).c_str()));
-    ReleaseDebugFile();
     return r;
 }

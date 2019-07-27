@@ -1,6 +1,8 @@
 #include "WndMain.h"
 #include "WndTrayIcon.h"
 #include "BjutNet.h"
+#include "Utility.h"
+#include <QDateTime>
 #include <QPainter>
 #include <QShowEvent>
 #include <QDesktopServices>
@@ -23,7 +25,10 @@
 #include <QClipboard>
 #include <QDir>
 
-namespace bna{
+namespace bna {
+
+namespace gui {
+
 
 WndMain::WndMain(WndTrayIcon *tray, QWidget *parent) :
     QWidget(parent),
@@ -31,26 +36,33 @@ WndMain::WndMain(WndTrayIcon *tray, QWidget *parent) :
     m_tray(tray)
 {
     tray->setMainWindow(this);
-    m_service = tray->getService();
+    m_net = tray->getBjutNet();
     //初始化界面
     initUI();
 
     //关联信号
-    connect(m_btnDetail, &QPushButton::clicked, this, &WndMain::on_btnDetail_clicked);
-    connect(m_btnLogout, &QPushButton::clicked, this, &WndMain::on_btnLogout_clicked);
-    connect(m_btnLogin, &QPushButton::clicked, this, &WndMain::on_btnLogin_clicked);
-    connect(m_btnRefresh, &QPushButton::clicked, this, &WndMain::on_btnRefresh_clicked);
-    connect(m_btnOffline1, &QPushButton::clicked, this, &WndMain::on_btnOffline1_clicked);
-    connect(m_btnOffline2, &QPushButton::clicked, this, &WndMain::on_btnOffline2_clicked);
-    connect(m_lblClent1_addr4, &HLabel::doubleClicked, this, &WndMain::on_lblClient1addr4_doubleClicked);
-    connect(m_lblClent1_addr6, &HLabel::doubleClicked, this, &WndMain::on_lblClient1addr6_doubleClicked);
-    connect(m_lblClent2_addr4, &HLabel::doubleClicked, this, &WndMain::on_lblClient2addr4_doubleClicked);
-    connect(m_lblClent2_addr6, &HLabel::doubleClicked, this, &WndMain::on_lblClient2addr6_doubleClicked);
-    connect(m_btnOfficalWeb, &QPushButton::clicked, this, &WndMain::on_btnOffcicalWeb_clicked);
-    connect(m_btnRefreshBook, &QPushButton::clicked, this, &WndMain::on_btnRefreshBook_clicked);
-    connect(m_btnSubmitBook, &QPushButton::clicked, this, &WndMain::on_btnSubmitBook_clicked);
-    connect(m_lblVersion, &HLabel::clicked, this, &WndMain::on_lblVersion_clicked);
+    connect(m_btnDetail, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnDetail_clicked);
+    connect(m_btnLogout, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnLogout_clicked);
+    connect(m_btnLogin, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnLogin_clicked);
+    connect(m_btnRefresh, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnRefresh_clicked);
+    connect(m_btnOffline1, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnOffline1_clicked);
+    connect(m_btnOffline2, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnOffline2_clicked);
+    connect(m_lblClent1_addr4, &bna::gui::HLabel::doubleClicked, this, &bna::gui::WndMain::on_lblClientaddr_doubleClicked);
+    connect(m_lblClent1_addr6, &bna::gui::HLabel::doubleClicked, this, &bna::gui::WndMain::on_lblClientaddr_doubleClicked);
+    connect(m_lblClent2_addr4, &bna::gui::HLabel::doubleClicked, this, &bna::gui::WndMain::on_lblClientaddr_doubleClicked);
+    connect(m_lblClent2_addr6, &bna::gui::HLabel::doubleClicked, this, &bna::gui::WndMain::on_lblClientaddr_doubleClicked);
+    connect(m_btnOfficalWeb, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnOffcicalWeb_clicked);
+    connect(m_btnRefreshBook, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnRefreshBook_clicked);
+    connect(m_btnSubmitBook, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnSubmitBook_clicked);
+    connect(m_lblVersion, &bna::gui::HLabel::clicked, this, &bna::gui::WndMain::on_lblVersion_clicked);
     //connect(this, &WndMain::showed, this, &WndMain::on_show);
+    connect(m_net, &bna::gui::BjutNet::updateMessage, this, &bna::gui::WndMain::on_txtMsg_message);
+    connect(m_net, &bna::gui::BjutNet::updateNetInfo, this, &bna::gui::WndMain::on_account_status);
+    connect(m_net, &bna::gui::BjutNet::updateOnlineDevice, this, &bna::gui::WndMain::on_online_status);
+    connect(m_net, &bna::gui::BjutNet::updateServiceInfo, this, &bna::gui::WndMain::on_serviceInfo);
+    connect(m_net, &bna::gui::BjutNet::updateRemoteVersion, this, &bna::gui::WndMain::on_remoteVersion);
+    connect(m_net, &bna::gui::BjutNet::updateAllServices, this, &bna::gui::WndMain::on_allServices);
+    connect(m_net, &bna::gui::BjutNet::updateBookedService, this, &bna::gui::WndMain::on_bookedService);
     //光标
     m_txtMsg->setFocus();
 }
@@ -62,6 +74,12 @@ WndMain::~WndMain()
 void WndMain::show()
 {
     QWidget::show();
+    QWidget::raise();
+    QWidget::activateWindow();
+#ifdef Q_OS_WIN
+    HWND hWnd = reinterpret_cast<HWND>QWidget::winId(); //reinterpret_cast
+    ::SwitchToThisWindow(hWnd);
+#endif
     //后台处理事件
     QCoreApplication::processEvents();
     on_show();
@@ -83,13 +101,8 @@ void WndMain::paintEvent(QPaintEvent *event)
     // 设置反锯齿
     painter.setRenderHint(QPainter::Antialiasing);
     //绘制流量图
-//    QFile f("flow.txt");
-//    f.open(QIODevice::ReadOnly);
-//    auto data = f.readAll();
-//    f.close();
-//    int currentFlow = QString(data).toInt();
-    int currentFlow = m_net->getWebLgn().getFlow() / 1024;//MB
-    int totalFlow = m_net->getWebJfself().getTotalFlow();//MB
+    int currentFlow = m_net->getUsedFlow() / 1024;//MB
+    int totalFlow = m_net->getServiceFlow();//MB
     QBrush brushPie(QColor(60,180,60));
     if(totalFlow > 0)
     {
@@ -149,7 +162,7 @@ void WndMain:: on_show()
     on_btnRefresh_clicked();
 }
 
-void WndMain::on_account_status(bool login, int time, int flow, int fee)
+void WndMain::on_account_status(bool login, int flow, int time, int fee)
 {
     if(login)
     {
@@ -191,7 +204,7 @@ void WndMain::on_account_status(bool login, int time, int flow, int fee)
     m_lblFlowUnit->setText(flowUnit[flowUnitIndex]);
     m_lcdNumFee->display(float(fee) / 100);
     strFlowTip.append(QString("流量状态：已用%1%2").arg(fflow).arg(flowUnit[flowUnitIndex]));
-    int totalFlow = m_net->getWebJfself().getTotalFlow();//MB
+    int totalFlow = m_net->getServiceFlow();//MB
     if(totalFlow > 0){
         m_lblFlowUsed->setText(QString("已用：%1 %").arg(int(100.0 * flow / totalFlow / 1024)));
         fflow = totalFlow-flow/1024;
@@ -205,66 +218,64 @@ void WndMain::on_account_status(bool login, int time, int flow, int fee)
         m_frmFlowGraph->setToolTip(strFlowTip);
         this->update();
     }
-    auto service = m_net->getWebJfself().getServiceName();
+    auto service = m_net->getServiceName();
     if(service.size()){
         m_lblService->setText(service);
     }
-    else{
-        m_lblService->setText(QString("未检测到套餐"));
-    }
 }
 
-void WndMain::on_online_status(const QVector<OnlineClientInfo> &info)
+void WndMain::on_online_status(const QVariant &var_info)
 {
-    QHostInfo host_info = QHostInfo::fromName(QHostInfo::localHostName());
-    QList<QHostAddress> addrs = host_info.addresses();
+    QVector<QHostAddress> addrs;
+    ListLocalIpAddress(addrs);
+    BjutNet::TypeOnlineDevices info = var_info.value<BjutNet::TypeOnlineDevices>();
     if(info.size() > 0)
     {
-        const auto &c = info.first();
-        m_lblClent1_addr4->setText(c.strIPv4);
-        m_lblClent1_addr6->setText(c.strIPv6);
-        if((c.strIPv4.size() && addrs.contains(QHostAddress(c.strIPv4)))
-            || (c.strIPv6.size() && addrs.contains(QHostAddress(c.strIPv6))))
+        const auto &c = info[0];
+        m_lblClent1_addr4->setText(c[1]);
+        m_lblClent1_addr6->setText(c[2]);
+        if((c[1].size() && addrs.contains(QHostAddress(c[1])))
+            || (c[2].size() && addrs.contains(QHostAddress(c[2]))))
         {
             m_lblClent1_addr4->setText(m_lblClent1_addr4->text()+"(本机)");
         }
-        m_strOnlineID[0] = c.strID;
+        m_strOnlineID[0] = c[0].toInt();
         m_lblClent1_addr4->setVisible(true);
         m_lblClent1_addr6->setVisible(true);
         m_btnOffline1->setVisible(true);
     }
     else {
-        m_strOnlineID[0].clear();
+        m_strOnlineID[0] = 0;
         m_lblClent1_addr4->setVisible(false);
         m_lblClent1_addr6->setVisible(false);
         m_btnOffline1->setVisible(false);
     }
     if(info.size() > 1)
     {
-        const auto &c = info.last();
-        m_lblClent2_addr4->setText(c.strIPv4);
-        m_lblClent2_addr6->setText(c.strIPv6);
-        if((c.strIPv4.size() && addrs.contains(QHostAddress(c.strIPv4)))
-            || (c.strIPv6.size() && addrs.contains(QHostAddress(c.strIPv6))))
+        const auto &c = info[1];
+        m_lblClent2_addr4->setText(c[1]);
+        m_lblClent2_addr6->setText(c[2]);
+        if((c[1].size() && addrs.contains(QHostAddress(c[1])))
+            || (c[2].size() && addrs.contains(QHostAddress(c[2]))))
         {
             m_lblClent2_addr4->setText(m_lblClent2_addr4->text()+"(本机)");
         }
-        m_strOnlineID[1] = c.strID;
+        m_strOnlineID[1] = c[1].toInt();
         m_lblClent2_addr4->setVisible(true);
         m_lblClent2_addr6->setVisible(true);
         m_btnOffline2->setVisible(true);
     }
     else {
-        m_strOnlineID[1].clear();
+        m_strOnlineID[1] = 0;
         m_lblClent2_addr4->setVisible(false);
         m_lblClent2_addr6->setVisible(false);
         m_btnOffline2->setVisible(false);
     }
 }
 
-void WndMain::on_txtMsg_message(const QDateTime& time, const QString& info)
+void WndMain::on_txtMsg_message(const QString& info)
 {
-    m_txtMsg->append(time.toString("yyyy-MM-dd hh:mm:ss  ") + (info.endsWith('\n') ? info : (info + '\n')));
+    m_txtMsg->append(QDateTime::currentDateTime().toString("[yyyy-MM-dd hh:mm:ss] ") + (info.endsWith('\n') ? info : (info + '\n')));
 }
 
 
@@ -277,40 +288,11 @@ void WndMain::resizeEvent(QResizeEvent *event)
 void WndMain::on_btnRefresh_clicked()
 {
     m_btnRefresh->setEnabled(false);
-    WebLgn &lgn = m_net->getWebLgn();
-    WebJfself &jfself = m_net->getWebJfself();
-    on_txtMsg_message(QDateTime::currentDateTime(), "刷新账户信息");
-    jfself.refreshAccount();
-    //on_txtMsg_message(QDateTime::currentDateTime(), "刷新在线设备");
-    jfself.refreshOnline();
-    //on_txtMsg_message(QDateTime::currentDateTime(), "更新界面信息");
-    if(jfself.getTotalFlow() > 0){
-        m_lblFlowUsed->setText(QString("已用：%1 %").arg(100 * lgn.getFlow() / jfself.getTotalFlow() / 1024));
-    }
-    else {
-         m_lblFlowUsed->setText(QString("已用：-- %"));
-    }
-    if(jfself.getServiceName().size()){
-        m_lblService->setText(jfself.getServiceName());
-    }
-    else{
-        m_lblService->setText(QString("未检测到套餐"));
-    }
-    //更新页面显示的流量状态
-    on_txtMsg_message(QDateTime::currentDateTime(), "检查网络状态");
-    bool loged = lgn.checkLoginStatus();
-    //on_account_status(lgn.getTime() > 0, lgn.getTime(), lgn.getFlow(), lgn.getFee());
-    // 没有登陆外网时，连不上服务器，不检查更新
-    if(loged){
-        on_txtMsg_message(QDateTime::currentDateTime(), "检查版本更新");
-        m_updater.checkUpdate();
-        if(m_updater.needUpdate()){
-            m_bNeedUpdate = true;
-            QString ver("%1 <font color=#dd3333>最新版本：%2 点我更新！</font>");
-            m_lblVersion->setText(ver.arg(m_updater.getOldVersion(), m_updater.getNewVersion()));
-        }
-    }
-    on_txtMsg_message(QDateTime::currentDateTime(), "刷新完成");
+    on_txtMsg_message("[INFO] Refresh all");
+    m_net->requireServiveInfo();
+    m_net->requireNetInfo();
+    m_net->requireOnlineDevices();
+    m_net->requireRemoteVersion();
     m_btnRefresh->setEnabled(true);
 }
 
@@ -330,53 +312,32 @@ void WndMain::on_btnDetail_clicked()
 
 void WndMain::on_btnLogout_clicked()
 {
-    m_net->stop_monitor();
-    m_net->getWebLgn().logout();
+    m_net->sendLogout();
 }
 
 void WndMain::on_btnLogin_clicked()
 {
-    m_net->stop_monitor();
-    m_net->start_monitor();
+    m_net->sendLogin();
 }
 
-void WndMain::on_lblClient1addr4_doubleClicked()
+void WndMain::on_lblClientaddr_doubleClicked()
 {
-    QString addr = m_lblClent1_addr4->text();
-    if(addr.size()==0) return;
-    int index = addr.indexOf(QChar('('));
-    if(index == 0) return;
-    if(index > 0) addr = addr.left(index);
-    QApplication::clipboard()->setText(addr);
+    try{
+        HLabel *lbl = dynamic_cast<HLabel *>(sender());
+        QString addr = lbl->text();
+        if(addr.size()==0) return;
+        int index = addr.indexOf(QChar('('));
+        if(index == 0) return;
+        if(index > 0) addr = addr.left(index);
+        QApplication::clipboard()->setText(addr);
+    }
+    catch(...){
+        QMessageBox mb(this);
+        mb.setText("复制IP地址失败");
+        mb.setWindowTitle("双击IP复制到剪贴板");
+        mb.exec();
+    }
 }
-void WndMain::on_lblClient1addr6_doubleClicked()
-{
-    QString addr = m_lblClent1_addr6->text();
-    if(addr.size()==0) return;
-    int index = addr.indexOf(QChar('('));
-    if(index == 0) return;
-    if(index > 0) addr = addr.left(index);
-    QApplication::clipboard()->setText(addr);
-}
-void WndMain::on_lblClient2addr4_doubleClicked()
-{
-    QString addr = m_lblClent2_addr4->text();
-    if(addr.size()==0) return;
-    int index = addr.indexOf(QChar('('));
-    if(index == 0) return;
-    if(index > 0) addr = addr.left(index);
-    QApplication::clipboard()->setText(addr);
-}
-void WndMain::on_lblClient2addr6_doubleClicked()
-{
-    QString addr = m_lblClent2_addr6->text();
-    if(addr.size()==0) return;
-    int index = addr.indexOf(QChar('('));
-    if(index == 0) return;
-    if(index > 0) addr = addr.left(index);
-    QApplication::clipboard()->setText(addr);
-}
-
 void WndMain::on_btnOffcicalWeb_clicked()
 {
     QDesktopServices::openUrl(QUrl("https://jfself.bjut.edu.cn/"));
@@ -384,25 +345,15 @@ void WndMain::on_btnOffcicalWeb_clicked()
 
 void WndMain::on_btnRefreshBook_clicked()
 {
-    m_cmbListBook->clear();
-    auto &jfself = m_net->getWebJfself();
-    jfself.refreshBookService();
-    m_lblCurrentBook->setText("已预约:["+jfself.getCurrentBookService()+"]");
-    const auto &lst = jfself.getBookServiceList();
-    QStringList items;
-    for(const auto &l : lst)
-    {
-        items.append(l.second);
-    }
-    m_cmbListBook->addItems(items);
+    m_net->requireAlldService();
+    m_net->requireBookedService();
 }
 
 void WndMain::on_btnSubmitBook_clicked()
 {
-    auto &jfself = m_net->getWebJfself();
-    const auto &lst = jfself.getBookServiceList();
-    if(m_cmbListBook->currentIndex() >=0 && m_cmbListBook->currentIndex() < lst.size())
-        jfself.submitBookService(lst[m_cmbListBook->currentIndex()].first);
+    const auto &lst = m_net->getAllServices();
+    if(m_cmbListBook->currentIndex() >=0 && static_cast<size_t>(m_cmbListBook->currentIndex()) < lst.size())
+        m_net->sendBookService(std::get<0>(lst[m_cmbListBook->currentIndex()]));
 }
 
 void WndMain::on_lblVersion_clicked()
@@ -469,16 +420,62 @@ void WndMain::on_lblVersion_clicked()
 
 void WndMain::on_btnOffline1_clicked()
 {
-    if(m_strOnlineID[0].size())
-        m_net->getWebJfself().toOffline(m_strOnlineID[0]);
-    m_net->getWebJfself().refreshOnline();
+    if(m_strOnlineID[0])
+        m_net->sendOfflineDevice(m_strOnlineID[0]);
+    m_net->requireOnlineDevices();
 }
 
 void WndMain::on_btnOffline2_clicked()
 {
-    if(m_strOnlineID[1].size())
-        m_net->getWebJfself().toOffline(m_strOnlineID[1]);
-    m_net->getWebJfself().refreshOnline();
+    if(m_strOnlineID[1])
+        m_net->sendOfflineDevice(m_strOnlineID[1]);
+    m_net->requireOnlineDevices();
+}
+
+// recive the info of account service
+void WndMain::on_serviceInfo(const QString &name, int totalFlow)
+{
+    //TODO: 1% why????
+    if(totalFlow > 0){
+        m_lblFlowUsed->setText(QString("已用：%1 %").arg(int(100.0 * m_net->getUsedFlow() / totalFlow / 1024)));
+    }
+    else {
+         m_lblFlowUsed->setText(QString("已用：-- %"));
+    }
+    if(name.size()){
+        m_lblService->setText(name);
+    }
+    else{
+        m_lblService->setText(QString("未检测到套餐"));
+    }
+}
+// recive the version of remote service
+void WndMain::on_remoteVersion(const QString &version, int inner_ver)
+{
+    Q_UNUSED(inner_ver);
+    if(m_net->getNetOnline()){
+        m_updater.checkUpdate();
+        if(m_updater.needUpdate()){
+            m_bNeedUpdate = true;
+            QString ver("%1 <font color=#dd3333>最新版本：%2 点我更新！</font>");
+            m_lblVersion->setText(ver.arg(version, m_updater.getNewVersion()));
+        }
+    }
+}
+//
+void WndMain::on_allServices(const QVariant &services)
+{
+    BjutNet::TypeAllServices serv = services.value<BjutNet::TypeAllServices>();
+    m_cmbListBook->clear();
+    for(const auto &l : serv)
+    {
+        m_cmbListBook->addItem(std::get<1>(l), QVariant(std::get<0>(l)));
+    }
+}
+//
+void WndMain::on_bookedService(const QString &name)
+{
+    m_lblCurrentBook->setText("已预约:["+name+"]");
 }
 
 void WndMain::downloadProgress(qint64 bytesReceived, qint64 bytesTotal)
@@ -487,4 +484,4 @@ void WndMain::downloadProgress(qint64 bytesReceived, qint64 bytesTotal)
         m_dlgProgress->setValue(100.0 * bytesReceived / bytesTotal);
     }
 }
-}
+}}
