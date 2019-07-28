@@ -51,6 +51,14 @@ void BjutNet::run()
         }
         this->msleep(1000);
     }
+    strMsg = "Check message version.";
+    if(m_bridge->sendENQ()){
+        emit updateMessage("[ OK ] " + strMsg);
+    }
+    else{
+        emit updateMessage("[Fail] " + strMsg);
+        return;
+    }
     QTime tmRefresh;
     m_mtxAction.lock();
     m_lstAction.emplace_front(GET_NET_INFO, nullptr);
@@ -107,7 +115,15 @@ void BjutNet::run()
                 delete param_i;
                 param_i = nullptr;
                 break;
-            case  OFFLINE_DEVICE:
+            case REFRESH_ONLINE_DEVICE:
+                strMsg = "Refresh online devices.";
+                SEND_ACT_AND_UPDATE_MESSAGE(m_bridge->sendActRefreshOnline());
+                break;
+            case REFRESH_NET_INFO:
+                strMsg = "Refresh net info.";
+                SEND_ACT_AND_UPDATE_MESSAGE(m_bridge->sendActRefreshNet());
+                break;
+            case OFFLINE_DEVICE:
                 strMsg = "offline device.";
                 param_i = static_cast<ParamInt*>(act.second);
                 SEND_ACT_AND_UPDATE_MESSAGE(m_bridge->sendSetOfflineDevice(std::get<0>(*param_i)));
@@ -123,7 +139,6 @@ void BjutNet::run()
                 break;
             case GET_NET_INFO:
                 strMsg = "Get net info.";
-                m_bridge->sendActRefreshNet();
                 m_bridge->sendGetUsedFlow(m_nNetFlow);
                 m_bridge->sendGetUsedTime(m_nNetTime);
                 m_bridge->sendGetLeftFee(m_nNetFee);

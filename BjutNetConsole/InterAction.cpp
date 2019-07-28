@@ -12,33 +12,35 @@ namespace bna{
 void InterAction::ShowMenu()
 {
     cout << endl;
-    cout << "  ================================================" << endl;
-    cout << "                       Menu                       " << endl;
-    cout << "  ================================================" << endl;
-    cout << "  command |        description                    " << endl;
-    cout << "  ------------------------------------------------" << endl;
-    cout << "    q     |  Quit this session.                   " << endl;
-    cout << "    s     |  Show the status of login.            " << endl;
-    cout << "    r     |  Refresh all status.                  " << endl;
-    cout << "    v     |  Version information.                 " << endl;
-    cout << "    li    |  Login BJUT net now.                  " << endl;
-    cout << "    lo    |  Logout BJUT net now.                 " << endl;
-    cout << "    ol    |  List online devices.                 " << endl;
-    cout << "    onl   |  List online devices.                 " << endl;
-    cout << "    ofl   |  Offline devices.                     " << endl;
-    cout << "    lda   |  Reload account profile.              " << endl;
-    cout << "    sna   |  Set new account profile.             " << endl;
-    cout << "    csv   |  Show the current service             " << endl;
-    cout << "    bsv   |  Book the service of next month.      " << endl;
-    cout << "    ats   |  Auto start service when power on.    " << endl;
-    cout << "    addr  |  Show my ip address.                  " << endl;
-    cout << "  ================================================" << endl;
+    cout << "  =========================================================" << endl;
+    cout << "                       Menu                                " << endl;
+    cout << "  =========================================================" << endl;
+    cout << "  command |        description                             " << endl;
+    cout << "  ---------------------------------------------------------" << endl;
+    cout << "    m     |  Print menu.(\"atm\" for automatically print)  " << endl;
+    cout << "    q     |  Quit this session.                            " << endl;
+    cout << "    s     |  Show the status of login.                     " << endl;
+    cout << "    r     |  Refresh all status.                           " << endl;
+    cout << "    v     |  Version information.                          " << endl;
+    cout << "    li    |  Login BJUT net now.                           " << endl;
+    cout << "    lo    |  Logout BJUT net now.                          " << endl;
+    cout << "    ol    |  List online devices.                          " << endl;
+    cout << "    onl   |  List online devices.                          " << endl;
+    cout << "    ofl   |  Offline devices.                              " << endl;
+    cout << "    lda   |  Reload account profile.                       " << endl;
+    cout << "    sna   |  Set new account profile.                      " << endl;
+    cout << "    csv   |  Show the current service                      " << endl;
+    cout << "    bsv   |  Book the service of next month.               " << endl;
+    cout << "    atm   |  The switch of print menu after a operation.   " << endl;
+    cout << "    ats   |  The switch of start service when power on.    " << endl;
+    cout << "    addr  |  Show my ip address.                           " << endl;
+    cout << "  =========================================================" << endl;
 #if defined(_DEBUG) || defined(BUILD_DEVELOP)
-    cout << "    enter_debug     Enter debug mode.             " << endl;
-    cout << "    leave_debug     Leave debug mode.             " << endl;
-    cout << "    set_host        Set host address.             " << endl;
-    cout << "    my_host         Show host address.            " << endl;
-    cout << "  ================================================" << endl;
+    cout << "    enter_debug     Enter debug mode.                      " << endl;
+    cout << "    leave_debug     Leave debug mode.                      " << endl;
+    cout << "    set_host        Set host address.                      " << endl;
+    cout << "    my_host         Show host address.                     " << endl;
+    cout << "  =========================================================" << endl;
 #endif
     cout << "Input your command: ";
     cout.flush();
@@ -48,7 +50,7 @@ bool InterAction::Process()
 {
     try{
         string input;
-        ShowMenu();
+        if(m_bShowMenu) ShowMenu();
         cin >> input;
         auto n_cmd_s = input.find_first_not_of(" \t\r\n");
         auto n_cmd_e = input.find_last_not_of(" \t\r\n");
@@ -59,6 +61,9 @@ bool InterAction::Process()
         cout << endl;
         if(cmd.size() == 1){
             switch (cmd[0]) {
+            case 'm':
+                if(!m_bShowMenu) ShowMenu();
+                break;
             case 'q':
                 return false;
             case 's':
@@ -108,6 +113,9 @@ bool InterAction::Process()
             else if(cmd == "bsv") {
                 BookService();
             }
+            else if(cmd == "atm") {
+                m_bShowMenu = true;
+            }
             else if(cmd == "ats") {
                 SetAutoStart();
             }
@@ -154,12 +162,18 @@ bool InterAction::Process()
 bool InterAction::Connected()
 {
     if(m_service.sendSYN()){
-        return true;
+        if(m_bVerifyMsgVer || m_service.sendENQ()){
+            m_bVerifyMsgVer = true;
+            return true;
+        }
+        else{
+            cout << "The version of <BjutNetService> is lower than me. Please upgrade the remote <BjutNetService>." << endl;
+        }
     }
     else{
         cout << "Can not connect to <BjutNetService>." << endl;
-        return false;
     }
+    return false;
 }
 
 bool InterAction::ShowStatus()
@@ -451,10 +465,31 @@ bool InterAction::BookService()
     return false;
 }
 
+bool InterAction::SetAutoMenu()
+{
+    cout << " Do you want to print menu automatically after a operation?(y/n) ";
+    string input;
+    cin >> input;
+    if(input == "y" || input == "yes"){
+        m_bShowMenu = true;
+        cout << "Will print menu automatically after a operation." << endl;
+    }
+    else if(input == "n" || input == "no"){
+        m_bShowMenu = false;
+        cout << "Unrecognized input." << endl;
+        cout << "Will not print menu after a operation." << endl;
+    }
+    else{
+        cout << "Unrecognized input." << endl;
+        return false;
+    }
+    return true;
+}
+
 bool InterAction::SetAutoStart()
 {
     if(Connected()){
-        cout << " Do you want to start <BjutNetService> automatically (y/n)? ";
+        cout << " Do you want to start <BjutNetService> automatically? (y/n) ";
         string input;
         cin >> input;
         bool succ = false;
@@ -533,6 +568,7 @@ bool InterAction::ShowMyAddress()
 bool InterAction::SetHost(const string &host)
 {
     if(m_service.setHost(host)){
+        m_bVerifyMsgVer = false;
         cout << " Host address is " << host << " now." << endl;
         return true;
     }
@@ -542,15 +578,21 @@ bool InterAction::SetHost(const string &host)
     return false;
 }
 
-void InterAction::ShowVersion()
+bool InterAction::ShowVersion()
 {
     string version;
     int inner_ver;
-    if(Connected() && m_service.sendGetVersion(version, inner_ver)){
-        cout << BNS_NAME << "  " << BNA_VERSION << " (" << BNA_INNER_VERSION << ")" << endl;
+    if(Connected()){
+        if(m_service.sendGetVersion(version, inner_ver)){
+            cout << BNS_NAME << "  " << BNA_VERSION << " (" << BNA_INNER_VERSION << ")" << endl;
+        }
+        else{
+            cout << BNS_NAME << "  Fail to query version." << endl;
+        }
     }
-    cout << BNC_NAME << "  " << BNA_VERSION << " (" << BNA_INNER_VERSION << ")" << endl;
+    cout << BNC_NAME << "  " << BNA_VERSION << " (" << BNA_INNER_VERSION << ")" << endl << endl;
     cout << "The assistant of BJUT net. It has the functions of automatic login,"
             " online maintemance, service management and so on." << endl;
+    return true;
 }
 }

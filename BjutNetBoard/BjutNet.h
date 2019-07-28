@@ -27,14 +27,16 @@ public:
         LOGIN,
         LOGOUT,
         BOOK_NEW_SERVICE,
-        OFFLINE_DEVICE,
-        SET_AUTO_START,
-        GET_NET_INFO,
+        REFRESH_ONLINE_DEVICE,
         GET_ONLINE_DEVICE,
+        OFFLINE_DEVICE,
+        REFRESH_NET_INFO,
+        GET_NET_INFO,
         GET_SERVICE_INFO,
         GET_REMOTE_VERSION,
         GET_BOOKED_SERVICE,
         GET_ALL_SERVICE,
+        SET_AUTO_START,
         GET_AUTO_START
     };
 
@@ -57,6 +59,10 @@ public:
     void sendLogin();
 
     void sendLogout();
+
+    void sendRefreshOnlineDevices();
+
+    void sendRefreshNetInfo();
 
     void sendNewAccount(QString name, QString passwd, int type);
 
@@ -194,6 +200,16 @@ inline void BjutNet::sendLogin()
 inline void BjutNet::sendLogout()
 {
     queueAction(LOGOUT);
+}
+
+inline void BjutNet::sendRefreshOnlineDevices()
+{
+    queueAction(REFRESH_ONLINE_DEVICE);
+}
+
+inline void BjutNet::sendRefreshNetInfo()
+{
+    queueAction(REFRESH_NET_INFO);
 }
 
 inline void BjutNet::sendNewAccount(QString name, QString passwd, int type)

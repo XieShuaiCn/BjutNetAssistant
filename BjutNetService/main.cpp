@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     QtSingleApplication app("BjutNetAssistant_UUID_APPV4", argc, argv);
     if(app.isRunning())
     {
-        app.sendMessage("ShowMainWnd");
+        qDebug() << "Only can start one instance." << endl;
         return 0;
     }
     // change pwd

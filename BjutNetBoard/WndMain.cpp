@@ -289,10 +289,12 @@ void WndMain::on_btnRefresh_clicked()
 {
     m_btnRefresh->setEnabled(false);
     on_txtMsg_message("[INFO] Refresh all");
+    m_net->sendRefreshNetInfo();
+    m_net->sendRefreshOnlineDevices();
+    m_net->requireRemoteVersion();
     m_net->requireServiveInfo();
     m_net->requireNetInfo();
     m_net->requireOnlineDevices();
-    m_net->requireRemoteVersion();
     m_btnRefresh->setEnabled(true);
 }
 

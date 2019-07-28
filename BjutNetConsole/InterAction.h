@@ -14,7 +14,7 @@ public:
 
     bool Connected();
 
-    void ShowVersion();
+    bool ShowVersion();
 
     bool ShowStatus();
 
@@ -36,6 +36,8 @@ public:
 
     bool BookService();
 
+    bool SetAutoMenu();
+
     bool SetAutoStart();
 
     bool EnterDebugMode();
@@ -49,6 +51,8 @@ public:
     bool SetHost(const std::string &host);
 
 private:
+    bool m_bShowMenu = true;
+    bool m_bVerifyMsgVer = false;
     ServiceBridge m_service;
 };
 }
