@@ -7,6 +7,7 @@
 #include "Version.h"
 #include "MessageValue.h"
 #include "Utility.h"
+#include "MessageCoder.h"
 
 using std::string;
 using std::stringstream;
@@ -16,13 +17,28 @@ namespace bna{
 
 inline bool __ServiceBridge_SendAndReceive(UdpSocket *socket, const std::string &sdata, std::string &rdata)
 {
-    if(!socket->send(sdata)) {
+    std::string buffer;
+    size_t size = MessageCoder::Encrypt(sdata.data(), sdata.length(), nullptr, 0);
+    if(size <= 0){ return false; }
+    buffer.resize(size);
+    size = MessageCoder::Encrypt(sdata.data(), sdata.length(), const_cast<char*>(buffer.data()), buffer.length());
+    if(size != buffer.length()) { return false; }
+    if(!socket->send(buffer)) {
         return false;
     }
-    if(!socket->receive(rdata)) {
+    buffer.clear();
+    if(!socket->receive(buffer)) {
         return false;
     }
-    return true;
+    if(buffer.size() > 2){
+        size = MessageCoder::Decrypt(buffer.data(), buffer.length(), nullptr, 0);
+        if(size <= 0){ return false; }
+        rdata.resize(size);
+        size = MessageCoder::Decrypt(buffer.data(), buffer.length(), const_cast<char*>(rdata.data()), rdata.length());
+        if(size != rdata.length()) { return false; }
+        return true;
+    }
+    return false;
 }
 
 ServiceBridge::ServiceBridge()
@@ -83,7 +99,7 @@ bool ServiceBridge::sendENQ()
         return false;
     }
     m_nMsgVersion = static_cast<int>(static_cast<unsigned char>(data[0]));
-    return m_nMsgVersion <= MessageValue::Version;
+    return m_nMsgVersion == MessageValue::Version;
 }
 
 bool ServiceBridge::sendSyncHello()

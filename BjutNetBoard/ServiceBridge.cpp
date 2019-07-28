@@ -6,6 +6,7 @@
 #include <QJsonObject>
 #include <QException>
 #include "Utility.h"
+#include "../BjutNetService/MessageCoder.h"
 
 namespace bna {
 namespace gui {
@@ -16,11 +17,19 @@ bool ServiceBridge::doSendAndReceive(const QString &sdata, QString &rdata)
     while(m_socket.bytesAvailable()){
         m_socket.readAll();
     }
-    if(!m_socket.writeDatagram(sdata.toUtf8(), m_host, m_port)) {
+    QByteArray arr;
+    QByteArray sbuf = sdata.toUtf8();
+    QByteArray rbuf;
+    int sz = MessageCoder::Encrypt(sbuf.data(), sbuf.length(), nullptr, 0);
+    arr.resize(sz);
+    sz = MessageCoder::Encrypt(sbuf.data(), sbuf.length(), arr.data(), arr.length());
+    if(sz != arr.length()){
+        return false;
+    }
+    if(!m_socket.writeDatagram(arr, m_host, m_port)) {
         return false;
     }
     if(m_socket.waitForReadyRead(10000)){
-        QByteArray arr;
         QHostAddress address;
         quint16 port;
         arr.resize(m_socket.bytesAvailable());
@@ -28,8 +37,16 @@ bool ServiceBridge::doSendAndReceive(const QString &sdata, QString &rdata)
             return false;
         }
         if(port == m_port && m_host.isEqual(address, QHostAddress::TolerantConversion)){
-            rdata.append(arr);
-            return true;
+            if(arr.size() > 2){
+                sz = MessageCoder::Decrypt(arr.data(), arr.length(), nullptr, 0);
+                rbuf.resize(sz);
+                sz = MessageCoder::Decrypt(arr.data(), arr.length(), rbuf.data(), rbuf.length());
+                rdata = QString::fromUtf8(rbuf);
+                return sz == rbuf.length();
+            }
+            else{
+                rdata.append(arr);
+            }
         }
     }
     return false;
@@ -94,7 +111,7 @@ bool ServiceBridge::sendENQ()
             return false;
         }
         m_nMsgVersion = static_cast<int>(static_cast<unsigned char>(arr[0]));
-        return m_nMsgVersion <= MessageValue::Version;
+        return m_nMsgVersion == MessageValue::Version;
     }
     return false;
 }
@@ -389,7 +406,7 @@ bool ServiceBridge::sendGetAutoStart(bool &autorun)
 bool ServiceBridge::sendSetAccount(const QString name, const QString passwd, int type)
 {
     int seed = qrand();
-    QString sdata = QString("{\"type\":%1,\"act\":%2,\"data\":{\"n\":\"%4\",\"p\":\"%5\",\"t\":%6}\"seed\":%3}")
+    QString sdata = QString("{\"type\":%1,\"act\":%2,\"data\":{\"n\":\"%4\",\"p\":\"%5\",\"t\":%6},\"seed\":%3}")
             .arg(MessageValue::SET).arg(MessageValue::SET_ACCOUNT).arg(seed)
             .arg(name).arg(passwd).arg(type);
     QString buf;
@@ -402,7 +419,7 @@ bool ServiceBridge::sendSetAccount(const QString name, const QString passwd, int
 bool ServiceBridge::sendSetBookedService(int id)
 {
     int seed = qrand();
-    QString sdata = QString("{\"type\":%1,\"act\":%2,\"data\":{\"id\":\"%4\"}\"seed\":%3}")
+    QString sdata = QString("{\"type\":%1,\"act\":%2,\"data\":{\"id\":\"%4\"},\"seed\":%3}")
             .arg(MessageValue::SET).arg(MessageValue::SET_BOOK_SERVICE).arg(seed)
             .arg(id);
     QString buf;
@@ -415,7 +432,7 @@ bool ServiceBridge::sendSetBookedService(int id)
 bool ServiceBridge::sendSetOfflineDevice(int id)
 {
     int seed = qrand();
-    QString sdata = QString("{\"type\":%1,\"act\":%2,\"data\":{\"id\":\"%4\"}\"seed\":%3}")
+    QString sdata = QString("{\"type\":%1,\"act\":%2,\"data\":{\"id\":%4},\"seed\":%3}")
             .arg(MessageValue::SET).arg(MessageValue::SET_OFFLINE_DEVICE).arg(seed)
             .arg(id);
     QString buf;
@@ -428,7 +445,7 @@ bool ServiceBridge::sendSetOfflineDevice(int id)
 bool ServiceBridge::sendSetAutoStart(bool autorun)
 {
     int seed = qrand();
-    QString sdata = QString("{\"type\":%1,\"act\":%2,\"data\":{\"v\":\"%4\"}\"seed\":%3}")
+    QString sdata = QString("{\"type\":%1,\"act\":%2,\"data\":{\"v\":\"%4\"},\"seed\":%3}")
             .arg(MessageValue::SET).arg(MessageValue::SET_AUTO_START).arg(seed)
             .arg(static_cast<int>(autorun));
     QString buf;

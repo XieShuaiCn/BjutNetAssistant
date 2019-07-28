@@ -31,6 +31,7 @@ PRECOMPILED_HEADER  = common.h
 
 SOURCES += \
     ../BjutNetService/MessageValue.cpp \
+    ../BjutNetService/MessageCoder.cpp \
     ../BjutNetService/ParamParse.cpp \
     common.cpp \
     main.cpp \
@@ -49,6 +50,7 @@ SOURCES += \
 
 HEADERS += \
     ../BjutNetService/MessageValue.h \
+    ../BjutNetService/MessageCoder.h \
     ../BjutNetService/ParamParse.h \
     ../BjutNetService/Version.h \
     common.h \

@@ -7,6 +7,7 @@
 #include "common.h"
 #include "BjutNet.h"
 #include "MessageValue.h"
+#include "MessageCoder.h"
 #include "Setting.h"
 
 namespace bna{
@@ -81,14 +82,14 @@ void ServiceInterface::ReadSocketData()
             if(arrData == g_acbACK) {
                 // recive 'ACK'
 #ifdef BUILD_DEVELOP
-                qDebug() << "==> ACK" << endl;
+                qDebug() << "["<< address.toString() << ":" << port << "]==> ACK" << endl;
 #endif
             }
             else if(arrData == g_acbSYN) {
                 m_socket->writeDatagram(g_acbACK, address, port);
 #ifdef BUILD_DEVELOP
-                qDebug() << "==> SYN" << endl;
-                qDebug() << "<== ACK" << endl;
+                qDebug() << "["<< address.toString() << ":" << port << "]==> SYN" << endl;
+                qDebug() << "["<< address.toString() << ":" << port << "]<== ACK" << endl;
 #endif
             }
             else if(arrData == g_acbENQ){// recive 'ENQ', reply 'Version'
@@ -97,8 +98,8 @@ void ServiceInterface::ReadSocketData()
                 array.append(chVersion);
                 m_socket->writeDatagram(array, address, port);
 #ifdef BUILD_DEVELOP
-                qDebug() << "==> ENQ" << endl;
-                qDebug() << "<== " << chVersion << endl;
+                qDebug() << "["<< address.toString() << ":" << port << "]==> ENQ" << endl;
+                qDebug() << "["<< address.toString() << ":" << port << "]<== " << chVersion << endl;
 #endif
             }
             else{
@@ -108,15 +109,43 @@ void ServiceInterface::ReadSocketData()
         else if(arrData.size() > 1){
             // reply 'ACK'
             //m_socket->writeDatagram(cbACK, address, port);
+            QByteArray words;
+            if(!Decrypt(arrData, words)){
+                m_socket->writeDatagram(g_acbNAK, address, port);
+                continue;
+            }
 #ifdef BUILD_DEVELOP
-                qDebug() << "==> " << arrData << endl;
+            qDebug() << "["<< address.toString() << ":" << port << "]==>" << words << endl;
 #endif
-            ProcessCommand(arrData, address, port);
+            QByteArray rdata = ProcessCommand(words, address, port);
+            words.clear();
+            // return json
+            if(rdata.size() > 2){
+                if(!Encrypt(rdata, words)){
+                    m_socket->writeDatagram(g_acbNAK, address, port);
+                    continue;
+                }
+                m_socket->writeDatagram(words.data(), words.size(), address, port);
+            }
+            // return command
+            else{
+                m_socket->writeDatagram(rdata.data(), rdata.size(), address, port);
+            }
+#ifdef BUILD_DEVELOP
+            if(rdata.size()==1){
+                // escape command
+                if(rdata == g_acbNAK){
+                    rdata.clear();;
+                    rdata.append("NAK");
+                }
+            }
+            qDebug() << "["<< address.toString() << ":" << port << "]<==" << rdata << endl;
+#endif
         }
     }
 }
 
-void ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAddress &address, quint16 port)
+QByteArray ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAddress &address, quint16 port)
 {
     using MsgCvtToType = MessageValue::ConvertToType;
     using MsgCvtToSync = MessageValue::ConvertToActSync;
@@ -125,6 +154,13 @@ void ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAddress 
     using MsgCvtToSet = MessageValue::ConvertToActSet;
     auto &lgn = m_bjutnet->getWebLgn();
     auto &jfself = m_bjutnet->getWebJfself();
+
+    //authority
+    enum {
+        AUTH_NONE = 0, AUTH_REMOTE = 1, AUTH_DEBUG = 2, AUTH_ALL = 2
+    } hostAuth = AUTH_NONE;
+    bool bNeedVerify = !address.isLoopback();
+    bool bVerified = false;
 
     // parse json
     QJsonParseError json_error;
@@ -138,6 +174,22 @@ void ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAddress 
             QByteArray buffer;
             QString strTemp;
             auto seed = jo["seed"].toInt();
+
+            if(bNeedVerify){
+                if(!jo.contains("name") || !jo.contains("passwd")){
+                    return __ServiceInterface_ErrMsgToByteArray("Require verify.", seed);
+                }
+                QString name = jo["name"].toString();
+                QString passwd = jo["passwd"].toString();
+                if(name != m_bjutnet->getAccount() || passwd != m_bjutnet->getPassword()){
+                    return __ServiceInterface_ErrMsgToByteArray("Verify failed.", seed);
+                }
+                bVerified = true;
+                hostAuth = AUTH_REMOTE;
+            }else{
+                hostAuth = AUTH_ALL;
+            }
+
             auto type = MsgCvtToType::To(jo["type"].toInt());
             // SYNC
             if(type == MessageValue::SYNC) {
@@ -396,23 +448,14 @@ void ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAddress 
             else{
                 buffer = __ServiceInterface_ErrMsgToByteArray("Bad type", seed);
             }
-#ifdef BUILD_DEVELOP
-            qDebug() << "<==" << buffer << endl;
-#endif
-            m_socket->writeDatagram(buffer.data(), buffer.size(), address, port);
+            return buffer;
         }
         else {
-    #ifdef BUILD_DEVELOP
-            qDebug() << "Incomplete json content: " << cmd << endl;
-    #endif
-            m_socket->writeDatagram(g_acbNAK, address, port);
+            return g_acbNAK;
         }
     }
     else {
-#ifdef BUILD_DEVELOP
-        qDebug() << "Error json format: " << cmd << endl;
-#endif
-        m_socket->writeDatagram(g_acbNAK, address, port);
+        return g_acbNAK;
     }
 }
 
@@ -426,6 +469,24 @@ void ServiceInterface::PushMessage(const QDateTime& time, const QString& info)
                 QString("{\"t\":%1,\"m\":\"%2\"}").arg(time.toTime_t()).arg(info),
                 seed);
     m_socket->writeDatagram(buffer.data(), buffer.size(), m_remoteHost, m_remotePort);
+}
+
+bool ServiceInterface::Encrypt(QByteArray &src, QByteArray &dst)
+{
+    int dsize = MessageCoder::Encrypt(src.data(), src.length(), nullptr, 0);
+    if(dsize <= 0) return false;
+    dst.resize(dsize);
+    dsize = MessageCoder::Encrypt(src.data(), src.length(), dst.data(), dst.length());
+    return dst.length() == dsize;
+}
+
+bool ServiceInterface::Decrypt(QByteArray &src, QByteArray &dst)
+{
+    int dsize = MessageCoder::Decrypt(src.data(), src.length(), nullptr, 0);
+    if(dsize <= 0) return false;
+    dst.resize(dsize);
+    dsize = MessageCoder::Decrypt(src.data(), src.length(), dst.data(), dst.length());
+    return dst.length() == dsize;
 }
 
 }

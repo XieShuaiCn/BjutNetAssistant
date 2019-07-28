@@ -5,7 +5,7 @@ CONFIG += c++11 console
 CONFIG -= app_bundle
 
 # BUild binary file for developer
-# DEFINES += BUILD_DEVELOP
+DEFINES += BUILD_DEVELOP
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings
@@ -29,7 +29,8 @@ SOURCES += \
     HttpClient.cpp \
     WebJfself.cpp \
     WebLgn.cpp \
-    Setting.cpp
+    Setting.cpp \
+    MessageCoder.cpp
 
 HEADERS += \
     ServiceInterface.h \
@@ -42,6 +43,7 @@ HEADERS += \
     HttpClient.h \
     WebJfself.h \
     WebLgn.h \
-    Setting.h
+    Setting.h \
+    MessageCoder.h
 
 include(qtsingleapplication/src/qtsingleapplication.pri)

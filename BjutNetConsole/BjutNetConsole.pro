@@ -32,19 +32,21 @@ LIBS += -lpthread
 }
 
 SOURCES += \
-        main.cpp \
-    ServiceBridge.cpp \
-    UdpSocket.cpp \
     ../BjutNetService/ParamParse.cpp \
     ../BjutNetService/MessageValue.cpp \
+    ../BjutNetService/MessageCoder.cpp \
+    main.cpp \
+    ServiceBridge.cpp \
+    UdpSocket.cpp \
     InterAction.cpp \
     Utility.cpp
 
 HEADERS += \
-    ServiceBridge.h \
-    UdpSocket.h \
     ../BjutNetService/ParamParse.h \
     ../BjutNetService/Version.h \
     ../BjutNetService/MessageValue.h \
+    ../BjutNetService/MessageCoder.h \
+    ServiceBridge.h \
+    UdpSocket.h \
     InterAction.h \
     Utility.h
