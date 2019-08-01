@@ -19,6 +19,9 @@ public:
     bool setHost(const std::string &host);
     const std::string getHost();
     void getMyAddress(std::vector<std::string> &ip);
+    void setAuth(bool needed = true);
+    void setAuth(bool needed, bool use_token, const std::string &token=std::string());
+    void setAuth(bool needed, const std::string &name, const std::string &passwd);
 
     bool sendSYN();
     bool sendENQ();
@@ -53,6 +56,9 @@ public:
     bool sendSetOfflineDevice(int id);
     bool sendSetAutoStart(bool autorun);
 
+    bool sendRegistDevelop(std::string &token, size_t &time);
+    bool sendUnregistDevelop();
+
     bool parseJson(const std::string &json, int seed, boost::property_tree::ptree &tree);
     bool parseJsonAndVarify(const std::string &json, int seed);
 
@@ -60,9 +66,15 @@ public:
 
 private:
     bool sendAct_common(MessageValue::ActionAct type);
+    bool SendAndReceive(const std::string &sdata, std::string &rdata);
 
     UdpSocket *m_socket;
     int m_nMsgVersion;
+    bool m_bNeedVarify = false;
+    bool m_bUseToken = false;
+    std::string m_strToken;
+    std::string m_strName;
+    std::string m_strPasswd;
     std::string m_strLastError;
 };
 

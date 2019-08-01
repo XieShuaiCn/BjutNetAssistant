@@ -31,7 +31,10 @@ int main(int argc, char* argv[])
     }
     InterAction act;
     if(!parser.getHost().empty()){
-        act.SetHost(parser.getHost());
+        if(!act.SetHost(parser.getHost())){
+            cout << " Faild to set remote host. Exit now!" << endl;
+            return 0;
+        }
     }
     if(parser.getSize() == 0){
         // interactive

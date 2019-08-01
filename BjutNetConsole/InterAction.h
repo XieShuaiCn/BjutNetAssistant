@@ -14,6 +14,8 @@ public:
 
     bool Connected();
 
+    bool AutoShowMenu();
+
     bool ShowVersion();
 
     bool ShowStatus();

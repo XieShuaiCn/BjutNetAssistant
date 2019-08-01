@@ -20,13 +20,16 @@ public:
         ACT=2,
         GET=3,
         SET=4,
+        REGIST=5,
         ACK=9
     };
 
     enum ActionSync{
-        HELLO=0,
+        HELLO=0
+    };
+    enum ActionRegist{
         REGIST_DEVELOP,
-        CONNECT_DEVELOP,
+        UNREGIST_DEVELOP,
         REGIST_MESSAGE,
         MESSAGE_CHANGE,
         REGIST_STATUS,
@@ -81,6 +84,7 @@ public:
     using ConvertToActAct = Convert<ActionAct>;
     using ConvertToActGet = Convert<ActionGet>;
     using ConvertToActSet = Convert<ActionSet>;
+    using ConvertToActRegist = Convert<ActionRegist>;
 };
 
 extern template struct MessageValue::Convert<MessageValue::Type>;
@@ -88,6 +92,7 @@ extern template struct MessageValue::Convert<MessageValue::ActionSync>;
 extern template struct MessageValue::Convert<MessageValue::ActionAct>;
 extern template struct MessageValue::Convert<MessageValue::ActionGet>;
 extern template struct MessageValue::Convert<MessageValue::ActionSet>;
+extern template struct MessageValue::Convert<MessageValue::ActionRegist>;
 
 }
 

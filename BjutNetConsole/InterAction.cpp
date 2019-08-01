@@ -17,10 +17,11 @@ void InterAction::ShowMenu()
     cout << "  =========================================================" << endl;
     cout << "  command |        description                             " << endl;
     cout << "  ---------------------------------------------------------" << endl;
-    cout << "    m     |  Print menu.(\"atm\" for automatically print)  " << endl;
+    cout << "    m     |  Print menu.(\"atm\" for auto print)           " << endl;
     cout << "    q     |  Quit this session.                            " << endl;
-    cout << "    s     |  Show the status of login.                     " << endl;
+    cout << "    e     |  Exit local demon service.                     " << endl;
     cout << "    r     |  Refresh all status.                           " << endl;
+    cout << "    s     |  Show the status of login.                     " << endl;
     cout << "    v     |  Version information.                          " << endl;
     cout << "    li    |  Login BJUT net now.                           " << endl;
     cout << "    lo    |  Logout BJUT net now.                          " << endl;
@@ -42,15 +43,20 @@ void InterAction::ShowMenu()
     cout << "    my_host         Show host address.                     " << endl;
     cout << "  =========================================================" << endl;
 #endif
-    cout << "Input your command: ";
-    cout.flush();
 }
 
 bool InterAction::Process()
 {
     try{
         string input;
-        if(m_bShowMenu) ShowMenu();
+        if(m_bShowMenu){
+            ShowMenu();
+            cout << "Input your command: ";
+        }
+        else{
+            cout << endl << "Input your command('m' for menu): ";
+        }
+        cout.flush();
         cin >> input;
         auto n_cmd_s = input.find_first_not_of(" \t\r\n");
         auto n_cmd_e = input.find_last_not_of(" \t\r\n");
@@ -114,7 +120,7 @@ bool InterAction::Process()
                 BookService();
             }
             else if(cmd == "atm") {
-                m_bShowMenu = true;
+                AutoShowMenu();
             }
             else if(cmd == "ats") {
                 SetAutoStart();
@@ -174,6 +180,25 @@ bool InterAction::Connected()
         cout << "Can not connect to <BjutNetService>." << endl;
     }
     return false;
+}
+
+bool InterAction::AutoShowMenu()
+{
+    cout << " Do you want to print menu automatically? (y/n) ";
+    string input;
+    cin >> input;
+    if(input == "y" || input == "yes"){
+        m_bShowMenu = true;
+        cout << " Will print menu automatically." << endl;
+    }
+    else if(input == "n" || input == "no"){
+        m_bShowMenu = false;
+        cout << " Will not print menu automatically. type 'm' for print menu once." << endl;
+    }
+    else{
+        cout << " Bad input." << endl;
+    }
+    return true;
 }
 
 bool InterAction::ShowStatus()
@@ -516,9 +541,36 @@ bool InterAction::EnterDebugMode()
     if(Connected()){
         if(m_service.sendActEnterDebugMode()){
             cout << " Enter DEBUG mode!!!!!!" << endl;
+        }
+        else{
+            cout << " Fail to enter DEBUG mode." << endl;
+        }
+        string token;
+        size_t nVaildTime;
+        double dVaildTime;
+        string strUnit[4] = {"seconds", "minutes", "hours", "days"};
+        int nUnitIdx = 0;
+        if(m_service.sendRegistDevelop(token, nVaildTime)){
+            cout << " Regist token code: " << token << endl;
+            dVaildTime = static_cast<double>(nVaildTime);
+            if(nUnitIdx == 0 && dVaildTime >= 60.){
+                dVaildTime /= 60.;
+                ++nUnitIdx;
+            }
+            if(nUnitIdx == 1 && dVaildTime >= 60.){
+                dVaildTime /= 60.;
+                ++nUnitIdx;
+            }
+            if(nUnitIdx == 2 && dVaildTime >= 24.){
+                dVaildTime /= 24.;
+                ++nUnitIdx;
+            }
+            cout << " This token is vaild for " << setprecision(3) << dVaildTime << " " << strUnit[nUnitIdx] << "." << endl;
             return true;
         }
-        cout << " Fail to enter DEBUG mode." << endl;
+        else{
+            cout << " Fail to regist token code." << endl;
+        }
     }
     return false;
 }
@@ -528,9 +580,18 @@ bool InterAction::LeaveDebugMode()
     if(Connected()){
         if(m_service.sendActLeaveDebugMode()){
             cout << " Leave DEBUG mode!!!!!!" << endl;
+        }
+        else{
+            cout << " Fail to leave DEBUG mode." << endl;
+        }
+
+        if(m_service.sendUnregistDevelop()){
+            cout << " Unregist token code." << endl;
             return true;
         }
-        cout << " Fail to leave DEBUG mode." << endl;
+        else{
+            cout << " Fail to unregist token code." << endl;
+        }
     }
     return false;
 }
@@ -570,10 +631,63 @@ bool InterAction::SetHost(const string &host)
     if(m_service.setHost(host)){
         m_bVerifyMsgVer = false;
         cout << " Host address is " << host << " now." << endl;
+        if(host == "127.0.0.1"){
+            m_service.setAuth(false);
+            return true;
+        }
+        cout << " Which authentication do you want to use?" << endl;
+        cout << "   1. account and password."<<endl;
+        cout << "   2. token code." << endl;
+        cout << " Your choice: ";
+        string data;
+        int type;
+        cin >> data;
+        try{
+            type = std::stoi(data);
+        }catch(...){
+            cout << "Invalid number." << endl;
+            SetHost("127.0.0.1");
+            return false;
+        }
+        if(type == 1) {
+            std::string name, passwd;
+            cout << " Input your account: ";
+            cin.ignore(INT_MAX, '\n');
+            cin >> name;
+            ConsoleInputPasswd(" Input your password: ", passwd, '*');
+            m_service.setAuth(true, name, passwd);
+        }
+        else if(type == 2){
+            std::string token;
+            cout << " Input your token: ";
+            cin.ignore(INT_MAX, '\n');
+            cin >> token;
+            m_service.setAuth(true, true, token);
+        }
+        else{
+            cout << "Error type.";
+            SetHost("127.0.0.1");
+            return false;
+        }
+        if(Connected()){
+            if(m_service.sendSyncHello()){
+                cout << "Success to sync host." << endl;
+            }
+            else{
+                cout << "Fail to sync host." << endl;
+                cout << m_service.getLastError() << endl;
+                return false;
+            }
+        }
+        else{
+            cout << "Fail to connect to host." << endl;
+            return false;
+        }
         return true;
     }
     else{
         cout << " Invalid host address: " << host << endl;
+        SetHost("127.0.0.1");
     }
     return false;
 }

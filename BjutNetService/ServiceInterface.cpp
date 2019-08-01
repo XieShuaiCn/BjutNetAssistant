@@ -48,7 +48,8 @@ inline QByteArray __ServiceInterface_AckSuccToByteArray(int seed, bool succ = tr
 ServiceInterface::ServiceInterface(BjutNet *bjutNet)
     : m_remoteHost(QHostAddress::Null),
       m_remotePort(0),
-      m_bjutnet(bjutNet)
+      m_bjutnet(bjutNet),
+      m_nTokenVaild(60 * 60 * 1)
 {
     Q_ASSERT(bjutNet!=nullptr);
     m_socket = new QUdpSocket();
@@ -134,7 +135,11 @@ void ServiceInterface::ReadSocketData()
 #ifdef BUILD_DEVELOP
             if(rdata.size()==1){
                 // escape command
-                if(rdata == g_acbNAK){
+                if(rdata == g_acbACK){
+                    rdata.clear();;
+                    rdata.append("ACK");
+                }
+                else if(rdata == g_acbNAK){
                     rdata.clear();;
                     rdata.append("NAK");
                 }
@@ -152,15 +157,33 @@ QByteArray ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAd
     using MsgCvtToAct = MessageValue::ConvertToActAct;
     using MsgCvtToGet = MessageValue::ConvertToActGet;
     using MsgCvtToSet = MessageValue::ConvertToActSet;
+    using MsgCvtToRegist = MessageValue::ConvertToActRegist;
     auto &lgn = m_bjutnet->getWebLgn();
     auto &jfself = m_bjutnet->getWebJfself();
 
     //authority
-    enum {
-        AUTH_NONE = 0, AUTH_REMOTE = 1, AUTH_DEBUG = 2, AUTH_ALL = 2
-    } hostAuth = AUTH_NONE;
+    enum RemoteAuth{
+        AUTH_NONE = 0x0000,
+        AUTH_SYNC = 0x0001,
+        AUTH_ACT = 0x0002,
+        AUTH_GET = 0x0004,
+        AUTH_SET = 0x0008,
+        AUTH_REGIST = 0x0010,
+        AUTH_VAR = 0x0100,
+        AUTH_LOCAL= AUTH_ACT|AUTH_GET|AUTH_SET|AUTH_REGIST,
+        AUTH_REMOTE = AUTH_ACT|AUTH_GET,
+        AUTH_DEBUG = AUTH_ACT|AUTH_GET|AUTH_VAR,
+        AUTH_ALL = AUTH_LOCAL|AUTH_REMOTE|AUTH_DEBUG
+    };
+    RemoteAuth remoteAuth = AUTH_NONE;
     bool bNeedVerify = !address.isLoopback();
     bool bVerified = false;
+    // check token
+    if(m_strTokenCode.size()){
+        if(m_dtTokenCreated.secsTo(QDateTime::currentDateTime()) >= m_nTokenVaild){
+            m_strTokenCode.clear();
+        }
+    }
 
     // parse json
     QJsonParseError json_error;
@@ -176,18 +199,31 @@ QByteArray ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAd
             auto seed = jo["seed"].toInt();
 
             if(bNeedVerify){
-                if(!jo.contains("name") || !jo.contains("passwd")){
-                    return __ServiceInterface_ErrMsgToByteArray("Require verify.", seed);
+                if(m_strTokenCode.size() && jo.contains("token")){
+                    QString token = jo["token"].toString("");
+#ifdef BUILD_DEVELOP
+                    qDebug() << "["<< address.toString() << ":" << port << "]??? Verify: " << token  << endl;
+#endif
+                    bVerified = (m_strTokenCode == token);
+                    remoteAuth = (bVerified ? AUTH_DEBUG : AUTH_NONE);
                 }
-                QString name = jo["name"].toString();
-                QString passwd = jo["passwd"].toString();
-                if(name != m_bjutnet->getAccount() || passwd != m_bjutnet->getPassword()){
+                if(!bVerified){
+                    if(!jo.contains("name") || !jo.contains("passwd")){
+                        return __ServiceInterface_ErrMsgToByteArray("Require verify.", seed);
+                    }
+                    QString name = jo["name"].toString();
+                    QString passwd = jo["passwd"].toString();
+#ifdef BUILD_DEVELOP
+                    qDebug() << "["<< address.toString() << ":" << port << "]??? Verify: " << name << " % " << passwd  << endl;
+#endif
+                    bVerified = (name == m_bjutnet->getAccount() && passwd == m_bjutnet->getPassword());
+                    remoteAuth = (bVerified ? AUTH_REMOTE : AUTH_NONE);
+                }
+                if(!bVerified){
                     return __ServiceInterface_ErrMsgToByteArray("Verify failed.", seed);
                 }
-                bVerified = true;
-                hostAuth = AUTH_REMOTE;
             }else{
-                hostAuth = AUTH_ALL;
+                remoteAuth = AUTH_LOCAL;
             }
 
             auto type = MsgCvtToType::To(jo["type"].toInt());
@@ -198,26 +234,6 @@ QByteArray ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAd
                 case MessageValue::HELLO:
                     buffer = __ServiceInterface_AckSuccToByteArray(seed);
                     break;
-                case MessageValue::REGIST_MESSAGE:
-                    if(!m_remoteHost.isNull() && m_remotePort!=0){
-                        PushMessage(QDateTime::currentDateTime(),
-                                    QString("Another device required to register message."
-                                            "No more pushed messages from now on."));
-                    }
-                    m_remoteHost = address;
-                    m_remotePort = port;
-                    buffer = __ServiceInterface_AckSuccToByteArray(seed);
-                    break;
-                case MessageValue::REGIST_STATUS:
-                    if(!m_remoteHost.isNull() && m_remotePort!=0){
-                        PushMessage(QDateTime::currentDateTime(),
-                                    QString("Another device required to register status."
-                                            "No more status notification from now on."));
-                    }
-                    m_remoteHost = address;
-                    m_remotePort = port;
-                    buffer = __ServiceInterface_AckSuccToByteArray(seed);
-                    break;
                 default:
                     buffer = __ServiceInterface_ErrMsgToByteArray("Bad act", seed);
                     break;
@@ -225,6 +241,9 @@ QByteArray ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAd
             }
             // action
             else if(type == MessageValue::ACT) {
+                if(!(remoteAuth&AUTH_ACT)){
+                    return __ServiceInterface_ErrMsgToByteArray("No permissions.", seed);
+                }
                 auto act = MsgCvtToAct::To(jo["act"].toInt());
                 switch (act) {
                 case MessageValue::ACT_LOAD_ACCOUNT:
@@ -277,6 +296,9 @@ QByteArray ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAd
             }
             // get value
             else if(type == MessageValue::GET) {
+                if(!(remoteAuth&AUTH_GET)){
+                    return __ServiceInterface_ErrMsgToByteArray("No permissions.", seed);
+                }
                 auto act = MsgCvtToGet::To(jo["act"].toInt());
                 switch (act) {
                 case MessageValue::GET_VERSION:
@@ -377,6 +399,9 @@ QByteArray ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAd
             }
             // set value
             else if(type == MessageValue::SET) {
+                if(!(remoteAuth&AUTH_SET)){
+                    return __ServiceInterface_ErrMsgToByteArray("No permissions.", seed);
+                }
                 auto act = MsgCvtToSet::To(jo["act"].toInt());
                 switch(act){
                 case MessageValue::SET_ACCOUNT:
@@ -438,6 +463,49 @@ QByteArray ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAd
                         }
                     }
                     buffer = __ServiceInterface_AckSuccToByteArray(seed, false);
+                    break;
+                default:
+                    buffer = __ServiceInterface_ErrMsgToByteArray("Bad act", seed);
+                    break;
+                }
+            }
+            else if(type == MessageValue::REGIST) {
+                auto act = MsgCvtToRegist::To(jo["act"].toInt());
+                if(!(remoteAuth&AUTH_REGIST)){
+                    return __ServiceInterface_ErrMsgToByteArray("No permissions.", seed);
+                }
+                switch (act) {
+                case MessageValue::REGIST_DEVELOP:
+                    m_strTokenCode = RandString(6);
+                    m_dtTokenCreated = QDateTime::currentDateTime();
+                    buffer = __ServiceInterface_AckDataToByteArray(
+                                QString("{\"token\":\"%1\", \"time\":%2}")
+                                .arg(m_strTokenCode).arg(m_nTokenVaild),
+                                seed);
+                    break;
+                case MessageValue::UNREGIST_DEVELOP:
+                    m_strTokenCode.clear();
+                    buffer = __ServiceInterface_AckSuccToByteArray(seed);
+                    break;
+                case MessageValue::REGIST_MESSAGE:
+                    if(!m_remoteHost.isNull() && m_remotePort!=0){
+                        PushMessage(QDateTime::currentDateTime(),
+                                    QString("Another device required to register message."
+                                            "No more pushed messages from now on."));
+                    }
+                    m_remoteHost = address;
+                    m_remotePort = port;
+                    buffer = __ServiceInterface_AckSuccToByteArray(seed);
+                    break;
+                case MessageValue::REGIST_STATUS:
+                    if(!m_remoteHost.isNull() && m_remotePort!=0){
+                        PushMessage(QDateTime::currentDateTime(),
+                                    QString("Another device required to register status."
+                                            "No more status notification from now on."));
+                    }
+                    m_remoteHost = address;
+                    m_remotePort = port;
+                    buffer = __ServiceInterface_AckSuccToByteArray(seed);
                     break;
                 default:
                     buffer = __ServiceInterface_ErrMsgToByteArray("Bad act", seed);

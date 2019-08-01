@@ -3,6 +3,7 @@
 
 #include <QCoreApplication>
 #include <QHostAddress>
+#include <QDateTime>
 
 class QUdpSocket;
 
@@ -33,6 +34,9 @@ private:
     QHostAddress m_remoteHost;
     quint16 m_remotePort;
     BjutNet *m_bjutnet;
+    QString m_strTokenCode;
+    QDateTime m_dtTokenCreated;
+    const long long m_nTokenVaild;//seconds
 };
 }
 #endif // BNS_SERVICEINTERFACE_H

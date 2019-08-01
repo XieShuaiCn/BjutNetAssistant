@@ -15,19 +15,31 @@ using boost_err_str = boost::error_info<struct tag_err_str,string>;
 
 namespace bna{
 
-inline bool __ServiceBridge_SendAndReceive(UdpSocket *socket, const std::string &sdata, std::string &rdata)
+bool ServiceBridge::SendAndReceive(const std::string &sdata, std::string &rdata)
 {
     std::string buffer;
-    size_t size = MessageCoder::Encrypt(sdata.data(), sdata.length(), nullptr, 0);
+    std::string sdata_copy(sdata);
+    if(m_bNeedVarify){
+        if(m_bUseToken){
+            sdata_copy.append(",\"token\":\"" + m_strToken + "\"}");
+        }
+        else{
+            sdata_copy.append(",\"name\":\"" + m_strName + "\",\"passwd\":\"" + m_strPasswd + "\"}");
+        }
+    }
+    else{
+        sdata_copy.append(1, '}');
+    }
+    size_t size = MessageCoder::Encrypt(sdata_copy.data(), sdata_copy.length(), nullptr, 0);
     if(size <= 0){ return false; }
     buffer.resize(size);
-    size = MessageCoder::Encrypt(sdata.data(), sdata.length(), const_cast<char*>(buffer.data()), buffer.length());
+    size = MessageCoder::Encrypt(sdata_copy.data(), sdata_copy.length(), const_cast<char*>(buffer.data()), buffer.length());
     if(size != buffer.length()) { return false; }
-    if(!socket->send(buffer)) {
+    if(!m_socket->send(buffer)) {
         return false;
     }
     buffer.clear();
-    if(!socket->receive(buffer)) {
+    if(!m_socket->receive(buffer)) {
         return false;
     }
     if(buffer.size() > 2){
@@ -69,6 +81,26 @@ void ServiceBridge::getMyAddress(std::vector<std::string> &ip)
 
 }
 
+void ServiceBridge::setAuth(bool needed)
+{
+    m_bNeedVarify = needed;
+}
+
+void ServiceBridge::setAuth(bool needed, bool use_token, const std::string &token)
+{
+    m_bNeedVarify = needed;
+    m_bUseToken = use_token;
+    m_strToken = token;
+}
+
+void ServiceBridge::setAuth(bool needed, const std::string &name, const std::string &passwd)
+{
+    m_bNeedVarify = needed;
+    m_bUseToken = false;
+    m_strName = name;
+    m_strPasswd = passwd;
+}
+
 bool ServiceBridge::sendSYN()
 {
     char ch(CHAR_SYN);
@@ -108,9 +140,9 @@ bool ServiceBridge::sendSyncHello()
     int seed = rand();
     ssbuf << "{\"type\":" << MessageValue::SYNC
           << ",\"act\":" << MessageValue::HELLO
-          << ",\"seed\":" << seed << "}";
+          << ",\"seed\":" << seed;
     string buf;
-    if(!__ServiceBridge_SendAndReceive(m_socket, ssbuf.str(), buf)) {
+    if(!SendAndReceive(ssbuf.str(), buf)) {
         return false;
     }
     return parseJsonAndVarify(buf, seed);
@@ -122,9 +154,9 @@ bool ServiceBridge::sendAct_common(MessageValue::ActionAct type)
     int seed = rand();
     ssbuf << "{\"type\":" << static_cast<MessageValue::Type>(MessageValue::ACT)
           << ",\"act\":" << static_cast<MessageValue::Type>(type)
-          << ",\"seed\":" << seed << "}";
+          << ",\"seed\":" << seed;
     string buf;
-    if(!__ServiceBridge_SendAndReceive(m_socket, ssbuf.str(), buf)) {
+    if(!SendAndReceive(ssbuf.str(), buf)) {
         return false;
     }
     return parseJsonAndVarify(buf, seed);
@@ -136,9 +168,9 @@ bool ServiceBridge::sendGetVersion(std::string &var, int &inner_ver)
     int seed = rand();
     ssbuf << "{\"type\":" << MessageValue::GET
           << ",\"act\":" << MessageValue::GET_VERSION
-          << ",\"seed\":" << seed << "}";
+          << ",\"seed\":" << seed;
     string buf;
-    if(!__ServiceBridge_SendAndReceive(m_socket, ssbuf.str(), buf)) {
+    if(!SendAndReceive(ssbuf.str(), buf)) {
         return false;
     }
     boost::property_tree::ptree data;
@@ -157,9 +189,9 @@ bool ServiceBridge::sendGetAccount(std::string &name, std::string &password, int
     int seed = rand();
     ssbuf << "{\"type\":" << MessageValue::GET
           << ",\"act\":" << MessageValue::GET_ACCOUNT
-          << ",\"seed\":" << seed << "}";
+          << ",\"seed\":" << seed;
     string buf;
-    if(!__ServiceBridge_SendAndReceive(m_socket, ssbuf.str(), buf)) {
+    if(!SendAndReceive(ssbuf.str(), buf)) {
         return false;
     }
     boost::property_tree::ptree data;
@@ -178,9 +210,9 @@ bool ServiceBridge::sendGetUsedFlow(int &value)
     int seed = rand();
     ssbuf << "{\"type\":" << MessageValue::GET
           << ",\"act\":" << MessageValue::GET_USED_FLOW
-          << ",\"seed\":" << seed << "}";
+          << ",\"seed\":" << seed;
     string buf;
-    if(!__ServiceBridge_SendAndReceive(m_socket, ssbuf.str(), buf)) {
+    if(!SendAndReceive(ssbuf.str(), buf)) {
         return false;
     }
     boost::property_tree::ptree data;
@@ -197,9 +229,9 @@ bool ServiceBridge::sendGetUsedTime(int &value)
     int seed = rand();
     ssbuf << "{\"type\":" << MessageValue::GET
           << ",\"act\":" << MessageValue::GET_USED_TIME
-          << ",\"seed\":" << seed << "}";
+          << ",\"seed\":" << seed;
     string buf;
-    if(!__ServiceBridge_SendAndReceive(m_socket, ssbuf.str(), buf)) {
+    if(!SendAndReceive(ssbuf.str(), buf)) {
         return false;
     }
     boost::property_tree::ptree data;
@@ -216,9 +248,9 @@ bool ServiceBridge::sendGetLeftFee(int &value)
     int seed = rand();
     ssbuf << "{\"type\":" << MessageValue::GET
           << ",\"act\":" << MessageValue::GET_LEFT_FEE
-          << ",\"seed\":" << seed << "}";
+          << ",\"seed\":" << seed;
     string buf;
-    if(!__ServiceBridge_SendAndReceive(m_socket, ssbuf.str(), buf)) {
+    if(!SendAndReceive(ssbuf.str(), buf)) {
         return false;
     }
     boost::property_tree::ptree data;
@@ -235,9 +267,9 @@ bool ServiceBridge::sendGetAllFlow(int &value)
     int seed = rand();
     ssbuf << "{\"type\":" << MessageValue::GET
           << ",\"act\":" << MessageValue::GET_ALL_FLOW
-          << ",\"seed\":" << seed << "}";
+          << ",\"seed\":" << seed;
     string buf;
-    if(!__ServiceBridge_SendAndReceive(m_socket, ssbuf.str(), buf)) {
+    if(!SendAndReceive(ssbuf.str(), buf)) {
         return false;
     }
     boost::property_tree::ptree data;
@@ -254,9 +286,9 @@ bool ServiceBridge::sendGetOnlineDevices(std::vector<std::array<std::string, 4>>
     int seed = rand();
     ssbuf << "{\"type\":" << MessageValue::GET
           << ",\"act\":" << MessageValue::GET_DEVICE_ONLINE
-          << ",\"seed\":" << seed << "}";
+          << ",\"seed\":" << seed;
     string buf;
-    if(!__ServiceBridge_SendAndReceive(m_socket, ssbuf.str(), buf)) {
+    if(!SendAndReceive(ssbuf.str(), buf)) {
         return false;
     }
     boost::property_tree::ptree data;
@@ -280,9 +312,9 @@ bool ServiceBridge::sendGetFlowService(std::string &name, int &totalFlow)
     int seed = rand();
     ssbuf << "{\"type\":" << MessageValue::GET
           << ",\"act\":" << MessageValue::GET_FLOW_SERVICE
-          << ",\"seed\":" << seed << "}";
+          << ",\"seed\":" << seed;
     string buf;
-    if(!__ServiceBridge_SendAndReceive(m_socket, ssbuf.str(), buf)) {
+    if(!SendAndReceive(ssbuf.str(), buf)) {
         return false;
     }
     boost::property_tree::ptree data;
@@ -303,9 +335,9 @@ bool ServiceBridge::sendGetBookedService(std::string &name)
     int seed = rand();
     ssbuf << "{\"type\":" << MessageValue::GET
           << ",\"act\":" << MessageValue::GET_BOOKED_SERVICE
-          << ",\"seed\":" << seed << "}";
+          << ",\"seed\":" << seed;
     string buf;
-    if(!__ServiceBridge_SendAndReceive(m_socket, ssbuf.str(), buf)) {
+    if(!SendAndReceive(ssbuf.str(), buf)) {
         return false;
     }
     boost::property_tree::ptree data;
@@ -325,9 +357,9 @@ bool ServiceBridge::sendGetAllServices(std::vector<std::tuple<int, std::string, 
     int seed = rand();
     ssbuf << "{\"type\":" << MessageValue::GET
           << ",\"act\":" << MessageValue::GET_ALL_SERVICES
-          << ",\"seed\":" << seed << "}";
+          << ",\"seed\":" << seed;
     string buf;
-    if(!__ServiceBridge_SendAndReceive(m_socket, ssbuf.str(), buf)) {
+    if(!SendAndReceive(ssbuf.str(), buf)) {
         return false;
     }
     boost::property_tree::ptree data;
@@ -359,9 +391,9 @@ bool ServiceBridge::sendSetAccount(const std::string name, const std::string pas
     ssbuf << "{\"type\":" << MessageValue::SET
           << ",\"act\":" << MessageValue::SET_ACCOUNT
           << ",\"data\":{\"n\":\"" << name << "\",\"p\":\""<<passwd << "\",\"t\":" << type
-          << "},\"seed\":" << seed << "}";
+          << "},\"seed\":" << seed;
     string buf;
-    if(!__ServiceBridge_SendAndReceive(m_socket, ssbuf.str(), buf)) {
+    if(!SendAndReceive(ssbuf.str(), buf)) {
         return false;
     }
     return parseJsonAndVarify(buf, seed);
@@ -374,9 +406,9 @@ bool ServiceBridge::sendSetBookedService(int id)
     ssbuf << "{\"type\":" << MessageValue::SET
           << ",\"act\":" << MessageValue::SET_BOOK_SERVICE
           << ",\"data\":{\"id\":" << id
-          << "},\"seed\":" << seed << "}";
+          << "},\"seed\":" << seed;
     string buf;
-    if(!__ServiceBridge_SendAndReceive(m_socket, ssbuf.str(), buf)) {
+    if(!SendAndReceive(ssbuf.str(), buf)) {
         return false;
     }
     return parseJsonAndVarify(buf, seed);
@@ -389,9 +421,9 @@ bool ServiceBridge::sendSetOfflineDevice(int id)
     ssbuf << "{\"type\":" << MessageValue::SET
           << ",\"act\":" << MessageValue::SET_OFFLINE_DEVICE
           << ",\"data\":{\"id\":" << id
-          << "},\"seed\":" << seed << "}";
+          << "},\"seed\":" << seed;
     string buf;
-    if(!__ServiceBridge_SendAndReceive(m_socket, ssbuf.str(), buf)) {
+    if(!SendAndReceive(ssbuf.str(), buf)) {
         return false;
     }
     return parseJsonAndVarify(buf, seed);
@@ -404,9 +436,44 @@ bool ServiceBridge::sendSetAutoStart(bool autorun)
     ssbuf << "{\"type\":" << MessageValue::SET
           << ",\"act\":" << MessageValue::SET_AUTO_START
           << ",\"data\":{\"v\":" << static_cast<int>(autorun)
-          << "},\"seed\":" << seed << "}";
+          << "},\"seed\":" << seed;
     string buf;
-    if(!__ServiceBridge_SendAndReceive(m_socket, ssbuf.str(), buf)) {
+    if(!SendAndReceive(ssbuf.str(), buf)) {
+        return false;
+    }
+    return parseJsonAndVarify(buf, seed);
+}
+
+bool ServiceBridge::sendRegistDevelop(std::string &token, size_t &time)
+{
+    stringstream ssbuf;
+    int seed = rand();
+    ssbuf << "{\"type\":" << MessageValue::REGIST
+          << ",\"act\":" << MessageValue::REGIST_DEVELOP
+          << ",\"seed\":" << seed;
+    string buf;
+    if(!SendAndReceive(ssbuf.str(), buf)) {
+        return false;
+    }
+    boost::property_tree::ptree data;
+    if (parseJson(buf, seed, data))
+    {
+        token = data.get<string>("token", "");
+        time = data.get<size_t>("time", 0);
+        return true;
+    }
+    return false;
+}
+
+bool ServiceBridge::sendUnregistDevelop()
+{
+    stringstream ssbuf;
+    int seed = rand();
+    ssbuf << "{\"type\":" << MessageValue::REGIST
+          << ",\"act\":" << MessageValue::UNREGIST_DEVELOP
+          << ",\"seed\":" << seed;
+    string buf;
+    if(!SendAndReceive(ssbuf.str(), buf)) {
         return false;
     }
     return parseJsonAndVarify(buf, seed);
