@@ -32,7 +32,7 @@ void bna::gui::WndMain::initUI()
     this->setObjectName(QStringLiteral("WndMain"));
     this->setWindowIcon(QIcon(":/icon/logo.ico"));
     //设置固定窗口大小
-    this->setFixedSize(575, 190);
+    this->setFixedSize(m_szFrameSimple);
     //窗口控件
 
     //状态图
@@ -57,10 +57,14 @@ void bna::gui::WndMain::initUI()
     m_btnRefresh->setFlat(true);
     m_btnRefresh->setFont(font_s120);
     m_frmFlowGraph = new QFrame(m_frmGraph);
-    m_frmFlowGraph->setGeometry(QRect(110,0,160,160));
+    m_frmFlowGraph->setGeometry(QRect(110,0,161,161));
     m_frmFlowGraph->setFrameShape(QFrame::NoFrame);
     m_frmFlowGraph->setFrameShadow(QFrame::Plain);
-    m_rectFlowGraph = QRect(m_frmGraph->pos()+m_frmFlowGraph->pos(), m_frmFlowGraph->size());
+    m_nFlowGraphThickness = 10;
+    m_rectFlowGraphTop = QRect(m_frmGraph->pos()+m_frmFlowGraph->pos(),
+                            m_frmFlowGraph->size()-QSize(0, m_nFlowGraphThickness));
+    m_rectFlowGraphBottom = QRect(m_rectFlowGraphTop.topLeft()+QPoint(0, m_nFlowGraphThickness),
+                            m_rectFlowGraphTop.size());
     //账户状态
     m_frmInfo = new QFrame(this);
     m_frmInfo->setGeometry(QRect(310, 10, 250, 120));
@@ -157,7 +161,7 @@ void bna::gui::WndMain::initUI()
 
     //预约套餐
     m_frmOperation = new QFrame(this);
-    m_frmOperation->setGeometry(QRect(390, 190, 170, 130));
+    m_frmOperation->setGeometry(QRect(15, 330, 540, 130));
     m_frmOperation->setFrameShape(QFrame::NoFrame);
     m_frmOperation->setFrameShadow(QFrame::Plain);
     m_btnOfficalWeb = new QPushButton(m_frmOperation);
@@ -178,7 +182,7 @@ void bna::gui::WndMain::initUI()
 
     //消息日志框
     m_txtMsg = new QTextEdit(this);
-    m_txtMsg->setGeometry(QRect(15, 330, 540, 130));
+    m_txtMsg->setGeometry(QRect(15, 470, 540, 130));
     m_txtMsg->setReadOnly(true);
     //版本号
     m_lblVersion = new bna::gui::HLabel(this);

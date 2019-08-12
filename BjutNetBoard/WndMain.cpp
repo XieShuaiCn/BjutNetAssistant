@@ -2,6 +2,7 @@
 #include "WndTrayIcon.h"
 #include "BjutNet.h"
 #include "Utility.h"
+#include <math.h>
 #include <QDateTime>
 #include <QPainter>
 #include <QShowEvent>
@@ -35,6 +36,10 @@ WndMain::WndMain(WndTrayIcon *tray, QWidget *parent) :
     m_bNeedUpdate(false),
     m_tray(tray)
 {
+    m_szFrameSimple.setWidth(575);
+    m_szFrameSimple.setHeight(190);
+    m_szFrameAdvanced.setWidth(575);
+    m_szFrameAdvanced.setHeight(650);
     tray->setMainWindow(this);
     m_net = tray->getBjutNet();
     //初始化界面
@@ -101,46 +106,135 @@ void WndMain::paintEvent(QPaintEvent *event)
     // 设置反锯齿
     painter.setRenderHint(QPainter::Antialiasing);
     //绘制流量图
-    int currentFlow = m_net->getUsedFlow() / 1024;//MB
-    int totalFlow = m_net->getServiceFlow();//MB
-    QBrush brushPie(QColor(60,180,60));
-    if(totalFlow > 0)
+    int currentFlow = 999;//m_net->getUsedFlow() / 1024;//MB
+    int totalFlow = 1000;//m_net->getServiceFlow();//MB
+    double flowRate = -1.0;
+    if(totalFlow > 0){
+        flowRate = 1.0 * currentFlow / totalFlow;
+    }
+    const QBrush brushGreen(QColor(60,180,60));
+    const QBrush brushGrayDark(QColor(100,100,100));
+    const QBrush brushGrayLight(QColor(170,170,170));
+    const QBrush brushRed(QColor(240, 60, 60));
+    const QPen penSolidGrayDark(brushGrayDark, 1.0, Qt::SolidLine);
+    const QPen penSolidGrayLight(brushGrayLight, 1.0, Qt::SolidLine);
+    const QPen penDashGrayLight(brushGrayLight, 1.0, Qt::DashLine);
+    if(totalFlow > 0 && flowRate < 0.998)
     {
         int angleStart = 90;
-        int angleLength = 360;
+        int angleLength = 360 * flowRate;
+        QPolygonF polySide(4);
+        QPointF posCenter1 = m_rectFlowGraphTop.center()+QPoint(1,1);
+        QPointF posCenter2 = m_rectFlowGraphBottom.center();
+        polySide[0] = posCenter1;
+        polySide[1] = posCenter2;
+        polySide[2] = QPointF(posCenter2.x()+m_rectFlowGraphBottom.width()*0.5*sin(flowRate*3.1415926*2.0),
+                          posCenter2.y()-m_rectFlowGraphBottom.height()*0.5*cos(flowRate*3.1415926*2.0));
+        polySide[3] = QPointF(posCenter1.x()+m_rectFlowGraphTop.width()*0.5*sin(flowRate*3.1415926*2.0),
+                          posCenter1.y()-m_rectFlowGraphTop.height()*0.5*cos(flowRate*3.1415926*2.0));
         //绘制底色
-        double flowRate = 1.0 * currentFlow / totalFlow;
-        angleLength = 360 * flowRate;
-        if(angleLength >= 360){
-            angleLength = 360;//
-            brushPie.setColor(QColor(240, 60, 60));
+        painter.setBrush(Qt::NoBrush);
+        // bottom plane border
+        painter.setPen(penDashGrayLight);
+        painter.drawArc(m_rectFlowGraphBottom, 0, 180*16);
+        painter.setPen(penSolidGrayDark);
+        QBrush brushPie = brushGreen;
+        if(angleLength <= 90){
+            painter.setBrush(brushGreen);
+            painter.setPen(Qt::NoPen);
+            painter.drawPolygon(polySide);
+            painter.setPen(penSolidGrayDark);
+            painter.drawLine(polySide[0], polySide[1]);
+            painter.drawLine(polySide[1], polySide[2]);
+            painter.drawLine(polySide[2], polySide[3]);
         }
-        else {
-            painter.setBrush(QBrush(QColor(220,220,220)));
-            painter.setPen(QPen(QColor(200,200,200)));
-            painter.drawEllipse(m_rectFlowGraph);
-            if(angleLength < 180){}
-            else if(angleLength < 270)//流量大于一半，变红警示
-            {
-                brushPie.setColor(QColor(int(75+180*(flowRate-0.5)/0.25),
-                                         180,
-                                         40));
-            }
-            else if(angleLength < 361)//流量大于一半，变红警示
-            {
-                brushPie.setColor(QColor(255,
-                                         int(180-140*(flowRate-0.75)/0.25),
-                                         40));
-            }
+        else if(angleLength <= 180){
+            painter.setBrush(brushGreen);
+            painter.drawPie(m_rectFlowGraphBottom, 0, -(angleLength-89.9)*16);
+            painter.drawPolygon(polySide);
+            painter.drawArc(m_rectFlowGraphBottom, 0, -(angleLength-89.9)*16);
         }
-        painter.setBrush(brushPie);
+        else if(angleLength < 270)//流量大于1/2，变橙警示
+        {
+            brushPie.setColor(QColor(int(75+180*(flowRate-0.5)/0.25),
+                                     180,
+                                     40));
+            painter.setBrush(brushPie);
+            painter.setPen(Qt::NoPen);
+            // bottom plane
+            painter.drawPie(m_rectFlowGraphBottom, 0, -(angleLength-89.3)*16);
+            // side plane
+            painter.drawPolygon(polySide);
+            painter.setPen(penSolidGrayDark);
+            // side border
+            painter.drawLine(polySide[2], polySide[3]);
+            painter.drawArc(m_rectFlowGraphBottom, 0, -(angleLength-89.5)*16);
+        }
+        else if(angleLength < 360)//流量大于3/4，变红警示
+        {
+            brushPie.setColor(QColor(255,
+                                     int(180-140*(flowRate-0.75)/0.25),
+                                     40));
+            // side plane
+            painter.setBrush(brushPie);
+            painter.drawPie(m_rectFlowGraphBottom, 0, -180*16);
+            painter.drawRect(m_rectFlowGraphTop.left(), m_rectFlowGraphTop.y()+m_rectFlowGraphTop.height()*0.5,
+                             m_rectFlowGraphTop.width(), m_nFlowGraphThickness+1);
+            painter.drawArc(m_rectFlowGraphBottom, 0, -180*16);
+        }
+        else{
+            // can not reach here
+            painter.setBrush(brushRed);
+            // side plane
+            painter.drawPie(m_rectFlowGraphBottom, 0, -180*16);
+            painter.drawRect(m_rectFlowGraphTop.left(), m_rectFlowGraphTop.y()+m_rectFlowGraphTop.height()*0.5,
+                             m_rectFlowGraphTop.width(), m_nFlowGraphThickness+1);
+        }
         painter.setPen(Qt::NoPen);
-        painter.drawPie(m_rectFlowGraph, angleStart*16, -angleLength*16);
+        // top plane
+        painter.drawPie(m_rectFlowGraphTop, angleStart*16, -angleLength*16);
+        painter.setPen(penSolidGrayDark);
+        painter.setBrush(Qt::NoBrush);
+        // side plane border
+        painter.setPen(penSolidGrayLight);
+        painter.drawArc(m_rectFlowGraphBottom, 0, -180*16);
+        painter.drawLine(m_rectFlowGraphTop.left(), m_rectFlowGraphTop.y()+m_rectFlowGraphTop.height()*0.5,
+                         m_rectFlowGraphBottom.left(), m_rectFlowGraphBottom.y()+m_rectFlowGraphBottom.height()*0.5);
+        painter.drawLine(m_rectFlowGraphTop.right()+1, m_rectFlowGraphTop.y()+m_rectFlowGraphTop.height()*0.5,
+                         m_rectFlowGraphBottom.right()+1, m_rectFlowGraphBottom.y()+m_rectFlowGraphBottom.height()*0.5);
+        // top plane border
+        painter.drawEllipse(m_rectFlowGraphTop);
+        painter.setPen(penSolidGrayDark);
+        painter.drawArc(m_rectFlowGraphTop, 90*16, -(angleLength)*16);
+        // top pie border
+        painter.drawLine(posCenter1.x(), m_rectFlowGraphTop.top(), posCenter1.x(), posCenter1.y());
+        painter.drawLine(polySide[3], posCenter1);
     }
     else {
-        painter.setBrush(brushPie);
+        if(totalFlow > 0 && flowRate >= 0.99){// > 100%
+            painter.setBrush(brushRed);
+        }
+        else{// unKnown
+            painter.setBrush(brushGreen);
+        }
         painter.setPen(Qt::NoPen);
-        painter.drawEllipse(m_rectFlowGraph);
+        painter.drawPie(m_rectFlowGraphBottom, 0, -180*16);
+        painter.drawRect(m_rectFlowGraphTop.left(), m_rectFlowGraphTop.y()+m_rectFlowGraphTop.height()*0.5,
+                         m_rectFlowGraphTop.width(), m_nFlowGraphThickness+1);
+
+        painter.setPen(penSolidGrayDark);
+        painter.drawArc(m_rectFlowGraphBottom, 0, -180*16);
+        painter.drawLine(m_rectFlowGraphTop.left(), m_rectFlowGraphTop.y()+m_rectFlowGraphTop.height()*0.5,
+                         m_rectFlowGraphBottom.left(), m_rectFlowGraphBottom.y()+m_rectFlowGraphBottom.height()*0.5);
+        painter.drawLine(m_rectFlowGraphTop.right()+1, m_rectFlowGraphTop.y()+m_rectFlowGraphTop.height()*0.5,
+                         m_rectFlowGraphBottom.right()+1, m_rectFlowGraphBottom.y()+m_rectFlowGraphBottom.height()*0.5);
+        painter.drawEllipse(m_rectFlowGraphTop);
+        if(totalFlow > 0 && flowRate >= 0.99){// > 100%
+            painter.drawLine(m_rectFlowGraphTop.left()+m_rectFlowGraphTop.width()*0.5,
+                             m_rectFlowGraphTop.y(),
+                             m_rectFlowGraphTop.left()+m_rectFlowGraphTop.width()*0.5,
+                             m_rectFlowGraphBottom.y()+m_rectFlowGraphBottom.height()*0.5);
+        }
     }
     //绘制panel边框
     painter.setBrush(Qt::NoBrush);
@@ -301,12 +395,12 @@ void WndMain::on_btnRefresh_clicked()
 void WndMain::on_btnDetail_clicked()
 {
     if(m_bShowDetail)
-    {   this->setFixedSize(575, 190);
+    {   this->setFixedSize(m_szFrameSimple);
         m_bShowDetail = false;
         m_btnDetail->setText(QString("<<高级"));
     }
     else
-    {   this->setFixedSize(575, 490);
+    {   this->setFixedSize(m_szFrameAdvanced);
         m_bShowDetail = true;
         m_btnDetail->setText(QString("<<简洁"));
     }

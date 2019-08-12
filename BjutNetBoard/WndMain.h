@@ -71,8 +71,12 @@ protected:
     void resizeEvent(QResizeEvent *event);
 private:
     //界面所需变量
+    QSize m_szFrameSimple;
+    QSize m_szFrameAdvanced;
     QFrame *m_frmGraph;
-    QRect m_rectFlowGraph;
+    QRect m_rectFlowGraphTop;
+    QRect m_rectFlowGraphBottom;
+    int m_nFlowGraphThickness;
     QFrame *m_frmFlowGraph;
     QLabel *m_lblService;
     QLabel *m_lblFlowUsed;
