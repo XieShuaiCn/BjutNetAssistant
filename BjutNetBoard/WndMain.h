@@ -4,6 +4,7 @@
 #include "common.h"
 #include "Updater.h"
 #include "HLabel.h"
+#include "HPanel.h"
 
 class QAction;
 class QApplication;
@@ -45,12 +46,16 @@ public slots:
     void on_btnDetail_clicked();
     void on_btnLogout_clicked();
     void on_btnLogin_clicked();
+    void on_btnOnline1_clicked();
+    void on_btnOnline2_clicked();
     void on_btnOffline1_clicked();
     void on_btnOffline2_clicked();
     void on_lblClientaddr_doubleClicked();
-    void on_btnOffcicalWeb_clicked();
     void on_btnRefreshBook_clicked();
     void on_btnSubmitBook_clicked();
+    void on_lblShowMsg_clicked();
+    void on_btnBjutWebCommon_clicked();
+    void on_btnBjutWebMore_clicked();
     void on_lblVersion_clicked();
     void on_txtMsg_message(const QString& info);
     void on_account_status(bool login, int flow, int time, int fee);
@@ -73,6 +78,7 @@ private:
     //界面所需变量
     QSize m_szFrameSimple;
     QSize m_szFrameAdvanced;
+    QSize m_szFrameShowMsg;
     QFrame *m_frmGraph;
     QRect m_rectFlowGraphTop;
     QRect m_rectFlowGraphBottom;
@@ -99,31 +105,46 @@ private:
     QPushButton *m_btnLogout;
     QPushButton *m_btnDetail;
 
-    QFrame *m_frmOnline;
+    HPanel *m_frmOnline;
     QLabel *m_lblCopyTip;
     QLabel *m_lblClent1_ip4;
     QLabel *m_lblClent1_ip6;
-    bna::gui::HLabel *m_lblClent1_addr4;
-    bna::gui::HLabel *m_lblClent1_addr6;
+    HLabel *m_lblClent1_addr4;
+    HLabel *m_lblClent1_addr6;
     QPushButton *m_btnOffline1;
+    QPushButton *m_btnOnline1;
     QLabel *m_lblClent2_ip4;
     QLabel *m_lblClent2_ip6;
-    bna::gui::HLabel *m_lblClent2_addr4;
-    bna::gui::HLabel *m_lblClent2_addr6;
+    HLabel *m_lblClent2_addr4;
+    HLabel *m_lblClent2_addr6;
     QPushButton *m_btnOffline2;
+    QPushButton *m_btnOnline2;
 
-    QFrame *m_frmOperation;
-    QPushButton *m_btnOfficalWeb;
+    HPanel *m_frmBjutWeb;
+    QPushButton *m_btnBjutJfselfWeb;
+    QPushButton *m_btnBjutMyWeb;
+    QPushButton *m_btnBjutCaWeb;
+    QPushButton *m_btnBjutMailWeb;
+    QPushButton *m_btnBjutHomeWeb;
+    QPushButton *m_btnBjutWebMore;
+    QMenu *m_menuBjutWeb;
+    QAction *m_actMenuBjutLgnWeb;
+    QAction *m_actMenuBjutRecdocPyxxWeb;
+    QAction *m_actMenuBjutFinanceManagerWeb;
+    HPanel *m_frmOperation;
     QLabel *m_lblCurrentBook;
     QComboBox *m_cmbListBook;
     QPushButton *m_btnSubmitBook;
     QPushButton *m_btnRefreshBook;
 
+    HLabel *m_lblShowMsg;
     QTextEdit *m_txtMsg;
-    bna::gui::HLabel *m_lblVersion;
+    HLabel *m_lblFeedback;
+    HLabel *m_lblVersion;
 
     //逻辑控制所需变量
     bool m_bShowDetail = false;
+    bool m_bShowMsg = false;
     bool m_bApplyLogin;
     bool m_bNeedUpdate;
     int m_strOnlineID[2];

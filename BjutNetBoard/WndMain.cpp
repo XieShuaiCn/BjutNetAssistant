@@ -37,9 +37,11 @@ WndMain::WndMain(WndTrayIcon *tray, QWidget *parent) :
     m_tray(tray)
 {
     m_szFrameSimple.setWidth(575);
-    m_szFrameSimple.setHeight(190);
+    m_szFrameSimple.setHeight(195);
     m_szFrameAdvanced.setWidth(575);
-    m_szFrameAdvanced.setHeight(650);
+    m_szFrameAdvanced.setHeight(495);
+    m_szFrameShowMsg.setWidth(575);
+    m_szFrameShowMsg.setHeight(620);
     tray->setMainWindow(this);
     m_net = tray->getBjutNet();
     //初始化界面
@@ -52,13 +54,24 @@ WndMain::WndMain(WndTrayIcon *tray, QWidget *parent) :
     connect(m_btnRefresh, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnRefresh_clicked);
     connect(m_btnOffline1, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnOffline1_clicked);
     connect(m_btnOffline2, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnOffline2_clicked);
+    connect(m_btnOnline1, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnOnline1_clicked);
+    connect(m_btnOnline2, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnOnline2_clicked);
     connect(m_lblClent1_addr4, &bna::gui::HLabel::doubleClicked, this, &bna::gui::WndMain::on_lblClientaddr_doubleClicked);
     connect(m_lblClent1_addr6, &bna::gui::HLabel::doubleClicked, this, &bna::gui::WndMain::on_lblClientaddr_doubleClicked);
     connect(m_lblClent2_addr4, &bna::gui::HLabel::doubleClicked, this, &bna::gui::WndMain::on_lblClientaddr_doubleClicked);
     connect(m_lblClent2_addr6, &bna::gui::HLabel::doubleClicked, this, &bna::gui::WndMain::on_lblClientaddr_doubleClicked);
-    connect(m_btnOfficalWeb, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnOffcicalWeb_clicked);
     connect(m_btnRefreshBook, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnRefreshBook_clicked);
     connect(m_btnSubmitBook, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnSubmitBook_clicked);
+    connect(m_lblShowMsg, &bna::gui::HLabel::clicked, this, &bna::gui::WndMain::on_lblShowMsg_clicked);
+    connect(m_btnBjutWebMore, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnBjutWebMore_clicked);
+    connect(m_btnBjutJfselfWeb, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
+    connect(m_btnBjutMyWeb, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
+    connect(m_btnBjutHomeWeb, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
+    connect(m_btnBjutMailWeb, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
+    connect(m_btnBjutCaWeb, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
+    connect(m_actMenuBjutLgnWeb, &QAction::triggered, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
+    connect(m_actMenuBjutLgnWeb, &QAction::triggered, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
+    connect(m_actMenuBjutFinanceManagerWeb, &QAction::triggered, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
     connect(m_lblVersion, &bna::gui::HLabel::clicked, this, &bna::gui::WndMain::on_lblVersion_clicked);
     //connect(this, &WndMain::showed, this, &WndMain::on_show);
     connect(m_net, &bna::gui::BjutNet::updateMessage, this, &bna::gui::WndMain::on_txtMsg_message);
@@ -106,8 +119,8 @@ void WndMain::paintEvent(QPaintEvent *event)
     // 设置反锯齿
     painter.setRenderHint(QPainter::Antialiasing);
     //绘制流量图
-    int currentFlow = 999;//m_net->getUsedFlow() / 1024;//MB
-    int totalFlow = 1000;//m_net->getServiceFlow();//MB
+    int currentFlow = m_net->getUsedFlow() / 1024;//MB
+    int totalFlow = m_net->getServiceFlow();//MB
     double flowRate = -1.0;
     if(totalFlow > 0){
         flowRate = 1.0 * currentFlow / totalFlow;
@@ -237,12 +250,33 @@ void WndMain::paintEvent(QPaintEvent *event)
         }
     }
     //绘制panel边框
-    painter.setBrush(Qt::NoBrush);
-    painter.setPen(QColor(180,180,180));
+    //painter.setBrush(Qt::NoBrush);
+    //painter.setPen(QColor(180,180,180));
     //painter.drawRoundedRect(m_frmGraph->geometry(), 5, 5);
     //painter.drawRoundedRect(m_frmInfo->geometry(), 5, 5);
-    painter.drawRoundedRect(m_frmOperation->geometry(), 5, 5);
-    painter.drawRoundedRect(m_frmOnline->geometry(), 5, 5);
+    //painter.drawRoundedRect(m_frmOperation->geometry(), 5, 5);
+    //painter.drawRoundedRect(m_frmOnline->geometry(), 5, 5);
+    //
+    painter.setBrush(QBrush(QColor(50,50,50)));
+    painter.setPen(Qt::NoPen);
+    if(m_bShowMsg){
+        QPolygon polyTriangle(3);
+        polyTriangle.setPoint(0, m_lblShowMsg->pos().x()+5, m_lblShowMsg->pos().y()+5);
+        polyTriangle.setPoint(1, m_lblShowMsg->pos().x()+m_lblShowMsg->height()-5,
+                                 m_lblShowMsg->pos().y()+5);
+        polyTriangle.setPoint(2, m_lblShowMsg->pos().x()+m_lblShowMsg->height()/2,
+                                 m_lblShowMsg->pos().y()+m_lblShowMsg->height()-5);
+        painter.drawPolygon(polyTriangle);
+    }
+    else{
+        QPolygon polyTriangle(3);
+        polyTriangle.setPoint(0, m_lblShowMsg->pos().x()+5, m_lblShowMsg->pos().y()+5);
+        polyTriangle.setPoint(1, m_lblShowMsg->pos().x()+m_lblShowMsg->height()-5,
+                                 m_lblShowMsg->pos().y()+m_lblShowMsg->height()/2);
+        polyTriangle.setPoint(2, m_lblShowMsg->pos().x()+5,
+                                 m_lblShowMsg->pos().y()+m_lblShowMsg->height()-5);
+        painter.drawPolygon(polyTriangle);
+    }
 }
 
 void WndMain:: on_show()
@@ -294,6 +328,7 @@ void WndMain::on_account_status(bool login, int flow, int time, int fee)
         fflow /= 1024;
         ++flowUnitIndex;
     }
+    fflow = double(int(fflow*1000)) / 1000.0;
     m_lcdNumFlow->display(fflow);
     m_lblFlowUnit->setText(flowUnit[flowUnitIndex]);
     m_lcdNumFee->display(float(fee) / 100);
@@ -308,6 +343,7 @@ void WndMain::on_account_status(bool login, int flow, int time, int fee)
             fflow /= 1024;
             ++flowUnitIndex;
         }
+        fflow = double(int(fflow*1000)) / 1000.0;
         strFlowTip.append(QString("，剩余%1%2").arg(fflow).arg(flowUnit[flowUnitIndex]));
         m_frmFlowGraph->setToolTip(strFlowTip);
         this->update();
@@ -337,12 +373,14 @@ void WndMain::on_online_status(const QVariant &var_info)
         m_lblClent1_addr4->setVisible(true);
         m_lblClent1_addr6->setVisible(true);
         m_btnOffline1->setVisible(true);
+        m_btnOnline1->setVisible(true);
     }
     else {
         m_strOnlineID[0] = 0;
         m_lblClent1_addr4->setVisible(false);
         m_lblClent1_addr6->setVisible(false);
         m_btnOffline1->setVisible(false);
+        m_btnOnline1->setVisible(false);
     }
     if(info.size() > 1)
     {
@@ -358,12 +396,14 @@ void WndMain::on_online_status(const QVariant &var_info)
         m_lblClent2_addr4->setVisible(true);
         m_lblClent2_addr6->setVisible(true);
         m_btnOffline2->setVisible(true);
+        m_btnOnline2->setVisible(true);
     }
     else {
         m_strOnlineID[1] = 0;
         m_lblClent2_addr4->setVisible(false);
         m_lblClent2_addr6->setVisible(false);
         m_btnOffline2->setVisible(false);
+        m_btnOnline2->setVisible(false);
     }
 }
 
@@ -376,7 +416,8 @@ void WndMain::on_txtMsg_message(const QString& info)
 void WndMain::resizeEvent(QResizeEvent *event)
 {
     Q_UNUSED(event);
-    m_lblVersion->setGeometry(QRect(10, this->height()-25, 250, 20));
+    m_lblVersion->setGeometry(QRect(10, this->height()-24, 250, 20));
+    m_lblFeedback->setGeometry(QRect(this->width()-70, this->height()-24, 70, 20));
 }
 
 void WndMain::on_btnRefresh_clicked()
@@ -394,16 +435,37 @@ void WndMain::on_btnRefresh_clicked()
 
 void WndMain::on_btnDetail_clicked()
 {
+    m_bShowDetail = !m_bShowDetail;
     if(m_bShowDetail)
-    {   this->setFixedSize(m_szFrameSimple);
-        m_bShowDetail = false;
-        m_btnDetail->setText(QString("<<高级"));
+    {
+        this->setFixedSize(m_bShowMsg ? m_szFrameShowMsg : m_szFrameAdvanced);
+        m_btnDetail->setText(QString("<<简洁"));
+        m_frmOnline->setVisible(true);
+        m_frmOperation->setVisible(true);
+        m_frmBjutWeb->setVisible(true);
     }
     else
-    {   this->setFixedSize(m_szFrameAdvanced);
-        m_bShowDetail = true;
-        m_btnDetail->setText(QString("<<简洁"));
+    {
+        this->setFixedSize(m_szFrameSimple);
+        m_btnDetail->setText(QString(">>更多"));
+        m_frmOnline->setVisible(false);
+        m_frmOperation->setVisible(false);
+        m_frmBjutWeb->setVisible(false);
     }
+}
+
+void WndMain::on_lblShowMsg_clicked()
+{
+    m_bShowMsg = !m_bShowMsg;
+    if(m_bShowMsg)
+    {
+        this->setFixedSize(m_szFrameShowMsg);
+    }
+    else
+    {
+        this->setFixedSize(m_bShowDetail ? m_szFrameAdvanced : m_szFrameSimple);
+    }
+    this->m_txtMsg->setVisible(m_bShowMsg);
 }
 
 void WndMain::on_btnLogout_clicked()
@@ -434,10 +496,6 @@ void WndMain::on_lblClientaddr_doubleClicked()
         mb.exec();
     }
 }
-void WndMain::on_btnOffcicalWeb_clicked()
-{
-    QDesktopServices::openUrl(QUrl("https://jfself.bjut.edu.cn/"));
-}
 
 void WndMain::on_btnRefreshBook_clicked()
 {
@@ -450,6 +508,41 @@ void WndMain::on_btnSubmitBook_clicked()
     const auto &lst = m_net->getAllServices();
     if(m_cmbListBook->currentIndex() >=0 && static_cast<size_t>(m_cmbListBook->currentIndex()) < lst.size())
         m_net->sendBookService(std::get<0>(lst[m_cmbListBook->currentIndex()]));
+}
+
+void WndMain::on_btnBjutWebCommon_clicked()
+{
+    QObject *obj = dynamic_cast<QObject *>(sender());
+    if(obj == m_btnBjutJfselfWeb)
+        QDesktopServices::openUrl(QUrl("https://jfself.bjut.edu.cn/"));
+    else if(obj == m_btnBjutMyWeb)
+        QDesktopServices::openUrl(QUrl("https://my.bjut.edu.cn/"));
+    else if(obj == m_btnBjutCaWeb)
+        QDesktopServices::openUrl(QUrl("http://ca.bjut.edu.cn/"));
+    else if(obj == m_btnBjutHomeWeb)
+        QDesktopServices::openUrl(QUrl("http://www.bjut.edu.cn/"));
+    else if(obj == m_btnBjutMailWeb)
+        QDesktopServices::openUrl(QUrl("https://mail.bjut.edu.cn/"));
+    else if(obj == m_actMenuBjutLgnWeb)
+        QDesktopServices::openUrl(QUrl("http://lgn.bjut.edu.cn/"));
+    else if(obj == m_actMenuBjutRecdocPyxxWeb)
+        QDesktopServices::openUrl(QUrl("http://webrecdoc.bjut.edu.cn/pyxx/"));
+    else if(obj == m_actMenuBjutFinanceManagerWeb)
+        QDesktopServices::openUrl(QUrl("http://172.27.12.88/WFManager/homesso.jsp"));
+    else{
+        QMessageBox mb(this);
+        mb.setWindowTitle("常用入口");
+        mb.setText("无法识别的调用");
+        mb.setStandardButtons(QMessageBox::Ok);
+        mb.exec();
+    }
+}
+
+void WndMain::on_btnBjutWebMore_clicked()
+{
+    QPoint pos = this->mapToGlobal(m_frmBjutWeb->pos() + m_btnBjutWebMore->pos());
+    m_menuBjutWeb->move(pos+QPoint(m_btnBjutWebMore->width(), 0));
+    m_menuBjutWeb->exec();
 }
 
 void WndMain::on_lblVersion_clicked()
@@ -513,6 +606,12 @@ void WndMain::on_lblVersion_clicked()
         mb.exec();
     }
 }
+
+void WndMain::on_btnOnline1_clicked()
+{}
+
+void WndMain::on_btnOnline2_clicked()
+{}
 
 void WndMain::on_btnOffline1_clicked()
 {

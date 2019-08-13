@@ -10,7 +10,7 @@ using namespace bna;
 
 int main(int argc, char *argv[])
 {
-    QtSingleApplication app("BjutNetAssistant_UUID_APPV4", argc, argv);
+    QtSingleApplication app("BjutNetAssistant_Service_UUID_APPV4", argc, argv);
     if(app.isRunning())
     {
         qDebug() << "Only can start one instance." << endl;
@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     // create temp file.
     auto timeSince1970 = time(nullptr);
     QString tmpName = QDir::temp().absoluteFilePath(
-                QString("BjutNetLogin_%1.tmp").arg(timeSince1970));
+                QString("BjutNetService_%1.tmp").arg(timeSince1970));
     for(int i =0; i < 255; ++i)
     {
         QDir tmpDir(tmpName);
@@ -34,11 +34,11 @@ int main(int argc, char *argv[])
         }
         QString rs = RandString(6);
         tmpName = QDir::temp().absoluteFilePath(
-                    QString("BjutNetLogin_%1_%2.tmp").arg(timeSince1970).arg(rs));
+                    QString("BjutNetService_%1_%2.tmp").arg(timeSince1970).arg(rs));
     }
     g_strAppTempPath = tmpName;
     QDir("/").mkpath(g_strAppTempPath);
-    g_debugTool.init(QDir(g_strAppTempPath).absoluteFilePath("bnl.log"));
+    g_debugTool.init(QDir(g_strAppTempPath).absoluteFilePath("bns.log"));
     g_strAppDirPath = QtSingleApplication::applicationDirPath();
 
 #ifdef BUILD_DEVELOP

@@ -12,40 +12,15 @@
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtNetwork/QNetworkRequest>
 #include <QtNetwork/QNetworkReply>
+#include "../BjutNetService/Version.h"
 
 namespace bna{
 namespace gui{
 
 Updater::Updater(QObject *parent) : QObject(parent),
-    m_nNewVersion(0), m_nOldVersion(0),
-    m_strNewVersion("0.0.0"), m_strOldVersion("0.0.0")
+    m_nNewVersion(0), m_nOldVersion(BNA_INNER_VERSION),
+    m_strNewVersion("0.0.0"), m_strOldVersion(BNA_VERSION)
 {
-    QFile file("./config.db");
-    if(file.exists()) {
-        if(file.open(QFile::ReadOnly))
-        {
-            QJsonParseError jp_err;
-            const QJsonDocument jdoc = QJsonDocument::fromJson(file.readAll(), &jp_err);
-            file.close();
-            if(jp_err.error == QJsonParseError::NoError)
-            {
-                const QJsonObject jo = jdoc.object();
-
-                if(jo.contains("version")) {
-                    m_strOldVersion = (jo["version"].toString());
-                }
-                if(jo.contains("inner_ver")) {
-                    m_nOldVersion = (jo["inner_ver"].toInt());
-                }
-
-            }
-        }
-#ifdef QT_DEBUG
-        else {
-            qDebug() << file.errorString() << "\n";
-        }
-#endif
-    }
     connect(&m_http, &HttpClient::downloadProgress, this, &Updater::downloadProgress);
 }
 

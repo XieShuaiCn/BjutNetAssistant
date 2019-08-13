@@ -14,6 +14,7 @@
 #include <QtWidgets/QWidget>
 #include "HLabel.h"
 #include "HPanel.h"
+#include "HPanel.h"
 
 
 void bna::gui::WndMain::initUI()
@@ -57,7 +58,7 @@ void bna::gui::WndMain::initUI()
     m_btnRefresh->setFlat(true);
     m_btnRefresh->setFont(font_s120);
     m_frmFlowGraph = new QFrame(m_frmGraph);
-    m_frmFlowGraph->setGeometry(QRect(110,0,161,161));
+    m_frmFlowGraph->setGeometry(QRect(115,0,161,161));
     m_frmFlowGraph->setFrameShape(QFrame::NoFrame);
     m_frmFlowGraph->setFrameShadow(QFrame::Plain);
     m_nFlowGraphThickness = 10;
@@ -83,19 +84,19 @@ void bna::gui::WndMain::initUI()
     //状态value
     m_lcdNumTime = new QLCDNumber(m_frmInfo);
     m_lcdNumTime->setGeometry(QRect(110, 10, 81, 23));
-    m_lcdNumTime->setFrameShadow(QFrame::Plain);
+    m_lcdNumTime->setFrameShadow(QFrame::Sunken);
     m_lcdNumTime->setLineWidth(1);
     m_lcdNumTime->setDigitCount(7);
     m_lcdNumTime->setSegmentStyle(QLCDNumber::Flat);
     m_lcdNumFlow = new QLCDNumber(m_frmInfo);
     m_lcdNumFlow->setGeometry(QRect(110, 50, 81, 23));
-    m_lcdNumFlow->setFrameShadow(QFrame::Plain);
+    m_lcdNumFlow->setFrameShadow(QFrame::Sunken);
     m_lcdNumFlow->setLineWidth(1);
     m_lcdNumFlow->setDigitCount(7);
     m_lcdNumFlow->setSegmentStyle(QLCDNumber::Flat);
     m_lcdNumFee = new QLCDNumber(m_frmInfo);
     m_lcdNumFee->setGeometry(QRect(110, 90, 81, 23));
-    m_lcdNumFee->setFrameShadow(QFrame::Plain);
+    m_lcdNumFee->setFrameShadow(QFrame::Sunken);
     m_lcdNumFee->setLineWidth(1);
     m_lcdNumFee->setDigitCount(7);
     m_lcdNumFee->setSegmentStyle(QLCDNumber::Flat);
@@ -120,74 +121,116 @@ void bna::gui::WndMain::initUI()
     m_btnDetail->setGeometry(QRect(510, 140, 50, 30));
     m_btnDetail->setFlat(true);
     //在线列表
-    m_frmOnline = new QFrame(this);
-    m_frmOnline->setGeometry(QRect(10, 190, 370, 130));
+    m_frmOnline = new HPanel(this);
+    m_frmOnline->setGeometry(QRect(15, 180, 540, 140));
     m_frmOnline->setFrameShape(QFrame::NoFrame);
     m_frmOnline->setFrameShadow(QFrame::Plain);
+    m_frmOnline->setVisible(false);
     m_lblClent1_ip4 = new QLabel(m_frmOnline);
-    m_lblClent1_ip4->setGeometry(QRect(10, 10, 40, 20));
+    m_lblClent1_ip4->setGeometry(QRect(10, 22, 40, 20));
     m_lblClent1_ip4->setFont(font_s120);
     m_lblClent1_ip6 = new QLabel(m_frmOnline);
-    m_lblClent1_ip6->setGeometry(QRect(10, 40, 40, 20));
+    m_lblClent1_ip6->setGeometry(QRect(10, 52, 40, 20));
     m_lblClent1_ip6->setFont(font_s120);
-    m_lblClent1_addr4 = new bna::gui::HLabel(m_frmOnline);
-    m_lblClent1_addr4->setGeometry(QRect(55, 10, 200, 20));
+    m_lblClent1_addr4 = new HLabel(m_frmOnline);
+    m_lblClent1_addr4->setGeometry(QRect(55, 22, 200, 20));
     m_lblClent1_addr4->setFont(font_s120);
-    m_lblClent1_addr6 = new bna::gui::HLabel(m_frmOnline);
-    m_lblClent1_addr6->setGeometry(QRect(55, 40, m_frmOnline->width()-20, 20));
-    m_lblClent1_addr6->setFont(font_s115);
+    m_lblClent1_addr6 = new HLabel(m_frmOnline);
+    m_lblClent1_addr6->setGeometry(QRect(55, 52, m_frmOnline->width()-20, 20));
+    m_lblClent1_addr6->setFont(font_s120);
+    m_btnOnline1 = new QPushButton(m_frmOnline);
+    m_btnOnline1->setGeometry(QRect(m_frmOnline->width()-80, 20, 70, 25));
+    m_btnOnline1->setVisible(false);
     m_btnOffline1 = new QPushButton(m_frmOnline);
-    m_btnOffline1->setGeometry(QRect(m_frmOnline->width()-90, 8, 80, 25));
+    m_btnOffline1->setGeometry(QRect(m_btnOnline1->pos().x()-80, 20, 70, 25));
     m_btnOffline1->setVisible(false);
     m_lblClent2_ip4 = new QLabel(m_frmOnline);
-    m_lblClent2_ip4->setGeometry(QRect(10, 70, 40, 20));
+    m_lblClent2_ip4->setGeometry(QRect(10, 82, 40, 20));
     m_lblClent2_ip4->setFont(font_s120);
     m_lblClent2_ip6 = new QLabel(m_frmOnline);
-    m_lblClent2_ip6->setGeometry(QRect(10, 100, 40, 20));
+    m_lblClent2_ip6->setGeometry(QRect(10, 112, 40, 20));
     m_lblClent2_ip6->setFont(font_s120);
-    m_lblClent2_addr4 = new bna::gui::HLabel(m_frmOnline);
-    m_lblClent2_addr4->setGeometry(QRect(55, 70, 200, 20));
+    m_lblClent2_addr4 = new HLabel(m_frmOnline);
+    m_lblClent2_addr4->setGeometry(QRect(55, 82, 200, 20));
     m_lblClent2_addr4->setFont(font_s120);
-    m_lblClent2_addr6 = new bna::gui::HLabel(m_frmOnline);
-    m_lblClent2_addr6->setGeometry(QRect(55, 100, m_frmOnline->width()-20, 20));
-    m_lblClent2_addr6->setFont(font_s115);
+    m_lblClent2_addr6 = new HLabel(m_frmOnline);
+    m_lblClent2_addr6->setGeometry(QRect(55, 112, m_frmOnline->width()-20, 20));
+    m_lblClent2_addr6->setFont(font_s120);
+    m_btnOnline2 = new QPushButton(m_frmOnline);
+    m_btnOnline2->setGeometry(QRect(m_frmOnline->width()-80, 80, 70, 25));
+    m_btnOnline2->setVisible(false);
     m_btnOffline2 = new QPushButton(m_frmOnline);
-    m_btnOffline2->setGeometry(QRect(m_frmOnline->width()-90, 68, 80, 25));
+    m_btnOffline2->setGeometry(QRect(m_btnOnline2->pos().x()-80, 80, 70, 25));
     m_btnOffline2->setVisible(false);
     m_lblCopyTip = new QLabel(m_frmOnline);
-    m_lblCopyTip->setGeometry(QRect(m_btnOffline1->pos().x()-80, 8, 80, 25));
+    m_lblCopyTip->setGeometry(QRect(m_btnOffline1->pos().x()-85, 20, 80, 25));
     m_lblCopyTip->setFont(font_s120);
     m_lblCopyTip->setStyleSheet("color:#808080;");
 
     //预约套餐
-    m_frmOperation = new QFrame(this);
-    m_frmOperation->setGeometry(QRect(15, 330, 540, 130));
+    m_frmOperation = new HPanel(this);
+    m_frmOperation->setGeometry(QRect(15, 327, 180, 120));
     m_frmOperation->setFrameShape(QFrame::NoFrame);
     m_frmOperation->setFrameShadow(QFrame::Plain);
-    m_btnOfficalWeb = new QPushButton(m_frmOperation);
-    m_btnOfficalWeb->setGeometry(QRect(40, 10, 80, 25));
-    m_btnOfficalWeb->setFont(font_s105);
+    m_frmOperation->setVisible(false);
     m_lblCurrentBook = new QLabel(m_frmOperation);
-    m_lblCurrentBook->setGeometry(QRect(10, 40, 160, 20));
-    m_lblCurrentBook->setFont(font_s100);
+    m_lblCurrentBook->setGeometry(QRect(15, 23, 160, 20));
+    m_lblCurrentBook->setFont(font_s115);
     m_cmbListBook = new QComboBox(m_frmOperation);
-    m_cmbListBook->setGeometry(QRect(10, 65, 150, 25));
-    m_cmbListBook->setFont(font_s100);
+    m_cmbListBook->setGeometry(QRect(15, 48, 150, 25));
+    m_cmbListBook->setFont(font_s115);
     m_btnRefreshBook = new QPushButton(m_frmOperation);
-    m_btnRefreshBook->setGeometry(QRect(10, 97, 73, 25));
-    m_btnRefreshBook->setFont(font_s100);
+    m_btnRefreshBook->setGeometry(QRect(15, 80, 73, 25));
+    m_btnRefreshBook->setFont(font_s115);
     m_btnSubmitBook = new QPushButton(m_frmOperation);
-    m_btnSubmitBook->setGeometry(QRect(87, 97, 73, 25));
-    m_btnSubmitBook->setFont(font_s100);
+    m_btnSubmitBook->setGeometry(QRect(93, 80, 73, 25));
+    m_btnSubmitBook->setFont(font_s115);
+    // entrance
+    m_frmBjutWeb = new HPanel(this);
+    m_frmBjutWeb->setGeometry(QRect(210, 325, 345, 120));
+    m_frmBjutWeb->setFrameShape(QFrame::NoFrame);
+    m_frmBjutWeb->setFrameShadow(QFrame::Plain);
+    m_frmBjutWeb->setVisible(false);
+    m_btnBjutJfselfWeb = new QPushButton(m_frmBjutWeb);
+    m_btnBjutJfselfWeb->setGeometry(QRect(20, 23, 130, 25));
+    m_btnBjutJfselfWeb->setFont(font_s105);
+    m_btnBjutMyWeb = new QPushButton(m_frmBjutWeb);
+    m_btnBjutMyWeb->setGeometry(QRect(20, 53, 130, 25));
+    m_btnBjutMyWeb->setFont(font_s105);
+    m_btnBjutCaWeb = new QPushButton(m_frmBjutWeb);
+    m_btnBjutCaWeb->setGeometry(QRect(20, 83, 130, 25));
+    m_btnBjutCaWeb->setFont(font_s105);
+    m_btnBjutHomeWeb = new QPushButton(m_frmBjutWeb);
+    m_btnBjutHomeWeb->setGeometry(QRect(180, 23, 130, 25));
+    m_btnBjutHomeWeb->setFont(font_s105);
+    m_btnBjutMailWeb = new QPushButton(m_frmBjutWeb);
+    m_btnBjutMailWeb->setGeometry(QRect(180, 53, 130, 25));
+    m_btnBjutMailWeb->setFont(font_s105);
+    m_btnBjutWebMore = new QPushButton(m_frmBjutWeb);
+    m_btnBjutWebMore->setGeometry(QRect(180, 83, 130, 25));
+    m_btnBjutWebMore->setFont(font_s105);
+    m_menuBjutWeb = new QMenu(m_frmBjutWeb);
+    m_actMenuBjutLgnWeb = new QAction(m_menuBjutWeb);
+    m_actMenuBjutRecdocPyxxWeb = new QAction(m_menuBjutWeb);
+    m_actMenuBjutFinanceManagerWeb = new QAction(m_menuBjutWeb);
+    m_menuBjutWeb->addAction(m_actMenuBjutLgnWeb);
+    m_menuBjutWeb->addAction(m_actMenuBjutRecdocPyxxWeb);
+    m_menuBjutWeb->addAction(m_actMenuBjutFinanceManagerWeb);
 
     //消息日志框
+    m_lblShowMsg = new HLabel(this);
+    m_lblShowMsg->setGeometry(QRect(15, 450, 540, 20));
     m_txtMsg = new QTextEdit(this);
-    m_txtMsg->setGeometry(QRect(15, 470, 540, 130));
+    m_txtMsg->setGeometry(QRect(15, 475, 540, 115));
     m_txtMsg->setReadOnly(true);
+    m_txtMsg->setVisible(false);
     //版本号
-    m_lblVersion = new bna::gui::HLabel(this);
-    m_lblVersion->setGeometry(QRect(10, this->height()-25, 250, 20));
+    m_lblVersion = new HLabel(this);
     m_lblVersion->setFont(font_s100);
+    // feedback
+    m_lblFeedback = new HLabel(this);
+    m_lblFeedback->setFont(font_s100);
+    m_lblFeedback->setStyleSheet("color:#303030;");
 
     //设置各控件的文本内容
     this->setWindowTitle(QString("北工大网关登录器"));
@@ -208,19 +251,34 @@ void bna::gui::WndMain::initUI()
     m_lblFeeUnit->setText(QString("元"));
     m_btnLogin->setText(QString("上线"));
     m_btnLogout->setText(QString("下线"));
-    m_btnDetail->setText(QString("<<高级"));
+    m_btnDetail->setText(QString(">>更多"));
+    m_frmOnline->setText(QString("在线列表"));
     m_lblClent1_ip4->setText(QString("IPv4:"));
     m_lblClent1_ip6->setText(QString("IPv6:"));
+    m_btnOnline1->setText(QString("尝试上线"));
     m_btnOffline1->setText(QString("强制下线"));
     m_lblClent2_ip4->setText(QString("IPv4:"));
     m_lblClent2_ip6->setText(QString("IPv6:"));
+    m_btnOnline2->setText(QString("尝试上线"));
     m_btnOffline2->setText(QString("强制下线"));
-    m_lblCopyTip->setText(QString("双击复制IP"));
-    m_btnOfficalWeb->setText(QString("办理业务"));
+    m_lblCopyTip->setText(QString("双击可复制IP"));
+    m_frmOperation->setText(QString("业务办理"));
     m_lblCurrentBook->setText(QString("已预约:[请刷新套餐]"));
     m_btnRefreshBook->setText(QString("刷新套餐"));
     m_btnSubmitBook->setText(QString("预约套餐"));
+    m_frmBjutWeb->setText(QString("常用入口"));
+    m_btnBjutJfselfWeb->setText(QString("自助服务系统"));
+    m_btnBjutMyWeb->setText(QString("综合服务门户"));
+    m_btnBjutCaWeb->setText(QString("软件正版化平台"));
+    m_btnBjutHomeWeb->setText(QString("学校首页"));
+    m_btnBjutMailWeb->setText(QString("邮件系统"));
+    m_btnBjutWebMore->setText(QString("更多入口>>"));
+    m_actMenuBjutLgnWeb->setText(QString("网关登陆页面"));
+    m_actMenuBjutRecdocPyxxWeb->setText(QString("研究生管理信息系统"));
+    m_actMenuBjutFinanceManagerWeb->setText(QString("财务信息门户"));
+    m_lblShowMsg->setText(QString("     Log"));
     m_lblVersion->setText(QString("版本号：") + m_updater.getOldVersion());
+    m_lblFeedback->setText(QString("意见反馈"));
     //根据objectName关联信号
     //QMetaObject::connectSlotsByName(this);
 }

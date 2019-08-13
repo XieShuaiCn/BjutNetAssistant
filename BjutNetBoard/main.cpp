@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
         }
     }
     // start single instance
-    QtSingleApplication app("APP_UUID_BjutNetLogin3", argc, argv);
+    QtSingleApplication app("BjutNetAssistant_Board_UUID_APPV4", argc, argv);
     if(app.isRunning())
     {
         app.sendMessage("ShowMainWnd");
@@ -42,11 +42,11 @@ int main(int argc, char *argv[])
     // change pwd
     QDir::setCurrent(app.applicationDirPath());
     // create temp file.
-    QString tmpName = QDir::temp().absoluteFilePath("BjutNetLogin_.tmp");
+    QString tmpName = QDir::temp().absoluteFilePath("BjutNetBoard_.tmp");
     for(int i =0; i < 30; ++i)
     {
         QString rs = RandString(6);
-        tmpName = QDir::temp().absoluteFilePath("BjutNetLogin_" + rs + ".tmp");
+        tmpName = QDir::temp().absoluteFilePath("BjutNetBoard_" + rs + ".tmp");
         QDir tmpDir(tmpName);
         if(tmpDir.exists()){
             if(!tmpDir.rmpath(tmpName) && i > 10)
