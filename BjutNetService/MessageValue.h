@@ -53,22 +53,23 @@ public:
     enum ActionGet{
         GET_VERSION=1,
         GET_ACCOUNT=2,
-        GET_USED_FLOW=3,
-        GET_USED_TIME=4,
-        GET_LEFT_FEE=5,
-        GET_ALL_FLOW=6,
-        GET_DEVICE_ONLINE=7,
-        GET_FLOW_SERVICE=8,
-        GET_BOOKED_SERVICE=9,
-        GET_ALL_SERVICES=10,
-        GET_AUTO_START
+        GET_LOGIN_STATUS=3,
+        GET_USED_FLOW=4,
+        GET_USED_TIME=5,
+        GET_LEFT_FEE=6,
+        GET_ALL_FLOW=7,
+        GET_DEVICE_ONLINE=8,
+        GET_FLOW_SERVICE=9,
+        GET_BOOKED_SERVICE=10,
+        GET_ALL_SERVICES=11,
+        GET_AUTO_START=12
     };
 
     enum ActionSet{
         SET_ACCOUNT=1,
         SET_BOOK_SERVICE=2,
         SET_OFFLINE_DEVICE=3,
-        SET_AUTO_START
+        SET_AUTO_START=4
     };
 
     template<typename _Tp>

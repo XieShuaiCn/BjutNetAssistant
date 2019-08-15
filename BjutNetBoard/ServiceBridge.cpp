@@ -18,8 +18,30 @@ bool ServiceBridge::doSendAndReceive(const QString &sdata, QString &rdata)
         m_socket.readAll();
     }
     QByteArray arr;
-    QByteArray sbuf = sdata.toUtf8();
+    QByteArray sbuf;
     QByteArray rbuf;
+    if(m_bNeedVarify){
+        QString sdata_copy(sdata);
+        if(sdata_copy.endsWith('}')){
+            sdata_copy = sdata_copy.remove(sdata_copy.length()-1, 1);
+        }
+        if(m_bUseToken){
+            sdata_copy.append(",\"token\":\"");
+            sdata_copy.append(m_strToken);
+            sdata_copy.append("\"}");
+        }
+        else{
+            sdata_copy.append(",\"name\":\"");
+            sdata_copy.append(m_strName);
+            sdata_copy.append("\",\"passwd\":\"");
+            sdata_copy.append(m_strPasswd);
+            sdata_copy.append("\"}");
+        }
+        sbuf = sdata_copy.toUtf8();
+    }
+    else{
+        sbuf = sdata.toUtf8();
+    }
     int sz = MessageCoder::Encrypt(sbuf.data(), sbuf.length(), nullptr, 0);
     arr.resize(sz);
     sz = MessageCoder::Encrypt(sbuf.data(), sbuf.length(), arr.data(), arr.length());
@@ -55,7 +77,9 @@ bool ServiceBridge::doSendAndReceive(const QString &sdata, QString &rdata)
 ServiceBridge::ServiceBridge()
     : m_host("127.0.0.1"),
       m_port(6350),
-      m_nMsgVersion(MessageValue::Version)
+      m_nMsgVersion(MessageValue::Version),
+      m_bNeedVarify(false),
+      m_bUseToken(false)
 {
     qsrand(uint(QDateTime::currentMSecsSinceEpoch()));
 }
@@ -63,6 +87,15 @@ ServiceBridge::ServiceBridge()
 bool ServiceBridge::setHost(const QString &host)
 {
     return m_host.setAddress(host);
+}
+
+bool ServiceBridge::setHost(QHostAddress::SpecialAddress host)
+{
+    if(host == QHostAddress::LocalHost || host == QHostAddress::LocalHostIPv6){
+        m_host.setAddress(host);
+        return true;
+    }
+    return false;
 }
 
 const QString ServiceBridge::getHost()
@@ -73,6 +106,26 @@ const QString ServiceBridge::getHost()
 void ServiceBridge::getMyAddress(QVector<QHostAddress> &addrs)
 {
     ListLocalIpAddress(addrs);
+}
+
+void ServiceBridge::setAuth(bool needed/* = true*/)
+{
+    m_bNeedVarify = needed;
+}
+
+void ServiceBridge::setAuth(bool needed, bool use_token, const QString &token/*=QString()*/)
+{
+    m_bNeedVarify = needed;
+    m_bUseToken = use_token;
+    m_strToken = token;
+}
+
+void ServiceBridge::setAuth(bool needed, const QString &name, const QString &passwd)
+{
+    m_bNeedVarify = needed;
+    m_bUseToken = false;
+    m_strName = name;
+    m_strPasswd = passwd;
 }
 
 bool ServiceBridge::sendSYN()
@@ -184,6 +237,29 @@ bool ServiceBridge::sendGetAccount(QString &name, QString &password, int &type)
                 type = obj["t"].toInt();
                 return true;
             }
+        }
+    }
+    return false;
+}
+bool ServiceBridge::sendGetLoginStatus(bool &login)
+{
+    int seed = qrand();
+    QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3}")
+            .arg(MessageValue::GET).arg(MessageValue::GET_USED_FLOW).arg(seed);
+    QString buf;
+    if(!doSendAndReceive(sdata, buf)) {
+        return false;
+    }
+    QJsonValue jdata;
+    if(parseJson(buf, seed, jdata))
+    {
+        if(jdata.isObject()){
+            QJsonObject obj = jdata.toObject();
+            if(obj.contains("v")){
+                login = (obj["v"].toInt() != 0);
+                return true;
+            }
+            login = false;
         }
     }
     return false;

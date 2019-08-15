@@ -204,6 +204,25 @@ bool ServiceBridge::sendGetAccount(std::string &name, std::string &password, int
     }
     return false;
 }
+bool ServiceBridge::sendGetLoginStatus(bool &login)
+{
+    stringstream ssbuf;
+    int seed = rand();
+    ssbuf << "{\"type\":" << MessageValue::GET
+          << ",\"act\":" << MessageValue::GET_LOGIN_STATUS
+          << ",\"seed\":" << seed;
+    string buf;
+    if(!SendAndReceive(ssbuf.str(), buf)) {
+        return false;
+    }
+    boost::property_tree::ptree data;
+    if (parseJson(buf, seed, data))
+    {
+        login = data.get<int>("v", 0);
+        return true;
+    }
+    return false;
+}
 bool ServiceBridge::sendGetUsedFlow(int &value)
 {
     stringstream ssbuf;

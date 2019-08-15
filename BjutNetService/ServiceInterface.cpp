@@ -315,6 +315,11 @@ QByteArray ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAd
                                 .arg(int(m_bjutnet->getLoginType())),
                                 seed);
                     break;
+                case MessageValue::GET_LOGIN_STATUS:
+                    buffer = __ServiceInterface_AckDataToByteArray(
+                                QString("{\"v\":%1}").arg(lgn.getLoginStatus()?1:0),
+                                seed);
+                    break;
                 case MessageValue::GET_USED_FLOW:
                     buffer = __ServiceInterface_AckDataToByteArray(
                                 QString("{\"v\":%1}").arg(lgn.getFlow()),

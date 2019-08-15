@@ -224,7 +224,9 @@ bool WebLgn::loginOnWIFI(LoginType type)
 
 bool WebLgn::logout()
 {
-    return BJUT_WIFI == m_netType ? logoutOnWIFI() : logoutOnLAN();
+    bool ret = BJUT_WIFI == m_netType ? logoutOnWIFI() : logoutOnLAN();
+    m_isOnline = checkLoginStatus(m_loginType);
+    return ret;
 }
 
 bool WebLgn::logoutOnLAN(LoginType type)

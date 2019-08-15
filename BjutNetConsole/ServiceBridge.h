@@ -42,6 +42,7 @@ public:
 
     bool sendGetVersion(std::string &ver, int &inner_ver);
     bool sendGetAccount(std::string &name, std::string &password, int &type);
+    bool sendGetLoginStatus(bool &login);
     bool sendGetUsedFlow(int &value);
     bool sendGetUsedTime(int &value);
     bool sendGetLeftFee(int &value);

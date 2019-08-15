@@ -20,8 +20,12 @@ class ServiceBridge : public QObject
 public:
     ServiceBridge();
     bool setHost(const QString &host);
+    bool setHost(QHostAddress::SpecialAddress host);
     const QString getHost();
     void getMyAddress(QVector<QHostAddress> &addrs);
+    void setAuth(bool needed = true);
+    void setAuth(bool needed, bool use_token, const QString &token=QString());
+    void setAuth(bool needed, const QString &name, const QString &passwd);
 
     bool sendSYN();
     bool sendENQ();
@@ -42,6 +46,7 @@ public:
 
     bool sendGetVersion(QString &ver, int &inner_ver);
     bool sendGetAccount(QString &name, QString &password, int &type);
+    bool sendGetLoginStatus(bool &login);
     bool sendGetUsedFlow(int &value);
     bool sendGetUsedTime(int &value);
     bool sendGetLeftFee(int &value);
@@ -70,6 +75,11 @@ private:
     QHostAddress m_host;
     quint16 m_port;
     int m_nMsgVersion;
+    bool m_bNeedVarify;
+    bool m_bUseToken;
+    QString m_strToken;
+    QString m_strName;
+    QString m_strPasswd;
     QString m_strLastError;
 };
 
