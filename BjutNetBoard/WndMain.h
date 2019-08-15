@@ -5,6 +5,7 @@
 #include "Updater.h"
 #include "HLabel.h"
 #include "HPanel.h"
+#include <tuple>
 
 class QAction;
 class QApplication;
@@ -32,6 +33,17 @@ class BjutNet;
 class WndMain : public QWidget
 {
     Q_OBJECT
+
+    using OnlineDevice = std::tuple<int, QString, QString, QString, bool, bool>;
+    enum OnlineDeviceIdx{
+        OLDEV_ID,
+        OLDEV_IPV4,
+        OLDEV_IPV6,
+        OLDEV_MAC,
+        OLDEV_ONLINE,
+        OLDEV_LOCAL
+    };
+
 public:
     WndMain(WndTrayIcon *tray, QWidget *parent = Q_NULLPTR);
     ~WndMain();
@@ -50,6 +62,8 @@ public slots:
     void on_btnOnline2_clicked();
     void on_btnOffline1_clicked();
     void on_btnOffline2_clicked();
+    void on_btnForceOffline1_clicked();
+    void on_btnForceOffline2_clicked();
     void on_lblClientaddr_doubleClicked();
     void on_btnRefreshBook_clicked();
     void on_btnSubmitBook_clicked();
@@ -106,17 +120,19 @@ private:
     QPushButton *m_btnDetail;
 
     HPanel *m_frmOnline;
-    QLabel *m_lblCopyTip;
+    //QLabel *m_lblCopyTip;
     QLabel *m_lblClent1_ip4;
     QLabel *m_lblClent1_ip6;
     HLabel *m_lblClent1_addr4;
     HLabel *m_lblClent1_addr6;
+    QPushButton *m_btnForceOffline1;
     QPushButton *m_btnOffline1;
     QPushButton *m_btnOnline1;
     QLabel *m_lblClent2_ip4;
     QLabel *m_lblClent2_ip6;
     HLabel *m_lblClent2_addr4;
     HLabel *m_lblClent2_addr6;
+    QPushButton *m_btnForceOffline2;
     QPushButton *m_btnOffline2;
     QPushButton *m_btnOnline2;
 
@@ -147,7 +163,8 @@ private:
     bool m_bShowMsg = false;
     bool m_bApplyLogin;
     bool m_bNeedUpdate;
-    int m_strOnlineID[2];
+    //int m_strOnlineID[2];
+    QList<OnlineDevice> m_lstOnline;
     bna::gui::Updater m_updater;
     QProgressDialog *m_dlgProgress;
     WndTrayIcon *m_tray;

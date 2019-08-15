@@ -68,6 +68,7 @@ void BjutNet::run()
     ParamAccount *param_a = nullptr;
     ParamInt *param_i = nullptr;
     ParamInt *param_b = nullptr;
+    QHostAddress *param_ip = nullptr;
     //
     while(m_bRun.load()){
         // milliseconds
@@ -123,12 +124,70 @@ void BjutNet::run()
                 strMsg = "Refresh net info.";
                 SEND_ACT_AND_UPDATE_MESSAGE(m_bridge->sendActRefreshNet());
                 break;
-            case OFFLINE_DEVICE:
-                strMsg = "offline device.";
+            case FORCE_OFFLINE_DEVICE:
+                strMsg = "forced offline device.";
                 param_i = static_cast<ParamInt*>(act.second);
                 SEND_ACT_AND_UPDATE_MESSAGE(m_bridge->sendSetOfflineDevice(std::get<0>(*param_i)));
                 delete param_i;
                 param_i = nullptr;
+                break;
+            case ONLINE_DEVICE:
+                strMsg = "online device.";
+                param_ip = static_cast<QHostAddress*>(act.second);
+                if(!param_ip->isNull()){
+                    if(param_ip->isLoopback()){
+                        strMsg = "online local device.";
+                        SEND_ACT_AND_UPDATE_MESSAGE(m_bridge->sendActLoginBjut());
+                    }
+                    else{
+                        if(!m_bridge->sendGetAccount(m_strAccountName, m_strAccountPassword, m_nLoginType)){
+                            emit updateMessage("[Info] Cannot update account before online remote device.");
+                        }
+                        m_bridge->setAuth(true, m_strAccountName, m_strAccountPassword);
+                        if(!m_bridge->setHost(param_ip->toString())){
+                            emit updateMessage("[Fail] Cannot change remote host address.");
+                            break;
+                        }
+                        if(!m_bridge->sendSYN()){
+                            emit updateMessage("[Fail] Cannot sync with remote device.");
+                            break;
+                        }
+                        SEND_ACT_AND_UPDATE_MESSAGE(m_bridge->sendActLoginBjut());
+                        m_bridge->setAuth(false);
+                        m_bridge->setHost(QHostAddress::LocalHost);
+                    }
+                }
+                delete param_ip;
+                param_ip = nullptr;
+                break;
+            case OFFLINE_DEVICE:
+                strMsg = "offline device.";
+                param_ip = static_cast<QHostAddress*>(act.second);
+                if(!param_ip->isNull()){
+                    if(param_ip->isLoopback()){
+                        strMsg = "online local device.";
+                        SEND_ACT_AND_UPDATE_MESSAGE(m_bridge->sendActLogoutBjut());
+                    }
+                    else{
+                        if(!m_bridge->sendGetAccount(m_strAccountName, m_strAccountPassword, m_nLoginType)){
+                            emit updateMessage("[Info] Cannot update account before offline remote device.");
+                        }
+                        m_bridge->setAuth(true, m_strAccountName, m_strAccountPassword);
+                        if(!m_bridge->setHost(param_ip->toString())){
+                            emit updateMessage("[Fail] Cannot change remote host address.");
+                            break;
+                        }
+                        if(!m_bridge->sendSYN()){
+                            emit updateMessage("[Fail] Cannot sync with remote device.");
+                            break;
+                        }
+                        SEND_ACT_AND_UPDATE_MESSAGE(m_bridge->sendActLogoutBjut());
+                        m_bridge->setAuth(false);
+                        m_bridge->setHost(QHostAddress::LocalHost);
+                    }
+                }
+                delete param_ip;
+                param_ip = nullptr;
                 break;
             case SET_AUTO_START:
                 strMsg = "Set auto start.";
@@ -142,7 +201,8 @@ void BjutNet::run()
                 m_bridge->sendGetUsedFlow(m_nNetFlow);
                 m_bridge->sendGetUsedTime(m_nNetTime);
                 m_bridge->sendGetLeftFee(m_nNetFee);
-                emit updateNetInfo(true, m_nNetFlow, m_nNetTime, m_nNetFee);
+                m_bridge->sendGetLoginStatus(m_bLogin);
+                emit updateNetInfo(m_bLogin, m_nNetFlow, m_nNetTime, m_nNetFee);
                 tmRefresh.restart();
                 break;
             case GET_ACCOUNT:

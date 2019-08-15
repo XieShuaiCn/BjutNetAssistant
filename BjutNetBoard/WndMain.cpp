@@ -52,6 +52,8 @@ WndMain::WndMain(WndTrayIcon *tray, QWidget *parent) :
     connect(m_btnLogout, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnLogout_clicked);
     connect(m_btnLogin, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnLogin_clicked);
     connect(m_btnRefresh, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnRefresh_clicked);
+    connect(m_btnForceOffline1, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnForceOffline1_clicked);
+    connect(m_btnForceOffline2, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnForceOffline2_clicked);
     connect(m_btnOffline1, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnOffline1_clicked);
     connect(m_btnOffline2, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnOffline2_clicked);
     connect(m_btnOnline1, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnOnline1_clicked);
@@ -359,51 +361,134 @@ void WndMain::on_online_status(const QVariant &var_info)
     QVector<QHostAddress> addrs;
     ListLocalIpAddress(addrs);
     BjutNet::TypeOnlineDevices info = var_info.value<BjutNet::TypeOnlineDevices>();
-    if(info.size() > 0)
-    {
-        const auto &c = info[0];
-        m_lblClent1_addr4->setText(c[1]);
-        m_lblClent1_addr6->setText(c[2]);
-        if((c[1].size() && addrs.contains(QHostAddress(c[1])))
-            || (c[2].size() && addrs.contains(QHostAddress(c[2]))))
-        {
-            m_lblClent1_addr4->setText(m_lblClent1_addr4->text()+"(本机)");
+    // set offline
+    for(auto &client : m_lstOnline){
+        std::get<OLDEV_ONLINE>(client) = false;
+    }
+    // refresh list
+    for(const auto &client : info){
+        int id = client[0].toInt();
+        OnlineDevice dev{id, client[1], client[2], client[3], true, false};
+        m_lstOnline.push_front(dev);
+        for(auto it = m_lstOnline.begin()+1; it != m_lstOnline.end();){
+            if((std::get<OLDEV_IPV4>(*it).size() && client[1].size() && std::get<OLDEV_IPV4>(*it) == client[1])
+            || (std::get<OLDEV_IPV6>(*it).size() && client[2].size() && std::get<OLDEV_IPV6>(*it) == client[2])){
+                it = m_lstOnline.erase(it);
+            }
+            else{
+                ++it;
+            }
         }
-        m_strOnlineID[0] = c[0].toInt();
+    }
+    // check local (this PC)
+    for(auto &client : m_lstOnline){
+        if(std::get<OLDEV_IPV4>(client).size() && addrs.contains(QHostAddress(std::get<OLDEV_IPV4>(client))))
+        {
+            std::get<OLDEV_LOCAL>(client) = true;
+        }
+        else if(std::get<OLDEV_IPV6>(client).size() && addrs.contains(QHostAddress(std::get<OLDEV_IPV6>(client))))
+        {
+            std::get<OLDEV_LOCAL>(client) = true;
+        }
+        else{
+            std::get<OLDEV_LOCAL>(client) = false;
+        }
+    }
+    // update frame
+    if(m_lstOnline.size() > 0){
+        auto &c = m_lstOnline.at(0);
+        m_lblClent1_addr4->setText(std::get<OLDEV_IPV4>(c));
+        m_lblClent1_addr6->setText(std::get<OLDEV_IPV6>(c));
         m_lblClent1_addr4->setVisible(true);
         m_lblClent1_addr6->setVisible(true);
         m_btnOffline1->setVisible(true);
         m_btnOnline1->setVisible(true);
+        m_btnForceOffline1->setVisible(true);
+        if(std::get<OLDEV_IPV4>(c).size() && std::get<OLDEV_LOCAL>(c))
+        {
+            m_lblClent1_addr4->setText(m_lblClent1_addr4->text()+"(本机)");
+        }
+        else if(std::get<OLDEV_IPV6>(c).size() && std::get<OLDEV_LOCAL>(c))
+        {
+            m_lblClent1_addr6->setText(m_lblClent1_addr6->text()+"(本机)");
+        }
+        // offline / online
+        if(!std::get<OLDEV_ONLINE>(c)){
+            m_lblClent1_addr4->setStyleSheet("color:#808080;");
+            m_lblClent1_addr6->setStyleSheet("color:#808080;");
+            m_btnOffline1->setEnabled(false);
+            m_btnOnline1->setEnabled(true);
+            if(std::get<OLDEV_IPV4>(c).size()==0 && std::get<OLDEV_IPV6>(c).size()>0){
+                m_lblClent1_addr6->setText(m_lblClent1_addr6->text()+"(离线)");
+            }
+            else{
+                m_lblClent1_addr4->setText(m_lblClent1_addr4->text()+"(离线)");
+            }
+        }
+        else{
+            m_lblClent1_addr4->setStyleSheet("color:#000000;");
+            m_lblClent1_addr6->setStyleSheet("color:#000000;");
+            m_btnOffline1->setEnabled(true);
+            m_btnOnline1->setEnabled(false);
+        }
     }
     else {
-        m_strOnlineID[0] = 0;
         m_lblClent1_addr4->setVisible(false);
         m_lblClent1_addr6->setVisible(false);
         m_btnOffline1->setVisible(false);
         m_btnOnline1->setVisible(false);
+        m_btnForceOffline1->setVisible(false);
     }
-    if(info.size() > 1)
-    {
-        const auto &c = info[1];
-        m_lblClent2_addr4->setText(c[1]);
-        m_lblClent2_addr6->setText(c[2]);
-        if((c[1].size() && addrs.contains(QHostAddress(c[1])))
-            || (c[2].size() && addrs.contains(QHostAddress(c[2]))))
-        {
-            m_lblClent2_addr4->setText(m_lblClent2_addr4->text()+"(本机)");
-        }
-        m_strOnlineID[1] = c[1].toInt();
+    if(m_lstOnline.size() > 1){
+        const auto &c = m_lstOnline.at(1);
+        m_lblClent2_addr4->setText(std::get<OLDEV_IPV4>(c));
+        m_lblClent2_addr6->setText(std::get<OLDEV_IPV6>(c));
         m_lblClent2_addr4->setVisible(true);
         m_lblClent2_addr6->setVisible(true);
         m_btnOffline2->setVisible(true);
         m_btnOnline2->setVisible(true);
+        m_btnForceOffline2->setVisible(true);
+        if(std::get<OLDEV_IPV4>(c).size() && std::get<OLDEV_LOCAL>(c))
+        {
+            m_lblClent2_addr4->setText(m_lblClent2_addr4->text()+"(本机)");
+        }
+        else if(std::get<OLDEV_IPV6>(c).size() && std::get<OLDEV_LOCAL>(c))
+        {
+            m_lblClent2_addr6->setText(m_lblClent2_addr6->text()+"(本机)");
+        }
+        // offline / online
+        if(!std::get<OLDEV_ONLINE>(c)){
+            m_lblClent2_addr4->setStyleSheet("color:#808080;");
+            m_lblClent2_addr6->setStyleSheet("color:#808080;");
+            m_btnOffline2->setEnabled(false);
+            m_btnOnline2->setEnabled(true);
+            if(std::get<OLDEV_IPV4>(c).size()==0 && std::get<OLDEV_IPV6>(c).size()>0){
+                m_lblClent2_addr6->setText(m_lblClent2_addr6->text()+"(离线)");
+            }
+            else{
+                m_lblClent2_addr4->setText(m_lblClent2_addr4->text()+"(离线)");
+            }
+        }
+        else{
+            m_lblClent2_addr4->setStyleSheet("color:#000000;");
+            m_lblClent2_addr6->setStyleSheet("color:#000000;");
+            m_btnOffline2->setEnabled(true);
+            m_btnOnline2->setEnabled(false);
+        }
     }
     else {
-        m_strOnlineID[1] = 0;
         m_lblClent2_addr4->setVisible(false);
         m_lblClent2_addr6->setVisible(false);
         m_btnOffline2->setVisible(false);
         m_btnOnline2->setVisible(false);
+        m_btnForceOffline2->setVisible(false);
+    }
+    // remove redundant items
+    if(m_lstOnline.size() > 2){
+        auto it = m_lstOnline.begin();
+        ++it;
+        ++it;
+        m_lstOnline.erase(it, m_lstOnline.end());
     }
 }
 
@@ -471,11 +556,13 @@ void WndMain::on_lblShowMsg_clicked()
 void WndMain::on_btnLogout_clicked()
 {
     m_net->sendLogout();
+    m_net->requireOnlineDevices();
 }
 
 void WndMain::on_btnLogin_clicked()
 {
     m_net->sendLogin();
+    m_net->requireOnlineDevices();
 }
 
 void WndMain::on_lblClientaddr_doubleClicked()
@@ -608,29 +695,96 @@ void WndMain::on_lblVersion_clicked()
 }
 
 void WndMain::on_btnOnline1_clicked()
-{}
+{
+    if(m_lstOnline.size() >= 1){
+        const OnlineDevice &od = m_lstOnline.at(0);
+        if(std::get<OLDEV_LOCAL>(od)){
+            m_net->sendLogin();
+        }
+        else{
+            QString addr = std::get<OLDEV_IPV4>(od).size() ? std::get<OLDEV_IPV4>(od) : std::get<OLDEV_IPV6>(od);
+            if(addr.size()){
+                m_net->sendOnlineDevice(addr);
+            }
+        }
+    }
+    m_net->requireOnlineDevices();
+}
 
 void WndMain::on_btnOnline2_clicked()
-{}
+{
+    if(m_lstOnline.size() >= 2){
+        const OnlineDevice &od = m_lstOnline.at(1);
+        if(std::get<OLDEV_LOCAL>(od)){
+            m_net->sendLogin();
+        }
+        else{
+            QString addr = std::get<OLDEV_IPV4>(od).size() ? std::get<OLDEV_IPV4>(od) : std::get<OLDEV_IPV6>(od);
+            if(addr.size()){
+                m_net->sendOnlineDevice(addr);
+            }
+        }
+    }
+    m_net->requireOnlineDevices();
+}
 
 void WndMain::on_btnOffline1_clicked()
 {
-    if(m_strOnlineID[0])
-        m_net->sendOfflineDevice(m_strOnlineID[0]);
+    if(m_lstOnline.size() >= 1){
+        const OnlineDevice &od = m_lstOnline.at(0);
+        if(std::get<OLDEV_LOCAL>(od)){
+            m_net->sendLogout();
+        }
+        else{
+            QString addr = std::get<OLDEV_IPV4>(od).size() ? std::get<OLDEV_IPV4>(od) : std::get<OLDEV_IPV6>(od);
+            if(addr.size()){
+                m_net->sendOfflineDevice(addr);
+            }
+        }
+    }
     m_net->requireOnlineDevices();
 }
 
 void WndMain::on_btnOffline2_clicked()
 {
-    if(m_strOnlineID[1])
-        m_net->sendOfflineDevice(m_strOnlineID[1]);
+    if(m_lstOnline.size() >= 2){
+        const OnlineDevice &od = m_lstOnline.at(1);
+        if(std::get<OLDEV_LOCAL>(od)){
+            m_net->sendLogout();
+        }
+        else{
+            QString addr = std::get<OLDEV_IPV4>(od).size() ? std::get<OLDEV_IPV4>(od) : std::get<OLDEV_IPV6>(od);
+            if(addr.size()){
+                m_net->sendOfflineDevice(addr);
+            }
+        }
+    }
+    m_net->requireOnlineDevices();
+}
+
+void WndMain::on_btnForceOffline1_clicked()
+{
+    if(m_lstOnline.size() >= 1){
+        const OnlineDevice &od = m_lstOnline.at(0);
+        if(std::get<OLDEV_ONLINE>(od))
+            m_net->sendForceOfflineDevice(std::get<OLDEV_ID>(od));
+    }
+    m_net->requireOnlineDevices();
+}
+
+void WndMain::on_btnForceOffline2_clicked()
+{
+    if(m_lstOnline.size() >= 2){
+        const OnlineDevice &od = m_lstOnline.at(1);
+        if(std::get<OLDEV_ONLINE>(od))
+            m_net->sendForceOfflineDevice(std::get<OLDEV_ID>(od));
+    }
     m_net->requireOnlineDevices();
 }
 
 // recive the info of account service
 void WndMain::on_serviceInfo(const QString &name, int totalFlow)
 {
-    //TODO: 1% why????
     if(totalFlow > 0){
         m_lblFlowUsed->setText(QString("已用：%1 %").arg(int(100.0 * m_net->getUsedFlow() / totalFlow / 1024)));
     }

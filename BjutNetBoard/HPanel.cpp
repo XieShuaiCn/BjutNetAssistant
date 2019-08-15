@@ -25,6 +25,7 @@ void HPanel::setText(const QString &text)
     {
         const auto fm = m_lblText->fontMetrics();
         m_rectText = fm.boundingRect(text);
+        m_lblText->setGeometry(QRect(25, 0, m_rectText.width()+10, 20));
         m_bShowText = true;
     }
     else {
@@ -50,7 +51,7 @@ void HPanel::paintEvent(QPaintEvent *event)
             double width = this->width();
             double height = this->height();
             double t_height_2 = 3+0.5*m_rectText.height();
-            double t_width = m_rectText.width();
+            double t_width = m_rectText.width()+2;
             double left = 0.5*m_dBorderWidth;
             double right = width-0.5*m_dBorderWidth;
             double top = t_height_2;

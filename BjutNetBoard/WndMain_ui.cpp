@@ -133,7 +133,7 @@ void bna::gui::WndMain::initUI()
     m_lblClent1_ip6->setGeometry(QRect(10, 52, 40, 20));
     m_lblClent1_ip6->setFont(font_s120);
     m_lblClent1_addr4 = new HLabel(m_frmOnline);
-    m_lblClent1_addr4->setGeometry(QRect(55, 22, 200, 20));
+    m_lblClent1_addr4->setGeometry(QRect(55, 22, 250, 20));
     m_lblClent1_addr4->setFont(font_s120);
     m_lblClent1_addr6 = new HLabel(m_frmOnline);
     m_lblClent1_addr6->setGeometry(QRect(55, 52, m_frmOnline->width()-20, 20));
@@ -144,6 +144,9 @@ void bna::gui::WndMain::initUI()
     m_btnOffline1 = new QPushButton(m_frmOnline);
     m_btnOffline1->setGeometry(QRect(m_btnOnline1->pos().x()-80, 20, 70, 25));
     m_btnOffline1->setVisible(false);
+    m_btnForceOffline1 = new QPushButton(m_frmOnline);
+    m_btnForceOffline1->setGeometry(QRect(m_btnOffline1->pos().x()-80, 20, 70, 25));
+    m_btnForceOffline1->setVisible(false);
     m_lblClent2_ip4 = new QLabel(m_frmOnline);
     m_lblClent2_ip4->setGeometry(QRect(10, 82, 40, 20));
     m_lblClent2_ip4->setFont(font_s120);
@@ -151,7 +154,7 @@ void bna::gui::WndMain::initUI()
     m_lblClent2_ip6->setGeometry(QRect(10, 112, 40, 20));
     m_lblClent2_ip6->setFont(font_s120);
     m_lblClent2_addr4 = new HLabel(m_frmOnline);
-    m_lblClent2_addr4->setGeometry(QRect(55, 82, 200, 20));
+    m_lblClent2_addr4->setGeometry(QRect(55, 82, 250, 20));
     m_lblClent2_addr4->setFont(font_s120);
     m_lblClent2_addr6 = new HLabel(m_frmOnline);
     m_lblClent2_addr6->setGeometry(QRect(55, 112, m_frmOnline->width()-20, 20));
@@ -162,14 +165,17 @@ void bna::gui::WndMain::initUI()
     m_btnOffline2 = new QPushButton(m_frmOnline);
     m_btnOffline2->setGeometry(QRect(m_btnOnline2->pos().x()-80, 80, 70, 25));
     m_btnOffline2->setVisible(false);
-    m_lblCopyTip = new QLabel(m_frmOnline);
-    m_lblCopyTip->setGeometry(QRect(m_btnOffline1->pos().x()-85, 20, 80, 25));
-    m_lblCopyTip->setFont(font_s120);
-    m_lblCopyTip->setStyleSheet("color:#808080;");
+    m_btnForceOffline2 = new QPushButton(m_frmOnline);
+    m_btnForceOffline2->setGeometry(QRect(m_btnOffline2->pos().x()-80, 80, 70, 25));
+    m_btnForceOffline2->setVisible(false);
+    //m_lblCopyTip = new QLabel(m_frmOnline);
+    //m_lblCopyTip->setGeometry(QRect(m_frmOnline->width()-85, 50, 80, 25));
+    //m_lblCopyTip->setFont(font_s120);
+    //m_lblCopyTip->setStyleSheet("color:#808080;");
 
     //预约套餐
     m_frmOperation = new HPanel(this);
-    m_frmOperation->setGeometry(QRect(15, 327, 180, 120));
+    m_frmOperation->setGeometry(QRect(15, 325, 180, 120));
     m_frmOperation->setFrameShape(QFrame::NoFrame);
     m_frmOperation->setFrameShadow(QFrame::Plain);
     m_frmOperation->setVisible(false);
@@ -252,16 +258,18 @@ void bna::gui::WndMain::initUI()
     m_btnLogin->setText(QString("上线"));
     m_btnLogout->setText(QString("下线"));
     m_btnDetail->setText(QString(">>更多"));
-    m_frmOnline->setText(QString("在线列表"));
+    m_frmOnline->setText(QString("在线列表(双击可复制IP)"));
     m_lblClent1_ip4->setText(QString("IPv4:"));
     m_lblClent1_ip6->setText(QString("IPv6:"));
     m_btnOnline1->setText(QString("尝试上线"));
-    m_btnOffline1->setText(QString("强制下线"));
+    m_btnOffline1->setText(QString("尝试下线"));
+    m_btnForceOffline1->setText(QString("强制下线"));
     m_lblClent2_ip4->setText(QString("IPv4:"));
     m_lblClent2_ip6->setText(QString("IPv6:"));
     m_btnOnline2->setText(QString("尝试上线"));
-    m_btnOffline2->setText(QString("强制下线"));
-    m_lblCopyTip->setText(QString("双击可复制IP"));
+    m_btnOffline2->setText(QString("尝试下线"));
+    m_btnForceOffline2->setText(QString("强制下线"));
+    //m_lblCopyTip->setText(QString("双击可复制IP"));
     m_frmOperation->setText(QString("业务办理"));
     m_lblCurrentBook->setText(QString("已预约:[请刷新套餐]"));
     m_btnRefreshBook->setText(QString("刷新套餐"));

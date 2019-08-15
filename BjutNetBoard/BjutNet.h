@@ -10,6 +10,7 @@
 #include <QString>
 #include <QThread>
 #include <QMutex>
+#include <QHostAddress>
 
 namespace bna {
 namespace gui {
@@ -29,7 +30,9 @@ public:
         BOOK_NEW_SERVICE,
         REFRESH_ONLINE_DEVICE,
         GET_ONLINE_DEVICE,
+        FORCE_OFFLINE_DEVICE,
         OFFLINE_DEVICE,
+        ONLINE_DEVICE,
         REFRESH_NET_INFO,
         GET_NET_INFO,
         GET_SERVICE_INFO,
@@ -68,7 +71,11 @@ public:
 
     void sendBookService(int id);
 
-    void sendOfflineDevice(int id);
+    void sendForceOfflineDevice(int id);
+
+    void sendOfflineDevice(QString ip_addr);
+
+    void sendOnlineDevice(QString ip_addr);
 
     void sendAutoStart(bool autostart = true);
 
@@ -154,6 +161,7 @@ private:
     int m_nNetFlow = 0;
     int m_nNetTime = 0;
     int m_nNetFee = 0;
+    bool m_bLogin = false;
     int m_nTotalFlow = 0;
     QString m_strServiceName;
     QString m_strBookedService;
@@ -222,9 +230,19 @@ inline void BjutNet::sendBookService(int id)
     queueAction(BOOK_NEW_SERVICE, new ParamInt{id});
 }
 
-inline void BjutNet::sendOfflineDevice(int id)
+inline void BjutNet::sendForceOfflineDevice(int id)
 {
-    queueAction(OFFLINE_DEVICE, new ParamInt{id});
+    queueAction(FORCE_OFFLINE_DEVICE, new ParamInt{id});
+}
+
+inline void BjutNet::sendOnlineDevice(QString ip_addr)
+{
+    queueAction(ONLINE_DEVICE, new QHostAddress(ip_addr));
+}
+
+inline void BjutNet::sendOfflineDevice(QString ip_addr)
+{
+    queueAction(OFFLINE_DEVICE, new QHostAddress(ip_addr));
 }
 
 inline void BjutNet::sendAutoStart(bool autostart)
