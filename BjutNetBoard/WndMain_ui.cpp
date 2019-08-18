@@ -42,11 +42,11 @@ void bna::gui::WndMain::initUI()
     m_frmGraph->setFrameShape(QFrame::NoFrame);
     m_frmGraph->setFrameShadow(QFrame::Plain);
     m_lblFlowUsed = new QLabel(m_frmGraph);
-    m_lblFlowUsed->setGeometry(QRect(0, 20, 100, 20));
-    m_lblFlowUsed->setFont(font_s120);
     m_lblService = new QLabel(m_frmGraph);
     m_lblService->setGeometry(QRect(0, 0, 150, 20));
     m_lblService->setFont(font_s115);
+    m_lblFlowUsed->setGeometry(QRect(0, 20, 100, 20));
+    m_lblFlowUsed->setFont(font_s120);
     m_lblStatus = new QLabel(m_frmGraph);
     m_lblStatus->setGeometry(QRect(0, 40, 50, 20));
     m_lblStatus->setFont(font_s120);
@@ -57,6 +57,14 @@ void bna::gui::WndMain::initUI()
     m_btnRefresh->setGeometry(QRect(55, 40, 20, 20));
     m_btnRefresh->setFlat(true);
     m_btnRefresh->setFont(font_s120);
+    m_btnSetting = new QPushButton(m_frmGraph);
+    m_btnSetting->setGeometry(QRect(0, 60, 20, 20));
+    m_btnSetting->setFlat(true);
+    m_btnSetting->setFont(font_s120);
+    m_btnHelp = new QPushButton(m_frmGraph);
+    m_btnHelp->setGeometry(QRect(20, 60, 20, 20));
+    m_btnHelp->setFlat(true);
+    m_btnHelp->setFont(font_s120);
     m_frmFlowGraph = new QFrame(m_frmGraph);
     m_frmFlowGraph->setGeometry(QRect(115,0,161,161));
     m_frmFlowGraph->setFrameShape(QFrame::NoFrame);
@@ -247,6 +255,10 @@ void bna::gui::WndMain::initUI()
     m_lblStatusFlag->setToolTip(QString("离线"));
     m_btnRefresh->setToolTip("刷新数据");
     m_btnRefresh->setIcon(QIcon(":/png/BtnRefresh"));
+    m_btnSetting->setToolTip("设置");
+    m_btnSetting->setIcon(QIcon(":/png/BtnSetting"));
+    m_btnHelp->setToolTip("帮助信息");
+    m_btnHelp->setIcon(QIcon(":/png/BtnHelp"));
     m_frmFlowGraph->setToolTip("流量使用情况图");
     m_frmFlowGraph->setToolTipDuration(0);
     m_lblInfoTime->setText(QString("已用时间："));
@@ -258,7 +270,7 @@ void bna::gui::WndMain::initUI()
     m_btnLogin->setText(QString("上线"));
     m_btnLogout->setText(QString("下线"));
     m_btnDetail->setText(QString(">>更多"));
-    m_frmOnline->setText(QString("在线列表(双击可复制IP)"));
+    m_frmOnline->setText(QString("在线列表(双击IP可复制)"));
     m_lblClent1_ip4->setText(QString("IPv4:"));
     m_lblClent1_ip6->setText(QString("IPv6:"));
     m_btnOnline1->setText(QString("尝试上线"));

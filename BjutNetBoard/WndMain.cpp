@@ -52,6 +52,8 @@ WndMain::WndMain(WndTrayIcon *tray, QWidget *parent) :
     connect(m_btnLogout, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnLogout_clicked);
     connect(m_btnLogin, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnLogin_clicked);
     connect(m_btnRefresh, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnRefresh_clicked);
+    connect(m_btnSetting, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnSetting_clicked);
+    connect(m_btnHelp, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnHelp_clicked);
     connect(m_btnForceOffline1, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnForceOffline1_clicked);
     connect(m_btnForceOffline2, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnForceOffline2_clicked);
     connect(m_btnOffline1, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnOffline1_clicked);
@@ -518,6 +520,14 @@ void WndMain::on_btnRefresh_clicked()
     m_btnRefresh->setEnabled(true);
 }
 
+void WndMain::on_btnSetting_clicked()
+{
+    m_tray->cmdShowSettingWnd();
+}
+
+void WndMain::on_btnHelp_clicked()
+{}
+
 void WndMain::on_btnDetail_clicked()
 {
     m_bShowDetail = !m_bShowDetail;
@@ -586,15 +596,18 @@ void WndMain::on_lblClientaddr_doubleClicked()
 
 void WndMain::on_btnRefreshBook_clicked()
 {
+    m_cmbListBook->clear();
     m_net->requireAlldService();
     m_net->requireBookedService();
 }
 
 void WndMain::on_btnSubmitBook_clicked()
 {
-    const auto &lst = m_net->getAllServices();
-    if(m_cmbListBook->currentIndex() >=0 && static_cast<size_t>(m_cmbListBook->currentIndex()) < lst.size())
-        m_net->sendBookService(std::get<0>(lst[m_cmbListBook->currentIndex()]));
+    bool ok = false;
+    int id = m_cmbListBook->currentData().toInt(&ok);
+    if(ok){
+        m_net->sendBookService(id);
+    }
 }
 
 void WndMain::on_btnBjutWebCommon_clicked()
@@ -814,14 +827,13 @@ void WndMain::on_remoteVersion(const QString &version, int inner_ver)
 //
 void WndMain::on_allServices(const QVariant &services)
 {
-    BjutNet::TypeAllServices serv = services.value<BjutNet::TypeAllServices>();
     m_cmbListBook->clear();
-    for(const auto &l : serv)
+    for(const auto &l : services.value<BjutNet::TypeAllServices>())
     {
         m_cmbListBook->addItem(std::get<1>(l), QVariant(std::get<0>(l)));
     }
 }
-//
+
 void WndMain::on_bookedService(const QString &name)
 {
     m_lblCurrentBook->setText("已预约:["+name+"]");

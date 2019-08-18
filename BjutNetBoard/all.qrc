@@ -6,5 +6,7 @@
         <file alias="BtnRefresh">res/BtnRefresh.png</file>
         <file alias="Online">res/Online.png</file>
         <file alias="Offline">res/Offline.png</file>
+        <file alias="BtnSetting">res/BtnSetting.png</file>
+        <file alias="BtnHelp">res/BtnHelp.png</file>
     </qresource>
 </RCC>

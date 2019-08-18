@@ -55,6 +55,8 @@ public slots:
     void initUI();
     void on_show();
     void on_btnRefresh_clicked();
+    void on_btnSetting_clicked();
+    void on_btnHelp_clicked();
     void on_btnDetail_clicked();
     void on_btnLogout_clicked();
     void on_btnLogin_clicked();
@@ -103,6 +105,8 @@ private:
     QLabel *m_lblStatus;
     QLabel *m_lblStatusFlag;
     QPushButton *m_btnRefresh;
+    QPushButton *m_btnSetting;
+    QPushButton *m_btnHelp;
 
     QFrame *m_frmInfo;
     QLabel *m_lblInfoTime;
