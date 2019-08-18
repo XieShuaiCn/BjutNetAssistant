@@ -46,6 +46,8 @@ WndMain::WndMain(WndTrayIcon *tray, QWidget *parent) :
     m_net = tray->getBjutNet();
     //初始化界面
     initUI();
+    //bjut web
+    initBjutWeb();
 
     //关联信号
     connect(m_btnDetail, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnDetail_clicked);
@@ -68,14 +70,11 @@ WndMain::WndMain(WndTrayIcon *tray, QWidget *parent) :
     connect(m_btnSubmitBook, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnSubmitBook_clicked);
     connect(m_lblShowMsg, &bna::gui::HLabel::clicked, this, &bna::gui::WndMain::on_lblShowMsg_clicked);
     connect(m_btnBjutWebMore, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnBjutWebMore_clicked);
-    connect(m_btnBjutJfselfWeb, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
-    connect(m_btnBjutMyWeb, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
-    connect(m_btnBjutHomeWeb, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
-    connect(m_btnBjutMailWeb, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
-    connect(m_btnBjutCaWeb, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
-    connect(m_actMenuBjutLgnWeb, &QAction::triggered, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
-    connect(m_actMenuBjutLgnWeb, &QAction::triggered, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
-    connect(m_actMenuBjutFinanceManagerWeb, &QAction::triggered, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
+    connect(m_btnBjutWeb1, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
+    connect(m_btnBjutWeb2, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
+    connect(m_btnBjutWeb3, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
+    connect(m_btnBjutWeb4, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
+    connect(m_btnBjutWeb5, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
     connect(m_lblVersion, &bna::gui::HLabel::clicked, this, &bna::gui::WndMain::on_lblVersion_clicked);
     //connect(this, &WndMain::showed, this, &WndMain::on_show);
     connect(m_net, &bna::gui::BjutNet::updateMessage, this, &bna::gui::WndMain::on_txtMsg_message);
@@ -91,6 +90,33 @@ WndMain::WndMain(WndTrayIcon *tray, QWidget *parent) :
 
 WndMain::~WndMain()
 {
+}
+
+void WndMain::initBjutWeb()
+{
+    m_vecBjutWeb = m_tray->getBjutWebList();
+    if(m_vecBjutWeb.size() > 0){
+        m_btnBjutWeb1->setText(m_vecBjutWeb[0].name);
+    }
+    if(m_vecBjutWeb.size() > 1){
+        m_btnBjutWeb2->setText(m_vecBjutWeb[1].name);
+    }
+    if(m_vecBjutWeb.size() > 2){
+        m_btnBjutWeb3->setText(m_vecBjutWeb[2].name);
+    }
+    if(m_vecBjutWeb.size() > 3){
+        m_btnBjutWeb4->setText(m_vecBjutWeb[3].name);
+    }
+    if(m_vecBjutWeb.size() > 4){
+        m_btnBjutWeb5->setText(m_vecBjutWeb[4].name);
+    }
+    m_menuBjutWeb->clear();
+    for(int i = 5; i < m_vecBjutWeb.size(); ++i){
+        QAction *act = new QAction(m_vecBjutWeb[i].name);
+        act->setData(QVariant(i));
+        m_menuBjutWeb->addAction(act);
+        connect(act, &QAction::triggered, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
+    }
 }
 
 void WndMain::show()
@@ -285,6 +311,7 @@ void WndMain::paintEvent(QPaintEvent *event)
 
 void WndMain:: on_show()
 {
+    initBjutWeb();
     m_updater.checkUpdate();
     if(m_updater.needUpdate()){
         m_bNeedUpdate = true;
@@ -612,30 +639,44 @@ void WndMain::on_btnSubmitBook_clicked()
 
 void WndMain::on_btnBjutWebCommon_clicked()
 {
-    QObject *obj = dynamic_cast<QObject *>(sender());
-    if(obj == m_btnBjutJfselfWeb)
-        QDesktopServices::openUrl(QUrl("https://jfself.bjut.edu.cn/"));
-    else if(obj == m_btnBjutMyWeb)
-        QDesktopServices::openUrl(QUrl("https://my.bjut.edu.cn/"));
-    else if(obj == m_btnBjutCaWeb)
-        QDesktopServices::openUrl(QUrl("http://ca.bjut.edu.cn/"));
-    else if(obj == m_btnBjutHomeWeb)
-        QDesktopServices::openUrl(QUrl("http://www.bjut.edu.cn/"));
-    else if(obj == m_btnBjutMailWeb)
-        QDesktopServices::openUrl(QUrl("https://mail.bjut.edu.cn/"));
-    else if(obj == m_actMenuBjutLgnWeb)
-        QDesktopServices::openUrl(QUrl("http://lgn.bjut.edu.cn/"));
-    else if(obj == m_actMenuBjutRecdocPyxxWeb)
-        QDesktopServices::openUrl(QUrl("http://webrecdoc.bjut.edu.cn/pyxx/"));
-    else if(obj == m_actMenuBjutFinanceManagerWeb)
-        QDesktopServices::openUrl(QUrl("http://172.27.12.88/WFManager/homesso.jsp"));
-    else{
-        QMessageBox mb(this);
-        mb.setWindowTitle("常用入口");
-        mb.setText("无法识别的调用");
-        mb.setStandardButtons(QMessageBox::Ok);
-        mb.exec();
+    QObject *obj = sender();
+    if(obj == m_btnBjutWeb1){
+        QDesktopServices::openUrl(m_vecBjutWeb[0].url);
+        m_tray->increaseBjutWebFrequency(m_vecBjutWeb[0].id);
     }
+    else if(obj == m_btnBjutWeb2){
+        QDesktopServices::openUrl(m_vecBjutWeb[1].url);
+        m_tray->increaseBjutWebFrequency(m_vecBjutWeb[1].id);
+    }
+    else if(obj == m_btnBjutWeb3){
+        QDesktopServices::openUrl(m_vecBjutWeb[2].url);
+        m_tray->increaseBjutWebFrequency(m_vecBjutWeb[2].id);
+    }
+    else if(obj == m_btnBjutWeb4){
+        QDesktopServices::openUrl(m_vecBjutWeb[3].url);
+        m_tray->increaseBjutWebFrequency(m_vecBjutWeb[3].id);
+    }
+    else if(obj == m_btnBjutWeb5){
+        QDesktopServices::openUrl(m_vecBjutWeb[4].url);
+        m_tray->increaseBjutWebFrequency(m_vecBjutWeb[4].id);
+    }
+    else{
+        QAction *act = static_cast<QAction*>(obj);
+        if(act->data().type() == QVariant::Int){
+            auto &w = m_vecBjutWeb[act->data().value<int>()];
+            QDesktopServices::openUrl(w.url);
+            m_tray->increaseBjutWebFrequency(w.id);
+        }
+        else{
+            QMessageBox mb(this);
+            mb.setWindowTitle("常用入口");
+            mb.setText("无法识别的调用");
+            mb.setStandardButtons(QMessageBox::Ok);
+            mb.exec();
+            return;
+        }
+    }
+    initBjutWeb();
 }
 
 void WndMain::on_btnBjutWebMore_clicked()

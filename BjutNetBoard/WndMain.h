@@ -5,6 +5,7 @@
 #include "Updater.h"
 #include "HLabel.h"
 #include "HPanel.h"
+#include "WndTrayIcon.h"
 #include <tuple>
 
 class QAction;
@@ -53,6 +54,7 @@ Q_SIGNALS:
     void showed();
 public slots:
     void initUI();
+    void initBjutWeb();
     void on_show();
     void on_btnRefresh_clicked();
     void on_btnSetting_clicked();
@@ -141,16 +143,13 @@ private:
     QPushButton *m_btnOnline2;
 
     HPanel *m_frmBjutWeb;
-    QPushButton *m_btnBjutJfselfWeb;
-    QPushButton *m_btnBjutMyWeb;
-    QPushButton *m_btnBjutCaWeb;
-    QPushButton *m_btnBjutMailWeb;
-    QPushButton *m_btnBjutHomeWeb;
+    QPushButton *m_btnBjutWeb1;
+    QPushButton *m_btnBjutWeb2;
+    QPushButton *m_btnBjutWeb3;
+    QPushButton *m_btnBjutWeb4;
+    QPushButton *m_btnBjutWeb5;
     QPushButton *m_btnBjutWebMore;
     QMenu *m_menuBjutWeb;
-    QAction *m_actMenuBjutLgnWeb;
-    QAction *m_actMenuBjutRecdocPyxxWeb;
-    QAction *m_actMenuBjutFinanceManagerWeb;
     HPanel *m_frmOperation;
     QLabel *m_lblCurrentBook;
     QComboBox *m_cmbListBook;
@@ -167,6 +166,7 @@ private:
     bool m_bShowMsg = false;
     bool m_bApplyLogin;
     bool m_bNeedUpdate;
+    QVector<BjutWebItemInfo> m_vecBjutWeb;
     //int m_strOnlineID[2];
     QList<OnlineDevice> m_lstOnline;
     bna::gui::Updater m_updater;
