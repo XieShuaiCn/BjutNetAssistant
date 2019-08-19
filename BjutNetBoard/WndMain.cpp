@@ -639,44 +639,53 @@ void WndMain::on_btnSubmitBook_clicked()
 
 void WndMain::on_btnBjutWebCommon_clicked()
 {
-    QObject *obj = sender();
-    if(obj == m_btnBjutWeb1){
-        QDesktopServices::openUrl(m_vecBjutWeb[0].url);
-        m_tray->increaseBjutWebFrequency(m_vecBjutWeb[0].id);
-    }
-    else if(obj == m_btnBjutWeb2){
-        QDesktopServices::openUrl(m_vecBjutWeb[1].url);
-        m_tray->increaseBjutWebFrequency(m_vecBjutWeb[1].id);
-    }
-    else if(obj == m_btnBjutWeb3){
-        QDesktopServices::openUrl(m_vecBjutWeb[2].url);
-        m_tray->increaseBjutWebFrequency(m_vecBjutWeb[2].id);
-    }
-    else if(obj == m_btnBjutWeb4){
-        QDesktopServices::openUrl(m_vecBjutWeb[3].url);
-        m_tray->increaseBjutWebFrequency(m_vecBjutWeb[3].id);
-    }
-    else if(obj == m_btnBjutWeb5){
-        QDesktopServices::openUrl(m_vecBjutWeb[4].url);
-        m_tray->increaseBjutWebFrequency(m_vecBjutWeb[4].id);
-    }
-    else{
-        QAction *act = static_cast<QAction*>(obj);
-        if(act->data().type() == QVariant::Int){
-            auto &w = m_vecBjutWeb[act->data().value<int>()];
-            QDesktopServices::openUrl(w.url);
-            m_tray->increaseBjutWebFrequency(w.id);
+    try{
+        QObject *obj = sender();
+        if(obj == m_btnBjutWeb1){
+            QDesktopServices::openUrl(m_vecBjutWeb[0].url);
+            m_tray->increaseBjutWebFrequency(m_vecBjutWeb[0].id);
+        }
+        else if(obj == m_btnBjutWeb2){
+            QDesktopServices::openUrl(m_vecBjutWeb[1].url);
+            m_tray->increaseBjutWebFrequency(m_vecBjutWeb[1].id);
+        }
+        else if(obj == m_btnBjutWeb3){
+            QDesktopServices::openUrl(m_vecBjutWeb[2].url);
+            m_tray->increaseBjutWebFrequency(m_vecBjutWeb[2].id);
+        }
+        else if(obj == m_btnBjutWeb4){
+            QDesktopServices::openUrl(m_vecBjutWeb[3].url);
+            m_tray->increaseBjutWebFrequency(m_vecBjutWeb[3].id);
+        }
+        else if(obj == m_btnBjutWeb5){
+            QDesktopServices::openUrl(m_vecBjutWeb[4].url);
+            m_tray->increaseBjutWebFrequency(m_vecBjutWeb[4].id);
         }
         else{
-            QMessageBox mb(this);
-            mb.setWindowTitle("常用入口");
-            mb.setText("无法识别的调用");
-            mb.setStandardButtons(QMessageBox::Ok);
-            mb.exec();
-            return;
+            QAction *act = static_cast<QAction*>(obj);
+            if(act->data().type() == QVariant::Int){
+                auto &w = m_vecBjutWeb[act->data().value<int>()];
+                QDesktopServices::openUrl(w.url);
+                m_tray->increaseBjutWebFrequency(w.id);
+            }
+            else{
+                QMessageBox mb(this);
+                mb.setWindowTitle("常用入口");
+                mb.setText("无法识别的调用！");
+                mb.setStandardButtons(QMessageBox::Ok);
+                mb.exec();
+                return;
+            }
         }
+        initBjutWeb();
+    }catch(...){
+        QMessageBox mb(this);
+        mb.setWindowTitle("常用入口");
+        mb.setText("无法打开页面！");
+        mb.setStandardButtons(QMessageBox::Ok);
+        mb.exec();
+        return;
     }
-    initBjutWeb();
 }
 
 void WndMain::on_btnBjutWebMore_clicked()
@@ -877,7 +886,12 @@ void WndMain::on_allServices(const QVariant &services)
 
 void WndMain::on_bookedService(const QString &name)
 {
-    m_lblCurrentBook->setText("已预约:["+name+"]");
+    if(name.size()){
+        m_lblCurrentBook->setText("已预约:"+name);
+    }
+    else{
+        m_lblCurrentBook->setText("暂未预约套餐");
+    }
 }
 
 void WndMain::downloadProgress(qint64 bytesReceived, qint64 bytesTotal)

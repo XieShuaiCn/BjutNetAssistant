@@ -495,7 +495,7 @@ bool ServiceBridge::sendSetAccount(const QString name, const QString passwd, int
 bool ServiceBridge::sendSetBookedService(int id)
 {
     int seed = qrand();
-    QString sdata = QString("{\"type\":%1,\"act\":%2,\"data\":{\"id\":\"%4\"},\"seed\":%3}")
+    QString sdata = QString("{\"type\":%1,\"act\":%2,\"data\":{\"id\":%4},\"seed\":%3}")
             .arg(MessageValue::SET).arg(MessageValue::SET_BOOK_SERVICE).arg(seed)
             .arg(id);
     QString buf;

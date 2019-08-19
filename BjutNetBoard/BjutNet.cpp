@@ -233,6 +233,7 @@ void BjutNet::run()
                 break;
             case GET_ALL_SERVICE:
                 strMsg = "Get all services.";
+                m_vecAllServices.clear();
                 SEND_ACT_AND_UPDATE_MESSAGE(m_bridge->sendGetAllServices(m_vecAllServices));
                 emit updateAllServices(QVariant::fromValue(m_vecAllServices));
                 break;

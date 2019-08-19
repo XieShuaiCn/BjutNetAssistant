@@ -188,16 +188,16 @@ void bna::gui::WndMain::initUI()
     m_frmOperation->setFrameShadow(QFrame::Plain);
     m_frmOperation->setVisible(false);
     m_lblCurrentBook = new QLabel(m_frmOperation);
-    m_lblCurrentBook->setGeometry(QRect(15, 23, 160, 20));
+    m_lblCurrentBook->setGeometry(QRect(12, 23, 160, 20));
     m_lblCurrentBook->setFont(font_s115);
     m_cmbListBook = new QComboBox(m_frmOperation);
-    m_cmbListBook->setGeometry(QRect(15, 48, 150, 25));
+    m_cmbListBook->setGeometry(QRect(12, 48, 150, 25));
     m_cmbListBook->setFont(font_s115);
     m_btnRefreshBook = new QPushButton(m_frmOperation);
-    m_btnRefreshBook->setGeometry(QRect(15, 80, 73, 25));
+    m_btnRefreshBook->setGeometry(QRect(12, 80, 73, 25));
     m_btnRefreshBook->setFont(font_s115);
     m_btnSubmitBook = new QPushButton(m_frmOperation);
-    m_btnSubmitBook->setGeometry(QRect(93, 80, 73, 25));
+    m_btnSubmitBook->setGeometry(QRect(90, 80, 73, 25));
     m_btnSubmitBook->setFont(font_s115);
     // entrance
     m_frmBjutWeb = new HPanel(this);
@@ -277,7 +277,7 @@ void bna::gui::WndMain::initUI()
     m_btnForceOffline2->setText(QString("强制下线"));
     //m_lblCopyTip->setText(QString("双击可复制IP"));
     m_frmOperation->setText(QString("业务办理"));
-    m_lblCurrentBook->setText(QString("已预约:[请刷新套餐]"));
+    m_lblCurrentBook->setText(QString("请刷新套餐"));
     m_btnRefreshBook->setText(QString("刷新套餐"));
     m_btnSubmitBook->setText(QString("预约套餐"));
     m_frmBjutWeb->setText(QString("常用入口"));
