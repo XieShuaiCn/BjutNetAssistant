@@ -20,6 +20,8 @@
 
 namespace bna{
 
+extern std::string g_strExeFilePath;
+
 bool ConvertUtf8ToMultiBytes(const char *src, int srclen, char *&dst, int &dstlen);
 
 bool CheckUtf8ToMultiBytes(std::string &src_dst);
@@ -27,6 +29,15 @@ bool CheckUtf8ToMultiBytes(std::string &src_dst);
 void ConsoleInputPasswd(const std::string &tip, std::string &passwd, char echo);
 
 bool ListLocalIpAddress(std::vector<std::string> &ip);
+
+std::string CurrentFilePath();
+std::string CurrentFileDir();
+
+bool StartProcess(const std::string &command);
+bool StartProcess(const std::string &program, const std::vector<std::string> &arguments);
+
+bool KillProcess(const std::string &name);
+bool KillProcess(uintptr_t pid);
 
 ////////////////////////////implements/////////////////////////////////
 

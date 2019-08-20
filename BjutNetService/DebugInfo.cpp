@@ -102,6 +102,7 @@ void DebugTool::writeInfo(DebugStatus status, const QString &content, bool with_
     {
         num += m_file.write("\n");
     }
+    m_file.flush();
 }
 
 }

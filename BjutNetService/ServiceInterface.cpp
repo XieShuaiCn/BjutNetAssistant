@@ -1,4 +1,5 @@
 #include "ServiceInterface.h"
+#include <QApplication>
 #include <QDateTime>
 #include <QUdpSocket>
 #include <QHostAddress>
@@ -45,13 +46,15 @@ inline QByteArray __ServiceInterface_AckSuccToByteArray(int seed, bool succ = tr
             .toUtf8();
 }
 
-ServiceInterface::ServiceInterface(BjutNet *bjutNet)
+ServiceInterface::ServiceInterface(BjutNet *bjutNet, QApplication *app)
     : m_remoteHost(QHostAddress::Null),
       m_remotePort(0),
       m_bjutnet(bjutNet),
+      m_app(app),
       m_nTokenVaild(60 * 60 * 1)
 {
-    Q_ASSERT(bjutNet!=nullptr);
+    Q_ASSERT(m_bjutnet!=nullptr);
+    Q_ASSERT(m_app!=nullptr);
     m_socket = new QUdpSocket();
 }
 
@@ -158,6 +161,7 @@ QByteArray ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAd
     using MsgCvtToGet = MessageValue::ConvertToActGet;
     using MsgCvtToSet = MessageValue::ConvertToActSet;
     using MsgCvtToRegist = MessageValue::ConvertToActRegist;
+    using MsgCvtToSys = MessageValue::ConvertToActSys;
     auto &lgn = m_bjutnet->getWebLgn();
     auto &jfself = m_bjutnet->getWebJfself();
 
@@ -169,10 +173,11 @@ QByteArray ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAd
         AUTH_GET = 0x0004,
         AUTH_SET = 0x0008,
         AUTH_REGIST = 0x0010,
+        AUTH_SYS = 0x0020,
         AUTH_VAR = 0x0100,
-        AUTH_LOCAL= AUTH_ACT|AUTH_GET|AUTH_SET|AUTH_REGIST,
+        AUTH_LOCAL= AUTH_ACT|AUTH_GET|AUTH_SET|AUTH_REGIST|AUTH_SYS,
         AUTH_REMOTE = AUTH_ACT|AUTH_GET,
-        AUTH_DEBUG = AUTH_ACT|AUTH_GET|AUTH_VAR,
+        AUTH_DEBUG = AUTH_ACT|AUTH_GET|AUTH_SET|AUTH_VAR,
         AUTH_ALL = AUTH_LOCAL|AUTH_REMOTE|AUTH_DEBUG
     };
     RemoteAuth remoteAuth = AUTH_NONE;
@@ -226,10 +231,10 @@ QByteArray ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAd
                 remoteAuth = AUTH_LOCAL;
             }
 
-            auto type = MsgCvtToType::To(jo["type"].toInt());
+            auto type = MsgCvtToType::From(jo["type"].toInt());
             // SYNC
             if(type == MessageValue::SYNC) {
-                auto act = MsgCvtToSync::To(jo["act"].toInt());
+                auto act = MsgCvtToSync::From(jo["act"].toInt());
                 switch (act) {
                 case MessageValue::HELLO:
                     buffer = __ServiceInterface_AckSuccToByteArray(seed);
@@ -244,7 +249,7 @@ QByteArray ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAd
                 if(!(remoteAuth&AUTH_ACT)){
                     return __ServiceInterface_ErrMsgToByteArray("No permissions.", seed);
                 }
-                auto act = MsgCvtToAct::To(jo["act"].toInt());
+                auto act = MsgCvtToAct::From(jo["act"].toInt());
                 switch (act) {
                 case MessageValue::ACT_LOAD_ACCOUNT:
                     buffer = __ServiceInterface_AckSuccToByteArray(seed,
@@ -299,7 +304,7 @@ QByteArray ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAd
                 if(!(remoteAuth&AUTH_GET)){
                     return __ServiceInterface_ErrMsgToByteArray("No permissions.", seed);
                 }
-                auto act = MsgCvtToGet::To(jo["act"].toInt());
+                auto act = MsgCvtToGet::From(jo["act"].toInt());
                 switch (act) {
                 case MessageValue::GET_VERSION:
                     buffer = __ServiceInterface_AckDataToByteArray(
@@ -407,7 +412,7 @@ QByteArray ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAd
                 if(!(remoteAuth&AUTH_SET)){
                     return __ServiceInterface_ErrMsgToByteArray("No permissions.", seed);
                 }
-                auto act = MsgCvtToSet::To(jo["act"].toInt());
+                auto act = MsgCvtToSet::From(jo["act"].toInt());
                 switch(act){
                 case MessageValue::SET_ACCOUNT:
                     if(jo.contains("data")){
@@ -475,7 +480,7 @@ QByteArray ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAd
                 }
             }
             else if(type == MessageValue::REGIST) {
-                auto act = MsgCvtToRegist::To(jo["act"].toInt());
+                auto act = MsgCvtToRegist::From(jo["act"].toInt());
                 if(!(remoteAuth&AUTH_REGIST)){
                     return __ServiceInterface_ErrMsgToByteArray("No permissions.", seed);
                 }
@@ -510,6 +515,30 @@ QByteArray ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAd
                     }
                     m_remoteHost = address;
                     m_remotePort = port;
+                    buffer = __ServiceInterface_AckSuccToByteArray(seed);
+                    break;
+                default:
+                    buffer = __ServiceInterface_ErrMsgToByteArray("Bad act", seed);
+                    break;
+                }
+            }
+            else if (type == MessageValue::SYS){
+                auto act = MsgCvtToSys::From(jo["act"].toInt());
+                if(!(remoteAuth&AUTH_SYS)){
+                    return __ServiceInterface_ErrMsgToByteArray("No permissions.", seed);
+                }
+                switch (act) {
+                case MessageValue::SYS_EXIT:
+                    m_bjutnet->stop_monitor();
+                    buffer = __ServiceInterface_AckSuccToByteArray(seed);
+                    m_app->exit(0);
+                    break;
+                case MessageValue::SYS_START:
+                    m_bjutnet->start_monitor();
+                    buffer = __ServiceInterface_AckSuccToByteArray(seed);
+                    break;
+                case MessageValue::SYS_PAUSE:
+                    m_bjutnet->stop_monitor();
                     buffer = __ServiceInterface_AckSuccToByteArray(seed);
                     break;
                 default:

@@ -26,6 +26,8 @@ public:
     void setAuth(bool needed = true);
     void setAuth(bool needed, bool use_token, const QString &token=QString());
     void setAuth(bool needed, const QString &name, const QString &passwd);
+    bool startDaemon();
+    bool killDaemon();
 
     bool sendSYN();
     bool sendENQ();
@@ -62,6 +64,10 @@ public:
     bool sendSetOfflineDevice(int id);
     bool sendSetAutoStart(bool autorun);
 
+    bool sendSysExit();
+    bool sendSysPause();
+    bool sendSysStart();
+
     bool parseJson(const QString &json, int seed, QJsonValue &data);
     bool parseJsonAndVarify(const QString &json, int seed);
 
@@ -69,6 +75,7 @@ public:
 
 private:
     bool doSendAndReceive(const QString &sdata, QString &rdata);
+    bool send_common(bna::MessageValue::Type type, bna::MessageValue::Action act);
     bool sendAct_common(bna::MessageValue::ActionAct type);
 
     QUdpSocket m_socket;
@@ -86,6 +93,11 @@ private:
 inline const QString &ServiceBridge::getLastError() const
 {
     return m_strLastError;
+}
+
+inline bool ServiceBridge::sendAct_common(MessageValue::ActionAct type)
+{
+    return send_common(bna::MessageValue::ACT, type);
 }
 
 inline bool ServiceBridge::sendActLoadAccount()
@@ -135,5 +147,21 @@ inline bool ServiceBridge::sendActLeaveDebugMode()
 {
     return sendAct_common(bna::MessageValue::ACT_LEAVE_DEBUG_MODE);
 }
+
+inline bool ServiceBridge::sendSysExit()
+{
+    return send_common(bna::MessageValue::SYS, bna::MessageValue::SYS_EXIT);
+}
+
+inline bool ServiceBridge::sendSysPause()
+{
+    return send_common(bna::MessageValue::SYS, bna::MessageValue::SYS_PAUSE);
+}
+
+inline bool ServiceBridge::sendSysStart()
+{
+    return send_common(bna::MessageValue::SYS, bna::MessageValue::SYS_START);
+}
+
 }}
 #endif // SERVICEBRIDGE_H

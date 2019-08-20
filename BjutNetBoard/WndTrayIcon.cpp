@@ -38,18 +38,22 @@ WndTrayIcon::WndTrayIcon(QApplication *app,QObject *parent):
     this->setContextMenu(m_menuTray);
     //
     m_actMenuShowMain = new QAction("显示主窗口");
+    m_actMenuRestartDamon = new QAction("重新启动服务");
     m_actMenuLogin = new QAction("上线");
     m_actMenuLogout = new QAction("下线");
     m_actMenuSetting = new QAction("设置");
+    m_actMenuQuitAll = new QAction("完全退出");
     m_actMenuQuit = new QAction("退出");
     m_menuBjutWeb = new QMenu("常用网址");
     m_menuTray->addAction(m_actMenuShowMain);
+    m_menuTray->addAction(m_actMenuRestartDamon);
     m_menuTray->addMenu(m_menuBjutWeb);
     m_menuTray->addSeparator();
     m_menuTray->addAction(m_actMenuLogin);
     m_menuTray->addAction(m_actMenuLogout);
     m_menuTray->addSeparator();
     m_menuTray->addAction(m_actMenuSetting);
+    m_menuTray->addAction(m_actMenuQuitAll);
     m_menuTray->addAction(m_actMenuQuit);
     //initBjutWebMenu();
     //双击间隔200ms
@@ -59,10 +63,12 @@ WndTrayIcon::WndTrayIcon(QApplication *app,QObject *parent):
 
     connect(this, &WndTrayIcon::activated, this, &WndTrayIcon::on_actived);
     connect(m_actMenuShowMain, &QAction::triggered, this, &WndTrayIcon::cmdShowMainWnd);
+    connect(m_actMenuRestartDamon, &QAction::triggered, this, &WndTrayIcon::cmdRestartDamon);
     connect(m_actMenuLogin, &QAction::triggered, this, &WndTrayIcon::cmdLoginLgn);
     connect(m_actMenuLogout, &QAction::triggered, this, &WndTrayIcon::cmdLogoutLgn);
     connect(m_actMenuSetting, &QAction::triggered, this, &WndTrayIcon::cmdShowSettingWnd);
     connect(m_actMenuQuit, &QAction::triggered, this, &WndTrayIcon::cmdExitApp);
+    connect(m_actMenuQuitAll, &QAction::triggered, this, &WndTrayIcon::cmdExitAll);
     connect(&m_tmClick, &QTimer::timeout, this, &WndTrayIcon::on_clicked);
     connect(m_menuBjutWeb, &QMenu::aboutToShow, this, &WndTrayIcon::initBjutWebMenu);
 
@@ -161,6 +167,11 @@ void WndTrayIcon::cmdShowMainWnd()
     m_wndMain->show();
 }
 
+void WndTrayIcon::cmdRestartDamon()
+{
+    m_bjutnet->restartDaemon();
+}
+
 void WndTrayIcon::cmdShowSettingWnd()
 {
     if(!m_wndSetting)
@@ -176,6 +187,12 @@ void WndTrayIcon::cmdExitApp()
     {
         m_app->quit();
     }
+}
+
+void WndTrayIcon::cmdExitAll()
+{
+    m_bjutnet->stopDaemon();
+    cmdExitApp();
 }
 
 void WndTrayIcon::cmdLoginLgn()

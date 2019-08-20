@@ -35,6 +35,8 @@ void InterAction::ShowMenu()
     cout << "    atm   |  The switch of print menu after a operation.   " << endl;
     cout << "    ats   |  The switch of start service when power on.    " << endl;
     cout << "    addr  |  Show my ip address.                           " << endl;
+    cout << "    stdm  |  Start daemon.                                 " << endl;
+    cout << "    spdm  |  Stop daemon.                                  " << endl;
     cout << "  =========================================================" << endl;
 #if defined(_DEBUG) || defined(BUILD_DEVELOP)
     cout << "    enter_debug     Enter debug mode.                      " << endl;
@@ -132,6 +134,12 @@ bool InterAction::Process()
         else if(cmd.size() == 4){
             if(cmd == "addr") {
                 ShowMyAddress();
+            }
+            else if(cmd == "stdm"){
+                StartDaemon();
+            }
+            else if(cmd == "spdm"){
+                StopDaemon();
             }
             else{
                 processed = false;
@@ -624,6 +632,18 @@ bool InterAction::ShowMyAddress()
         cout << "   " << a << endl;
     }
     return !ip.empty();
+}
+
+bool InterAction::StartDaemon()
+{
+    cout << " Starting up the damon of " BNA_NAME << endl;
+    cout << (m_service.startDaemon() ? "   Done." : "   Failed.");
+}
+
+bool InterAction::StopDaemon()
+{
+    cout << " Shutting down the damon of " BNA_NAME << endl;
+    cout << (m_service.killDaemon() ? "   Done." : "   Failed.");
 }
 
 bool InterAction::SetHost(const string &host)

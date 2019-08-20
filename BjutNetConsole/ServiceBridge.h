@@ -22,6 +22,8 @@ public:
     void setAuth(bool needed = true);
     void setAuth(bool needed, bool use_token, const std::string &token=std::string());
     void setAuth(bool needed, const std::string &name, const std::string &passwd);
+    bool startDaemon();
+    bool killDaemon();
 
     bool sendSYN();
     bool sendENQ();
@@ -60,12 +62,17 @@ public:
     bool sendRegistDevelop(std::string &token, size_t &time);
     bool sendUnregistDevelop();
 
+    bool sendSysExit();
+    bool sendSysPause();
+    bool sendSysStart();
+
     bool parseJson(const std::string &json, int seed, boost::property_tree::ptree &tree);
     bool parseJsonAndVarify(const std::string &json, int seed);
 
     const std::string &getLastError();
 
 private:
+    bool send_common(MessageValue::Type type, MessageValue::Action act);
     bool sendAct_common(MessageValue::ActionAct type);
     bool SendAndReceive(const std::string &sdata, std::string &rdata);
 
@@ -82,6 +89,11 @@ private:
 inline const std::string &ServiceBridge::getLastError()
 {
     return m_strLastError;
+}
+
+inline bool ServiceBridge::sendAct_common(MessageValue::ActionAct type)
+{
+    return send_common(MessageValue::ACT, type);
 }
 
 inline bool ServiceBridge::sendActLoadAccount()
@@ -130,6 +142,21 @@ inline bool ServiceBridge::sendActEnterDebugMode()
 inline bool ServiceBridge::sendActLeaveDebugMode()
 {
     return sendAct_common(MessageValue::ACT_LEAVE_DEBUG_MODE);
+}
+
+inline bool ServiceBridge::sendSysExit()
+{
+    return send_common(bna::MessageValue::SYS, bna::MessageValue::SYS_EXIT);
+}
+
+inline bool ServiceBridge::sendSysPause()
+{
+    return send_common(bna::MessageValue::SYS, bna::MessageValue::SYS_PAUSE);
+}
+
+inline bool ServiceBridge::sendSysStart()
+{
+    return send_common(bna::MessageValue::SYS, bna::MessageValue::SYS_START);
 }
 
 }

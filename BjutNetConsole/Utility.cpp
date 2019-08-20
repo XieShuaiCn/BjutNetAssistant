@@ -26,6 +26,8 @@
 
 namespace bna{
 
+std::string g_strExeFilePath;
+
 bool ConvertUtf8ToMultiBytes(const char *src, int srclen, char *&dst, int &dstlen)
 {
 #if defined(BNA_OS_WIN)
@@ -157,6 +159,54 @@ bool ListLocalIpAddress(std::vector<std::string> &ip)
     }
     return true;
 #endif
+}
+
+std::string CurrentFilePath()
+{
+    return g_strExeFilePath;
+}
+
+std::string CurrentFileDir()
+{
+    std::string path(g_strExeFilePath);
+    if(!path.empty()){
+        size_t idx = path.find_last_of("\\/");
+        if(idx != path.npos){
+            path = path.substr(0, idx);
+        }
+    }
+    return path;
+}
+
+bool StartProcess(const std::string &command)
+{
+    if(command.empty()) return false;
+#ifdef BNA_OS_WIN
+    return TRUE == CreateProcess();
+#else
+    return 0 == system((command+" &").data());
+#endif
+}
+
+bool StartProcess(const std::string &program, const std::vector<std::string> &arguments)
+{
+    if(program.empty()) return false;
+    std::string cmd = program;
+    for(const auto &arg : arguments){
+        cmd.append(1, ' ');
+        cmd.append(arg);
+    }
+    return StartProcess(cmd);
+}
+
+bool KillProcess(const std::string &name)
+{
+    return 0 == system(("killall "+name).data());
+}
+
+bool KillProcess(uintptr_t pid)
+{
+    return 0 == system(("kill -f "+std::to_string(pid)).data());
 }
 
 }

@@ -156,8 +156,8 @@ void WndMain::paintEvent(QPaintEvent *event)
         flowRate = 1.0 * currentFlow / totalFlow;
     }
     const QBrush brushGreen(QColor(60,180,60));
-    const QBrush brushGrayDark(QColor(100,100,100));
-    const QBrush brushGrayLight(QColor(170,170,170));
+    const QBrush brushGrayDark(QColor(150,150,150));
+    const QBrush brushGrayLight(QColor(200,200,200));
     const QBrush brushRed(QColor(240, 60, 60));
     const QPen penSolidGrayDark(brushGrayDark, 1.0, Qt::SolidLine);
     const QPen penSolidGrayLight(brushGrayLight, 1.0, Qt::SolidLine);

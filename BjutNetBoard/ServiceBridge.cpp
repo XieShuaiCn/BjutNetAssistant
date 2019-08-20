@@ -5,8 +5,13 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QException>
+#include <QProcess>
+#include <QApplication>
+#include <QDir>
+#include <QThread>
 #include "Utility.h"
 #include "../BjutNetService/MessageCoder.h"
+#include "../BjutNetService/Version.h"
 
 namespace bna {
 namespace gui {
@@ -128,6 +133,39 @@ void ServiceBridge::setAuth(bool needed, const QString &name, const QString &pas
     m_strPasswd = passwd;
 }
 
+bool ServiceBridge::startDaemon()
+{
+    QString program = QDir(QApplication::applicationDirPath()).absoluteFilePath(
+        #ifdef Q_OS_WIN
+                BNS_NAME ".exe"
+        #else
+                BNS_NAME ".sh"
+        #endif
+                );
+#ifdef QT_DEBUG
+    qDebug() << program << endl;
+#endif
+    return QProcess::startDetached(program, QStringList());
+}
+
+bool ServiceBridge::killDaemon()
+{
+    if(sendSYN()){
+        sendSysExit();
+        QThread::msleep(100);
+        if(sendSYN()){
+#ifdef Q_OS_WIN
+            return QProcess::execute("taskkill /im " BNS_NAME " /f") == 0;
+#elif defined(Q_OS_UNIX)
+            return QProcess::execute("killall -9 " BNS_NAME) == 0;
+#else
+            return false;
+#endif
+        }
+    }
+    return true;
+}
+
 bool ServiceBridge::sendSYN()
 {
     char ch(CHAR_SYN);
@@ -181,11 +219,11 @@ bool ServiceBridge::sendSyncHello()
     return parseJsonAndVarify(buf, seed);
 }
 
-bool ServiceBridge::sendAct_common(MessageValue::ActionAct type)
+bool ServiceBridge::send_common(bna::MessageValue::Type type, bna::MessageValue::Action act)
 {
     int seed = qrand();
     QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3}")
-            .arg(MessageValue::ACT).arg(type).arg(seed);
+            .arg(type).arg(act).arg(seed);
     QString buf;
     if(!doSendAndReceive(sdata, buf)) {
         return false;

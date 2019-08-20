@@ -1,4 +1,5 @@
 #include "ServiceBridge.h"
+#include <thread>
 #include <boost/exception/all.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -101,6 +102,29 @@ void ServiceBridge::setAuth(bool needed, const std::string &name, const std::str
     m_strPasswd = passwd;
 }
 
+bool ServiceBridge::startDaemon()
+{
+    return StartProcess(CurrentFilePath() + BNS_NAME
+#ifdef BNA_OS_WIN
+                        ".exe"
+#else
+                        ".sh"
+#endif
+                        );
+}
+
+bool ServiceBridge::killDaemon()
+{
+    if(sendSYN()){
+        sendSysExit();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        if(sendSYN()){
+            return KillProcess(BNS_NAME);
+        }
+    }
+    return true;
+}
+
 bool ServiceBridge::sendSYN()
 {
     char ch(CHAR_SYN);
@@ -148,12 +172,12 @@ bool ServiceBridge::sendSyncHello()
     return parseJsonAndVarify(buf, seed);
 }
 
-bool ServiceBridge::sendAct_common(MessageValue::ActionAct type)
+bool ServiceBridge::send_common(MessageValue::Type type, MessageValue::Action act)
 {
     stringstream ssbuf;
     int seed = rand();
-    ssbuf << "{\"type\":" << static_cast<MessageValue::Type>(MessageValue::ACT)
-          << ",\"act\":" << static_cast<MessageValue::Type>(type)
+    ssbuf << "{\"type\":" << type
+          << ",\"act\":" << act
           << ",\"seed\":" << seed;
     string buf;
     if(!SendAndReceive(ssbuf.str(), buf)) {

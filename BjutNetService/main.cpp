@@ -58,14 +58,17 @@ int main(int argc, char *argv[])
 #endif
 
     bna::BjutNet bjutnet;
-    bna::ServiceInterface si(&bjutnet);
+    bna::ServiceInterface si(&bjutnet, &app);
 
     bjutnet.loadAccount();
     if(si.Initilize()){
-        return app.exec();
+        int app_ret = app.exec();
+        g_debugTool.release();
+        return app_ret;
     }
     else{
         qDebug() << "Fail to initialize service. Exit now." << endl;
+        g_debugTool.release();
         app.exit(0);
         return 0;
     }

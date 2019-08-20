@@ -29,6 +29,22 @@ void BjutNet::queueAction(Action act, void *data)
     m_mtxAction.unlock();
 }
 
+void BjutNet::stopDaemon()
+{
+    pause();
+    while(m_bRun.load() && !m_bPaused.load()){
+        msleep(100);
+    }
+    m_bridge->killDaemon();
+}
+
+void BjutNet::restartDaemon()
+{
+    stopDaemon();
+    m_bridge->startDaemon();
+    resume();
+}
+
 #define SEND_ACT_AND_UPDATE_MESSAGE(func)                     \
     if(func){ emit updateMessage("[ OK ] " + strMsg);}        \
     else{ emit updateMessage("[FAIL] " + strMsg); }
@@ -36,9 +52,20 @@ void BjutNet::queueAction(Action act, void *data)
 void BjutNet::run()
 {
     m_bRun.store(true);
+    m_bPause.store(false);
+    m_bPaused.store(false);
 
     m_bridge = new ServiceBridge;
     assert(m_bridge!=nullptr);
+    if(!m_bridge->sendSYN()){
+        QString strMsg = "Start damon instance.";
+        if(m_bridge->startDaemon()){
+            emit updateMessage("[ OK ] " + strMsg);
+        }
+        else{
+            emit updateMessage("[Fail] " + strMsg);
+        }
+    }
 
     QString strMsg = "Connect to damon.";
     while(true){
@@ -71,6 +98,14 @@ void BjutNet::run()
     QHostAddress *param_ip = nullptr;
     //
     while(m_bRun.load()){
+        // pause
+        if(m_bPause.load()){
+            m_bPaused.store(true);
+            while(m_bPause.load()){
+                this->msleep(100);
+            }
+            m_bPaused.store(false);
+        }
         // milliseconds
         if(tmRefresh.elapsed() > 10000 && (m_lstAction.empty() || m_lstAction.front().first != GET_NET_INFO)){
             m_mtxAction.lock();

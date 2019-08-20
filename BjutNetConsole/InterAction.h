@@ -50,6 +50,10 @@ public:
 
     bool ShowMyAddress();
 
+    bool StartDaemon();
+
+    bool StopDaemon();
+
     bool SetHost(const std::string &host);
 
 private:

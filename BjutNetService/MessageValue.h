@@ -21,6 +21,7 @@ public:
         GET=3,
         SET=4,
         REGIST=5,
+        SYS=6,
         ACK=9
     };
 
@@ -72,13 +73,21 @@ public:
         SET_AUTO_START=4
     };
 
+    enum ActionSys{
+        SYS_EXIT,
+        SYS_PAUSE,
+        SYS_START,
+    };
+
     template<typename _Tp>
     struct Convert{
-        static _Tp To(int n)
+        static _Tp From(int n)
         {
             return _Tp(n);
         }
     };
+
+    using Action = int;
 
     using ConvertToType = Convert<Type>;
     using ConvertToActSync = Convert<ActionSync>;
@@ -86,6 +95,7 @@ public:
     using ConvertToActGet = Convert<ActionGet>;
     using ConvertToActSet = Convert<ActionSet>;
     using ConvertToActRegist = Convert<ActionRegist>;
+    using ConvertToActSys = Convert<ActionSys>;
 };
 
 extern template struct MessageValue::Convert<MessageValue::Type>;
@@ -94,6 +104,7 @@ extern template struct MessageValue::Convert<MessageValue::ActionAct>;
 extern template struct MessageValue::Convert<MessageValue::ActionGet>;
 extern template struct MessageValue::Convert<MessageValue::ActionSet>;
 extern template struct MessageValue::Convert<MessageValue::ActionRegist>;
+extern template struct MessageValue::Convert<MessageValue::ActionSys>;
 
 }
 

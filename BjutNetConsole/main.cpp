@@ -1,4 +1,5 @@
 #include <iostream>
+#include "Utility.h"
 #include "ParamParse.h"
 #include "InterAction.h"
 
@@ -8,22 +9,31 @@ using namespace bna;
 
 void ShowUsage()
 {
-    cout << "Usage: bjutnet [command] [parameter...]" << endl << endl;
+    cout << "Usage: bjutnet [command] [parameter...]" << endl;
+    cout << endl;
     cout << "The assistant of BJUT net. It has the functions of automatic login,"
-            " online maintemance, service management and so on." << endl << endl;
+            " online maintemance, service management and so on." << endl;
+    cout << endl;
     cout << "NO commands && NO parameters:     execute command interactively." << endl;
     cout << "command:" << endl;
-    cout << "    login        " << endl;
-    cout << "    logout       " << endl;
+    cout << "    login        login bjut net." << endl;
+    cout << "    logout       logout bjut net." << endl;
+    cout << "    online       show online devices." << endl;
+    cout << "    status       show the status of net." << endl;
+    cout << "    start        start the demon." << endl;
+    cout << "    stop         stop the demon." << endl;
     cout << "parameter:" << endl;
     cout << "    -V, -version           " << endl;
     cout << "    -name           " << endl;
     cout << "    -passwd           " << endl;
     cout << "    -type           " << endl;
+    cout << endl;
 }
 
 int main(int argc, char* argv[])
 {
+    g_strExeFilePath.clear();
+    g_strExeFilePath.append(argv[0]);
     ParamParse parser;
     if(!parser.parse(argc, argv)) {
         ShowUsage();
@@ -59,6 +69,14 @@ int main(int argc, char* argv[])
             else if(op == "status"){
                 // online status
                 act.ShowStatus();
+            }
+            else if(op == "start"){
+                // start damon
+                act.StartDaemon();
+            }
+            else if(op == "stop"){
+                // stop damon
+                act.StopDaemon();
             }
             else{
                 cout << "Unrecognized command: " << op << endl;

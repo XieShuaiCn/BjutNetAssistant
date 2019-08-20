@@ -131,6 +131,16 @@ public:
 
     void stop();
 
+    void pause();
+
+    bool isPaused();
+
+    void resume();
+
+    void stopDaemon();
+
+    void restartDaemon();
+
 signals:
     // recive message
     void updateMessage(const QString &msg);
@@ -172,6 +182,8 @@ private:
     int m_nRemoteVersion = 0;
 
     std::atomic_bool m_bRun;
+    std::atomic_bool m_bPause;
+    std::atomic_bool m_bPaused;
     std::list<std::pair<Action, void*>> m_lstAction;
     QMutex m_mtxAction;
     ServiceBridge *m_bridge;
@@ -188,6 +200,21 @@ namespace gui {
 inline void BjutNet::stop()
 {
     m_bRun.store(false);
+}
+
+inline void BjutNet::pause()
+{
+    m_bPause.store(true);
+}
+
+inline bool BjutNet::isPaused()
+{
+    return m_bPaused.load();
+}
+
+inline void BjutNet::resume()
+{
+    m_bPause.store(false);
 }
 
 inline void BjutNet::sendLoadAccount()

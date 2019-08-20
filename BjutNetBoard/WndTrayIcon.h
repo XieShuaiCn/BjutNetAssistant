@@ -42,7 +42,9 @@ Q_SIGNALS:
 public slots:
     void reciveMessage(const QString &msg);
     void cmdExitApp();
+    void cmdExitAll();
     void cmdShowMainWnd();
+    void cmdRestartDamon();
     void cmdShowSettingWnd();
     void cmdLoginLgn();
     void cmdLogoutLgn();
@@ -64,10 +66,12 @@ protected slots:
     BjutNet *m_bjutnet;
     QMenu *m_menuTray;
     QAction *m_actMenuShowMain;
+    QAction *m_actMenuRestartDamon;
     QAction *m_actMenuLogout;
     QAction *m_actMenuLogin;
     QAction *m_actMenuSetting;
     QAction *m_actMenuQuit;
+    QAction *m_actMenuQuitAll;
 
     QMenu *m_menuBjutWeb;
 

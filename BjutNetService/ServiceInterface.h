@@ -5,6 +5,7 @@
 #include <QHostAddress>
 #include <QDateTime>
 
+class QApplication;
 class QUdpSocket;
 
 namespace bna{
@@ -15,7 +16,7 @@ class ServiceInterface : public QObject
 {
     Q_OBJECT
 public:
-    ServiceInterface(BjutNet *BjutNet);
+    ServiceInterface(BjutNet *BjutNet, QApplication *app);
 
     bool Initilize();
 
@@ -34,6 +35,7 @@ private:
     QHostAddress m_remoteHost;
     quint16 m_remotePort;
     BjutNet *m_bjutnet;
+    QApplication *m_app;
     QString m_strTokenCode;
     QDateTime m_dtTokenCreated;
     const long long m_nTokenVaild;//seconds
