@@ -138,8 +138,10 @@ bool ServiceBridge::startDaemon()
     QString program = QDir(QApplication::applicationDirPath()).absoluteFilePath(
         #ifdef Q_OS_WIN
                 BNS_NAME ".exe"
-        #else
+        #elif defined(Q_OS_LINUX)
                 BNS_NAME ".sh"
+        #else
+                BNS_NAME
         #endif
                 );
 #ifdef QT_DEBUG
@@ -559,7 +561,7 @@ bool ServiceBridge::sendSetOfflineDevice(int id)
 bool ServiceBridge::sendSetAutoStart(bool autorun)
 {
     int seed = qrand();
-    QString sdata = QString("{\"type\":%1,\"act\":%2,\"data\":{\"v\":\"%4\"},\"seed\":%3}")
+    QString sdata = QString("{\"type\":%1,\"act\":%2,\"data\":{\"v\":%4},\"seed\":%3}")
             .arg(MessageValue::SET).arg(MessageValue::SET_AUTO_START).arg(seed)
             .arg(static_cast<int>(autorun));
     QString buf;

@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
         }
         auto hash_data = hash.result().toHex();
         std::cout << nm.toStdString() << "  " << size << " " << hash_data.toStdString() << std::endl;
-        vecClientFiles.emplace_back(nm, size, QString(hash_data), p.operator Int());
+        vecClientFiles.emplace_back(nm, size, QString(hash_data), int(p));
     }
     // convert to json
     QJsonArray jfilesarray;

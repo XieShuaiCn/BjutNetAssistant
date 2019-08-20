@@ -26,9 +26,6 @@ void bna::gui::WndSetting::initUI()
     m_frmBasic->setFrameShadow(QFrame::Plain);
     m_chkAutoRun = new QCheckBox(m_frmBasic);
     m_chkAutoRun->setGeometry(QRect(20, 25, 250, 20));
-#ifndef Q_OS_WIN
-    m_chkAutoRun->setEnabled(false);
-#endif
     m_chkAppDebug = new QCheckBox(m_frmBasic);
     m_chkAppDebug->setGeometry(QRect(20, 55, 250, 20));
 
@@ -74,7 +71,7 @@ void bna::gui::WndSetting::initUI()
 
     this->setWindowTitle(QStringLiteral("设置"));
     m_frmBasic->setText(QStringLiteral("基本"));
-    m_chkAutoRun->setText(QStringLiteral("开机自动运行(仅Windows可用)"));
+    m_chkAutoRun->setText(QStringLiteral("开机自动运行"));
     m_chkAppDebug->setText(QStringLiteral("调试模式(请勿开启)"));
     m_lblAccount->setText(QString("账号："));
     m_lblPassword->setText(QString("密码："));

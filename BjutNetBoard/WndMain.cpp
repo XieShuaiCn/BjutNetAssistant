@@ -42,6 +42,7 @@ WndMain::WndMain(WndTrayIcon *tray, QWidget *parent) :
     m_szFrameAdvanced.setHeight(495);
     m_szFrameShowMsg.setWidth(575);
     m_szFrameShowMsg.setHeight(620);
+    m_nFlowGraphThickness = 10;
     tray->setMainWindow(this);
     m_net = tray->getBjutNet();
     //初始化界面

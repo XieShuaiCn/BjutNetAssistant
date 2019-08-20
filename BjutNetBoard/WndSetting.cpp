@@ -53,7 +53,9 @@ void WndSetting::on_btnApply_clicked()
         auto *service = m_tray->getBjutNet();
         service->sendNewAccount(m_editAccount->text(), m_editPassword->text(), m_cmbType->currentIndex()+1);
     }
-    QMessageBox::information(this, "保存账号","账号信息未保存");
+    {
+        QMessageBox::information(this, "保存账号","账号信息未保存");
+    }
 }
 
 void WndSetting::on_btnApplyLogin_clicked()

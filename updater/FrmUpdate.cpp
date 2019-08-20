@@ -53,6 +53,10 @@ bool FrmUpdate::doProcess()
                 "windows"
 #elif defined(Q_OS_LINUX)
                 "linux64"
+#elif defined(Q_OS_MAC)
+                "Mac"
+#else
+                "Any"
 #endif
                 );
     m_barUpdate->setValue(0);
@@ -139,6 +143,10 @@ bool FrmUpdate::doProcess()
                         "Windows"
 #elif defined(Q_OS_LINUX)
                         "Linux64"
+#elif defined(Q_OS_MAC)
+                        "Mac"
+#else
+                        "Any"
 #endif
                         ){
                     m_lblInfo->setText("Error platform mainfest.");

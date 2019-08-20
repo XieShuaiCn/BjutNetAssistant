@@ -104,11 +104,13 @@ void ServiceBridge::setAuth(bool needed, const std::string &name, const std::str
 
 bool ServiceBridge::startDaemon()
 {
-    return StartProcess(CurrentFilePath() + BNS_NAME
+    return StartProcess(CurrentFilePath() +
 #ifdef BNA_OS_WIN
-                        ".exe"
+                        BNS_NAME ".exe"
+#elif defined(BNA_OS_LINUX)
+                        BNS_NAME ".sh"
 #else
-                        ".sh"
+                        BNS_NAME
 #endif
                         );
 }

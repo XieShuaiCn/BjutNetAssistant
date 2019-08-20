@@ -54,6 +54,7 @@ Q_SIGNALS:
     void showed();
 public slots:
     void initUI();
+    void layoutUI();
     void initBjutWeb();
     void on_show();
     void on_btnRefresh_clicked();

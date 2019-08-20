@@ -26,7 +26,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         main.cpp \
         WndMain.cpp \
-        wndmain_ui.cpp \
+        WndMain_ui.cpp \
     WndInit.cpp \
     FrmWelcome.cpp \
     FrmUpdate.cpp \
