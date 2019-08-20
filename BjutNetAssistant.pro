@@ -3,4 +3,6 @@ TEMPLATE = subdirs
 SUBDIRS += \
     BjutNetService \
     BjutNetConsole \
-    BjutNetBoard
+    BjutNetBoard \
+    updater \
+    hash_files \

@@ -637,13 +637,17 @@ bool InterAction::ShowMyAddress()
 bool InterAction::StartDaemon()
 {
     cout << " Starting up the damon of " BNA_NAME << endl;
-    cout << (m_service.startDaemon() ? "   Done." : "   Failed.");
+    bool suc = m_service.startDaemon();
+    cout << (suc ? "   Done." : "   Failed.");
+    return suc;
 }
 
 bool InterAction::StopDaemon()
 {
     cout << " Shutting down the damon of " BNA_NAME << endl;
-    cout << (m_service.killDaemon() ? "   Done." : "   Failed.");
+    bool suc = m_service.killDaemon();
+    cout << (suc ? "   Done." : "   Failed.");
+    return suc;
 }
 
 bool InterAction::SetHost(const string &host)

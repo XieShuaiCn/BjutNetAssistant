@@ -109,7 +109,10 @@ bool Updater::downloadNewPackage()
             fileTemp.close();
             ret = m_http.downloadFile(QUrl(m_strOnlineFileURL), QByteArray(), tempFile, false);
 
-            bool suc = QFile(tempFile).setPermissions(QFile::Permission(0x7755));
+#ifdef QT_DEBUG
+            bool suc =
+#endif
+            QFile(tempFile).setPermissions(QFile::Permission(0x7755));
 #ifdef QT_DEBUG
             if (!suc) qDebug() << "Change permission faild." << endl;
 #endif
