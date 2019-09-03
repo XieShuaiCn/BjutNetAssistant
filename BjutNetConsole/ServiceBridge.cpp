@@ -31,6 +31,9 @@ bool ServiceBridge::SendAndReceive(const std::string &sdata, std::string &rdata)
     else{
         sdata_copy.append(1, '}');
     }
+#ifdef BUILD_DEVELOP
+    printf(" <== \n");
+#endif
     size_t size = MessageCoder::Encrypt(sdata_copy.data(), sdata_copy.length(), nullptr, 0);
     if(size <= 0){ return false; }
     buffer.resize(size);
@@ -44,11 +47,15 @@ bool ServiceBridge::SendAndReceive(const std::string &sdata, std::string &rdata)
         return false;
     }
     if(buffer.size() > 2){
+
         size = MessageCoder::Decrypt(buffer.data(), buffer.length(), nullptr, 0);
         if(size <= 0){ return false; }
         rdata.resize(size);
         size = MessageCoder::Decrypt(buffer.data(), buffer.length(), const_cast<char*>(rdata.data()), rdata.length());
         if(size != rdata.length()) { return false; }
+#ifdef BUILD_DEVELOP
+        printf(" ==>\n");
+#endif
         return true;
     }
     return false;

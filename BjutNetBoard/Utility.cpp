@@ -43,7 +43,10 @@ bool ListLocalIpAddress(QVector<QHostAddress> &addrs)
     return true;
 #else
     QHostInfo host_info = QHostInfo::fromName(QHostInfo::localHostName());
-    addrs = host_info.addresses();
+    for(const auto &h : host_info.addresses()){
+        if(h.isLoopback()) continue;
+        addrs.append(h);
+    }
     return true;
 #endif
 }

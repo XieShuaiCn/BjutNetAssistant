@@ -125,10 +125,6 @@ void WndMain::show()
     QWidget::show();
     QWidget::raise();
     QWidget::activateWindow();
-#ifdef Q_OS_WIN
-    HWND hWnd = reinterpret_cast<HWND>QWidget::winId(); //reinterpret_cast
-    ::SwitchToThisWindow(hWnd);
-#endif
     //后台处理事件
     QCoreApplication::processEvents();
     on_show();

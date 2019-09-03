@@ -346,19 +346,16 @@ QByteArray ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAd
                                 seed);
                     break;
                 case MessageValue::GET_DEVICE_ONLINE:
-                    {
-                        QVector<OnlineClientInfo> list = jfself.getOnlineClient();
-                        strTemp = "[";
-                        for(const auto &dev : list){
-                            strTemp += QString("{\"id\":%1,\"ipv4\":\"%2\",\"ipv6\":\"%3\"},")
-                                    .arg(dev.nID).arg(dev.strIPv4).arg(dev.strIPv6);
-                        }
-                        if(strTemp.endsWith(',')){
-                            strTemp.remove(strTemp.size()-1, 1);
-                        }
-                        strTemp+="]";
-                        buffer = __ServiceInterface_AckDataToByteArray(strTemp, seed);
+                    strTemp = "[";
+                    for(const auto &dev : jfself.getOnlineClient()){
+                        strTemp += QString("{\"id\":%1,\"ipv4\":\"%2\",\"ipv6\":\"%3\"},")
+                                .arg(dev.nID).arg(dev.strIPv4).arg(dev.strIPv6);
                     }
+                    if(strTemp.endsWith(',')){
+                        strTemp.remove(strTemp.size()-1, 1);
+                    }
+                    strTemp+="]";
+                    buffer = __ServiceInterface_AckDataToByteArray(strTemp, seed);
                     break;
                 case MessageValue::GET_FLOW_SERVICE:
                     buffer = __ServiceInterface_AckDataToByteArray(

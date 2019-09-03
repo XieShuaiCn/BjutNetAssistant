@@ -51,12 +51,16 @@ SOURCES += \
     WndSetting.cpp \
     WndSetting_ui.cpp \
     Utility.cpp
+unix{
 macx{
-SOURCES += \
-    WndMain_ui_mac.cpp
+SOURCES += WndMain_ui_mac.cpp
 }
 !macx{
-    WndMain_ui_win.cpp
+SOURCES += WndMain_ui_lnx.cpp
+}
+}
+win32{
+SOURCES += WndMain_ui_win.cpp
 }
 
 HEADERS += \

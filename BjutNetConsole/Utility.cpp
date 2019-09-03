@@ -1,4 +1,8 @@
 
+#ifndef BNA_OS_LINUX
+#include <boost/asio/ip/udp.hpp>
+#include <boost/asio/ip/host_name.hpp>
+#endif
 #if defined(_WIN32) || defined(WIN32) || defined(_WINDOWS) || defined(_WIN64) || defined(WIN64) || defined(__WIN64__)
 #include <windows.h>
 #endif
@@ -19,10 +23,6 @@
 #include <arpa/inet.h>
 #endif
 
-#ifndef BNA_OS_LINUX
-#include <boost/asio/ip/udp.hpp>
-#include <boost/asio/ip/host_name.hpp>
-#endif
 
 namespace bna{
 
@@ -182,7 +182,20 @@ bool StartProcess(const std::string &command)
 {
     if(command.empty()) return false;
 #ifdef BNA_OS_WIN
-    return TRUE == CreateProcess();
+    PROCESS_INFORMATION pinfo;
+    DWORD dwCreationFlags = (GetConsoleWindow()?0:CREATE_NO_WINDOW);
+    dwCreationFlags |= CREATE_UNICODE_ENVIRONMENT;
+    STARTUPINFOA startInfo = {sizeof(STARTUPINFOA), 0, 0, 0,
+                              (ULONG)CW_USEDEFAULT, (ULONG)CW_USEDEFAULT,
+                             (ULONG)CW_USEDEFAULT, (ULONG)CW_USEDEFAULT,
+                             0,0,0, 0,0,0, 0,0,0,0};
+    BOOL success = CreateProcessA(NULL, const_cast<char*>(command.data()), NULL, NULL, FALSE,
+                                  dwCreationFlags, 0, NULL, &startInfo, &pinfo);
+    if(success){
+        CloseHandle(pinfo.hThread);
+        CloseHandle(pinfo.hProcess);
+    }
+    return success;
 #else
     return 0 == system((command+" &").data());
 #endif

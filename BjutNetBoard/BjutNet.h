@@ -332,7 +332,7 @@ inline void BjutNet::getNetInfo(bool &online, int &flow, int &time, int &fee) co
 // retrun {online, flow, time, fee}
 inline std::tuple<bool, int, int, int> BjutNet::getNetInfo()  const
 {
-    return {getNetOnline(), getUsedFlow(), getUsedTime(), getLeftFee()};
+    return std::tuple<bool, int, int, int>{getNetOnline(), getUsedFlow(), getUsedTime(), getLeftFee()};
 }
 
 //

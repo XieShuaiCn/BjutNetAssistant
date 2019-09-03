@@ -1,3 +1,6 @@
+#ifndef BUILD_DEVELOP
+#pragma comment(linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"")//remove console
+#endif
 
 #include "common.h"
 #include <QDir>

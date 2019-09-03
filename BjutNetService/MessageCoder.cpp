@@ -1,6 +1,7 @@
 #include "MessageCoder.h"
 #include <stdlib.h>
 #include <memory.h>
+#include <string.h>
 
 namespace bna {
 

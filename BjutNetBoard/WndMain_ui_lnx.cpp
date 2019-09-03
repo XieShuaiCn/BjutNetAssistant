@@ -137,27 +137,27 @@ void bna::gui::WndMain::layoutUI()
     m_frmOperation->setFrameShape(QFrame::NoFrame);
     m_frmOperation->setFrameShadow(QFrame::Plain);
     m_lblCurrentBook->setGeometry(QRect(12, 23, 160, 20));
-    m_lblCurrentBook->setFont(font_s105);
+    m_lblCurrentBook->setFont(font_s115);
     m_cmbListBook->setGeometry(QRect(12, 48, 150, 25));
     m_cmbListBook->setFont(font_s115);
     m_btnRefreshBook->setGeometry(QRect(12, 80, 73, 25));
-    m_btnRefreshBook->setFont(font_s100);
+    m_btnRefreshBook->setFont(font_s115);
     m_btnSubmitBook->setGeometry(QRect(90, 80, 73, 25));
-    m_btnSubmitBook->setFont(font_s100);
+    m_btnSubmitBook->setFont(font_s115);
     // entrance
     m_frmBjutWeb->setGeometry(QRect(210, 325, 345, 120));
     m_frmBjutWeb->setFrameShape(QFrame::NoFrame);
     m_frmBjutWeb->setFrameShadow(QFrame::Plain);
     m_btnBjutWeb1->setGeometry(QRect(20, 23, 130, 25));
-    m_btnBjutWeb1->setFont(font_s100);
+    m_btnBjutWeb1->setFont(font_s105);
     m_btnBjutWeb2->setGeometry(QRect(20, 53, 130, 25));
-    m_btnBjutWeb2->setFont(font_s100);
+    m_btnBjutWeb2->setFont(font_s105);
     m_btnBjutWeb3->setGeometry(QRect(20, 83, 130, 25));
-    m_btnBjutWeb3->setFont(font_s100);
+    m_btnBjutWeb3->setFont(font_s105);
     m_btnBjutWeb4->setGeometry(QRect(180, 23, 130, 25));
-    m_btnBjutWeb4->setFont(font_s100);
+    m_btnBjutWeb4->setFont(font_s105);
     m_btnBjutWeb5->setGeometry(QRect(180, 53, 130, 25));
-    m_btnBjutWeb5->setFont(font_s100);
+    m_btnBjutWeb5->setFont(font_s105);
     m_btnBjutWebMore->setGeometry(QRect(180, 83, 130, 25));
     m_btnBjutWebMore->setFont(font_s105);
 
