@@ -30,18 +30,24 @@ RC_ICONS = logo.ico
 }
 
 # Use Precompiled headers (PCH)
-PRECOMPILED_HEADER  = common.h
+PRECOMPILED_HEADER  = ../BjutNetService/common.h
 
 
 SOURCES += \
     ../BjutNetService/MessageValue.cpp \
     ../BjutNetService/MessageCoder.cpp \
     ../BjutNetService/ParamParse.cpp \
-    common.cpp \
+    ../BjutNetService/ServiceInterface.cpp \
+    ../BjutNetService/BjutNet.cpp \
+    ../BjutNetService/common.cpp \
+    ../BjutNetService/DebugInfo.cpp \
+    ../BjutNetService/HNetworkCookieJar.cpp \
+    ../BjutNetService/HttpClient.cpp \
+    ../BjutNetService/WebJfself.cpp \
+    ../BjutNetService/WebLgn.cpp \
+    ../BjutNetService/Setting.cpp \
     main.cpp \
-    HttpClient.cpp \
     ServiceBridge.cpp \
-    BjutNet.cpp \
     Updater.cpp \
     HPanel.cpp \
     HLabel.cpp \
@@ -50,7 +56,8 @@ SOURCES += \
     WndTrayIcon.cpp \
     WndSetting.cpp \
     WndSetting_ui.cpp \
-    Utility.cpp
+    Utility.cpp \
+    WndHelp.cpp
 unix{
 macx{
 SOURCES += WndMain_ui_mac.cpp
@@ -68,17 +75,24 @@ HEADERS += \
     ../BjutNetService/MessageCoder.h \
     ../BjutNetService/ParamParse.h \
     ../BjutNetService/Version.h \
-    common.h \
-    HttpClient.h \
+    ../BjutNetService/ServiceInterface.h \
+    ../BjutNetService/BjutNet.h \
+    ../BjutNetService/common.h \
+    ../BjutNetService/DebugInfo.h \
+    ../BjutNetService/HNetworkCookieJar.h \
+    ../BjutNetService/HttpClient.h \
+    ../BjutNetService/WebJfself.h \
+    ../BjutNetService/WebLgn.h \
+    ../BjutNetService/Setting.h \
     ServiceBridge.h \
-    BjutNet.h \
     Updater.h \
     HLabel.h \
     HPanel.h \
     WndMain.h \
     WndTrayIcon.h \
     WndSetting.h \
-    Utility.h
+    Utility.h \
+    WndHelp.h
 
 DISTFILES += \
     C:/Users/XIESHUAI/.bjutnet/account.json \

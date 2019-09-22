@@ -1,7 +1,7 @@
 #ifndef WNDSETTING_H
 #define WNDSETTING_H
 
-#include "common.h"
+#include "../BjutNetService/common.h"
 #include <QWidget>
 
 class QWidget;

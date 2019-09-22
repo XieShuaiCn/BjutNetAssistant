@@ -9,6 +9,7 @@
 #include <QtNetwork/QNetworkReply>
 
 namespace bna{
+namespace core{
 
 HttpClient::HttpClient()
 {
@@ -266,4 +267,4 @@ int HttpClient::downUrlData(const QUrl &url, const QByteArray &arg, QByteArray &
     delete pReply;
     return status;
 }
-}
+}}

@@ -1,7 +1,4 @@
 #include "WndMain.h"
-#include "WndTrayIcon.h"
-#include "BjutNet.h"
-#include "Utility.h"
 #include <math.h>
 #include <QDateTime>
 #include <QPainter>
@@ -25,6 +22,12 @@
 #include <QHostAddress>
 #include <QClipboard>
 #include <QDir>
+#include "../BjutNetService/BjutNet.h"
+#include "WndTrayIcon.h"
+#include "WndHelp.h"
+#include "Utility.h"
+
+using namespace bna::core;
 
 namespace bna {
 
@@ -44,7 +47,7 @@ WndMain::WndMain(WndTrayIcon *tray, QWidget *parent) :
     m_szFrameShowMsg.setHeight(620);
     m_nFlowGraphThickness = 10;
     tray->setMainWindow(this);
-    m_net = tray->getBjutNet();
+    m_coreBjutNet = tray->getBjutNet();
     //初始化界面
     initUI();
     //bjut web
@@ -68,6 +71,7 @@ WndMain::WndMain(WndTrayIcon *tray, QWidget *parent) :
     connect(m_lblClent2_addr4, &bna::gui::HLabel::doubleClicked, this, &bna::gui::WndMain::on_lblClientaddr_doubleClicked);
     connect(m_lblClent2_addr6, &bna::gui::HLabel::doubleClicked, this, &bna::gui::WndMain::on_lblClientaddr_doubleClicked);
     connect(m_btnRefreshBook, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnRefreshBook_clicked);
+    connect(m_cmbListBook, SIGNAL(highlighted(int)), this, SLOT(on_cmbListBook_highlight(int)));
     connect(m_btnSubmitBook, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnSubmitBook_clicked);
     connect(m_lblShowMsg, &bna::gui::HLabel::clicked, this, &bna::gui::WndMain::on_lblShowMsg_clicked);
     connect(m_btnBjutWebMore, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnBjutWebMore_clicked);
@@ -77,14 +81,19 @@ WndMain::WndMain(WndTrayIcon *tray, QWidget *parent) :
     connect(m_btnBjutWeb4, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
     connect(m_btnBjutWeb5, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
     connect(m_lblVersion, &bna::gui::HLabel::clicked, this, &bna::gui::WndMain::on_lblVersion_clicked);
+    connect(m_lblFeedback, &bna::gui::HLabel::clicked, this, &bna::gui::WndMain::on_lblFeedback_clicked);
     //connect(this, &WndMain::showed, this, &WndMain::on_show);
-    connect(m_net, &bna::gui::BjutNet::updateMessage, this, &bna::gui::WndMain::on_txtMsg_message);
-    connect(m_net, &bna::gui::BjutNet::updateNetInfo, this, &bna::gui::WndMain::on_account_status);
-    connect(m_net, &bna::gui::BjutNet::updateOnlineDevice, this, &bna::gui::WndMain::on_online_status);
-    connect(m_net, &bna::gui::BjutNet::updateServiceInfo, this, &bna::gui::WndMain::on_serviceInfo);
-    connect(m_net, &bna::gui::BjutNet::updateRemoteVersion, this, &bna::gui::WndMain::on_remoteVersion);
-    connect(m_net, &bna::gui::BjutNet::updateAllServices, this, &bna::gui::WndMain::on_allServices);
-    connect(m_net, &bna::gui::BjutNet::updateBookedService, this, &bna::gui::WndMain::on_bookedService);
+    if(m_coreBjutNet){
+        connect(m_coreBjutNet, &bna::core::BjutNet::message, this, &bna::gui::WndMain::on_txtMsg_MessageWithTime);
+        WebLgn &lgn = m_coreBjutNet->getWebLgn();
+        connect(&lgn, &bna::core::WebLgn::status_update, this, &bna::gui::WndMain::on_account_StatusUpdated);
+        WebJfself &jfself = m_coreBjutNet->getWebJfself();
+        connect(&jfself, &bna::core::WebJfself::online_status_update, this, &bna::gui::WndMain::on_online_status);
+    }
+    else{
+        QMessageBox::critical(this, "Init", "Fail to init core.", QMessageBox::Ok);
+        m_tray->cmdExitApp();
+    }
     //光标
     m_txtMsg->setFocus();
 }
@@ -146,12 +155,13 @@ void WndMain::paintEvent(QPaintEvent *event)
     // 设置反锯齿
     painter.setRenderHint(QPainter::Antialiasing);
     //绘制流量图
-    int currentFlow = m_net->getUsedFlow() / 1024;//MB
-    int totalFlow = m_net->getServiceFlow();//MB
+    int currentFlow = m_coreBjutNet->getWebLgn().getFlow() / 1024;//MB
+    int totalFlow = m_coreBjutNet->getWebJfself().getTotalFlow();//MB
     double flowRate = -1.0;
     if(totalFlow > 0){
         flowRate = 1.0 * currentFlow / totalFlow;
     }
+    //flowRate = 0.20;
     const QBrush brushGreen(QColor(60,180,60));
     const QBrush brushGrayDark(QColor(150,150,150));
     const QBrush brushGrayLight(QColor(200,200,200));
@@ -286,6 +296,7 @@ void WndMain::paintEvent(QPaintEvent *event)
     //
     painter.setBrush(QBrush(QColor(50,50,50)));
     painter.setPen(Qt::NoPen);
+    // draw a triangle of lblShowMsg
     if(m_bShowMsg){
         QPolygon polyTriangle(3);
         polyTriangle.setPoint(0, m_lblShowMsg->pos().x()+5, m_lblShowMsg->pos().y()+5);
@@ -318,7 +329,7 @@ void WndMain:: on_show()
     on_btnRefresh_clicked();
 }
 
-void WndMain::on_account_status(bool login, int flow, int time, int fee)
+void WndMain::on_account_StatusUpdated(bool login, int time, int flow, int fee)
 {
     if(login)
     {
@@ -361,7 +372,7 @@ void WndMain::on_account_status(bool login, int flow, int time, int fee)
     m_lblFlowUnit->setText(flowUnit[flowUnitIndex]);
     m_lcdNumFee->display(float(fee) / 100);
     strFlowTip.append(QString("流量状态：已用%1%2").arg(fflow).arg(flowUnit[flowUnitIndex]));
-    int totalFlow = m_net->getServiceFlow();//MB
+    int totalFlow = m_coreBjutNet->getWebJfself().getTotalFlow();//MB
     if(totalFlow > 0){
         m_lblFlowUsed->setText(QString("已用：%1 %").arg(int(100.0 * flow / totalFlow / 1024)));
         fflow = totalFlow-flow/1024;
@@ -376,7 +387,7 @@ void WndMain::on_account_status(bool login, int flow, int time, int fee)
         m_frmFlowGraph->setToolTip(strFlowTip);
         this->update();
     }
-    auto service = m_net->getServiceName();
+    auto service = m_coreBjutNet->getWebJfself().getServiceName();
     if(service.size()){
         m_lblService->setText(service);
     }
@@ -386,19 +397,18 @@ void WndMain::on_online_status(const QVariant &var_info)
 {
     QVector<QHostAddress> addrs;
     ListLocalIpAddress(addrs);
-    BjutNet::TypeOnlineDevices info = var_info.value<BjutNet::TypeOnlineDevices>();
+    QVector<bna::core::OnlineClientInfo> info = var_info.value<QVector<bna::core::OnlineClientInfo>>();
     // set offline
     for(auto &client : m_lstOnline){
         std::get<OLDEV_ONLINE>(client) = false;
     }
     // refresh list
-    for(const auto &client : info){
-        int id = client[0].toInt();
-        OnlineDevice dev{id, client[1], client[2], client[3], true, false};
+    for(const OnlineClientInfo &client : info){
+        OnlineDevice dev{client.nID, client.strIPv4, client.strIPv6, client.strMAC, true, false};
         m_lstOnline.push_front(dev);
         for(auto it = m_lstOnline.begin()+1; it != m_lstOnline.end();){
-            if((std::get<OLDEV_IPV4>(*it).size() && client[1].size() && std::get<OLDEV_IPV4>(*it) == client[1])
-            || (std::get<OLDEV_IPV6>(*it).size() && client[2].size() && std::get<OLDEV_IPV6>(*it) == client[2])){
+            if((std::get<OLDEV_IPV4>(*it).size() && client.strIPv4.size() && std::get<OLDEV_IPV4>(*it) == client.strIPv4)
+            || (std::get<OLDEV_IPV6>(*it).size() && client.strIPv6.size() && std::get<OLDEV_IPV6>(*it) == client.strIPv6)){
                 it = m_lstOnline.erase(it);
             }
             else{
@@ -518,7 +528,12 @@ void WndMain::on_online_status(const QVariant &var_info)
     }
 }
 
-void WndMain::on_txtMsg_message(const QString& info)
+void WndMain::on_txtMsg_MessageWithTime(const QDateTime &time, const QString &info)
+{
+    m_txtMsg->append(time.toString("[yyyy-MM-dd hh:mm:ss] ") + (info.endsWith('\n') ? info : (info + '\n')));
+}
+
+void WndMain::on_txtMsg_Message(const QString& info)
 {
     m_txtMsg->append(QDateTime::currentDateTime().toString("[yyyy-MM-dd hh:mm:ss] ") + (info.endsWith('\n') ? info : (info + '\n')));
 }
@@ -534,13 +549,32 @@ void WndMain::resizeEvent(QResizeEvent *event)
 void WndMain::on_btnRefresh_clicked()
 {
     m_btnRefresh->setEnabled(false);
-    on_txtMsg_message("[INFO] Refresh all");
-    m_net->sendRefreshNetInfo();
-    m_net->sendRefreshOnlineDevices();
-    m_net->requireRemoteVersion();
-    m_net->requireServiveInfo();
-    m_net->requireNetInfo();
-    m_net->requireOnlineDevices();
+    on_txtMsg_Message("[INFO] Refresh all");
+    WebLgn &lgn = m_coreBjutNet->getWebLgn();
+    WebJfself &jfself = m_coreBjutNet->getWebJfself();
+    jfself.refreshAccount();
+    jfself.refreshOnline();
+    if(jfself.getServiceName().size()){
+        m_lblService->setText(jfself.getServiceName());
+    }
+    else{
+        m_lblService->setText(QString("未检测到套餐"));
+    }
+    //更新页面显示的流量状态
+    //on_txtMsg_Message(QDateTime::currentDateTime(), "检查网络状态");
+    bool loged = lgn.checkLoginStatus();
+    //on_account_status(lgn.getTime() > 0, lgn.getTime(), lgn.getFlow(), lgn.getFee());
+    // 没有登陆外网时，连不上服务器，不检查更新
+    if(loged){
+        //on_txtMsg_Message(QDateTime::currentDateTime(), "检查版本更新");
+        m_updater.checkUpdate();
+        if(m_updater.needUpdate()){
+            m_bNeedUpdate = true;
+            QString ver("%1 <font color=#dd3333>最新版本：%2 点我更新！</font>");
+            m_lblVersion->setText(ver.arg(m_updater.getOldVersion(), m_updater.getNewVersion()));
+        }
+    }
+    //on_txtMsg_message(QDateTime::currentDateTime(), "刷新完成");
     m_btnRefresh->setEnabled(true);
 }
 
@@ -550,7 +584,9 @@ void WndMain::on_btnSetting_clicked()
 }
 
 void WndMain::on_btnHelp_clicked()
-{}
+{
+    m_tray->cmdShowHelpWnd();
+}
 
 void WndMain::on_btnDetail_clicked()
 {
@@ -589,14 +625,14 @@ void WndMain::on_lblShowMsg_clicked()
 
 void WndMain::on_btnLogout_clicked()
 {
-    m_net->sendLogout();
-    m_net->requireOnlineDevices();
+    m_tray->cmdLogoutLgn();
+    m_coreBjutNet->getWebJfself().refreshOnline();
 }
 
 void WndMain::on_btnLogin_clicked()
 {
-    m_net->sendLogin();
-    m_net->requireOnlineDevices();
+    m_tray->cmdLoginLgn();
+    m_coreBjutNet->getWebJfself().refreshOnline();
 }
 
 void WndMain::on_lblClientaddr_doubleClicked()
@@ -621,16 +657,34 @@ void WndMain::on_lblClientaddr_doubleClicked()
 void WndMain::on_btnRefreshBook_clicked()
 {
     m_cmbListBook->clear();
-    m_net->requireAlldService();
-    m_net->requireBookedService();
+    WebJfself &jfself = m_coreBjutNet->getWebJfself();
+    jfself.refreshBookService();
+    on_bookedService(jfself.getCurrentBookService());
+    for(const auto &l : jfself.getBookServiceList())
+    {
+        m_cmbListBook->addItem(l.strName, QVariant::fromValue(l));
+        //m_cmbListBook->setToolTip("");
+    }
+}
+
+void WndMain::on_cmbListBook_highlight(int index)
+{
+    if(index >=0 && index < m_cmbListBook->count()){
+        QVariant var = m_cmbListBook->itemData(index, Qt::UserRole);
+        bool ok = var.canConvert<ServiceInfo>();
+        if(ok){
+            ServiceInfo info = var.value<ServiceInfo>();
+            m_cmbListBook->setToolTip(info.strDescription);
+        }
+    }
 }
 
 void WndMain::on_btnSubmitBook_clicked()
 {
-    bool ok = false;
-    int id = m_cmbListBook->currentData().toInt(&ok);
+    bool ok = m_cmbListBook->currentData().canConvert<ServiceInfo>();
     if(ok){
-        m_net->sendBookService(id);
+        ServiceInfo info = m_cmbListBook->currentData().value<ServiceInfo>();
+        m_coreBjutNet->getWebJfself().submitBookService(info.nID);
     }
 }
 
@@ -754,72 +808,75 @@ void WndMain::on_lblVersion_clicked()
     }
 }
 
-void WndMain::on_btnOnline1_clicked()
+void WndMain::on_lblFeedback_clicked()
 {
-    if(m_lstOnline.size() >= 1){
-        const OnlineDevice &od = m_lstOnline.at(0);
+    QDesktopServices::openUrl(QUrl("https://www.wjx.top/jq/44055734.aspx"));
+}
+
+void WndMain::logRemoteDevice(int index, bool login)
+{
+    if(m_lstOnline.size() > index){
+        const OnlineDevice &od = m_lstOnline.at(index);
+        // local device
         if(std::get<OLDEV_LOCAL>(od)){
-            m_net->sendLogin();
+            login ? m_tray->cmdLoginLgn() : m_tray->cmdLogoutLgn();
+            on_txtMsg_Message(QString("[ OK ] ") + (login? "on":"off") + "line local device");
         }
         else{
             QString addr = std::get<OLDEV_IPV4>(od).size() ? std::get<OLDEV_IPV4>(od) : std::get<OLDEV_IPV6>(od);
             if(addr.size()){
-                m_net->sendOnlineDevice(addr);
+                QHostAddress param_ip(addr);
+                if(!param_ip.isNull()){
+                    // local device
+                    if(param_ip.isLoopback()){
+                        login ? m_tray->cmdLoginLgn() : m_tray->cmdLogoutLgn();
+                        on_txtMsg_Message(QString("[ OK ] ") + (login? "on":"off") + "line local device");
+                    }
+                    else{
+                        m_guiServiceBridge.setAuth(true, m_coreBjutNet->getAccount(), m_coreBjutNet->getPassword());
+                        if(!m_guiServiceBridge.setHost(addr)){
+                            on_txtMsg_Message("[Fail] Cannot change remote host address.");
+                            return;
+                        }
+                        if(!m_guiServiceBridge.sendSYN()){
+                            on_txtMsg_Message("[Fail] Cannot sync with remote device.");
+                            return;
+                        }
+                        bool ok = (login ? m_guiServiceBridge.sendActLoginBjut() : m_guiServiceBridge.sendActLogoutBjut());
+                        if(ok){
+                            on_txtMsg_Message(QString("[")+(ok?" OK ":"FAIL")+"] " + (login? "on":"off") + "line remote device:"+addr);
+                        }
+                        m_guiServiceBridge.setAuth(false);
+                        m_guiServiceBridge.setHost(QHostAddress::LocalHost);
+                    }
+                }
             }
         }
     }
-    m_net->requireOnlineDevices();
+}
+
+void WndMain::on_btnOnline1_clicked()
+{
+    logRemoteDevice(0, true);
+    m_coreBjutNet->getWebJfself().refreshOnline();
 }
 
 void WndMain::on_btnOnline2_clicked()
 {
-    if(m_lstOnline.size() >= 2){
-        const OnlineDevice &od = m_lstOnline.at(1);
-        if(std::get<OLDEV_LOCAL>(od)){
-            m_net->sendLogin();
-        }
-        else{
-            QString addr = std::get<OLDEV_IPV4>(od).size() ? std::get<OLDEV_IPV4>(od) : std::get<OLDEV_IPV6>(od);
-            if(addr.size()){
-                m_net->sendOnlineDevice(addr);
-            }
-        }
-    }
-    m_net->requireOnlineDevices();
+    logRemoteDevice(1, true);
+    m_coreBjutNet->getWebJfself().refreshOnline();
 }
 
 void WndMain::on_btnOffline1_clicked()
 {
-    if(m_lstOnline.size() >= 1){
-        const OnlineDevice &od = m_lstOnline.at(0);
-        if(std::get<OLDEV_LOCAL>(od)){
-            m_net->sendLogout();
-        }
-        else{
-            QString addr = std::get<OLDEV_IPV4>(od).size() ? std::get<OLDEV_IPV4>(od) : std::get<OLDEV_IPV6>(od);
-            if(addr.size()){
-                m_net->sendOfflineDevice(addr);
-            }
-        }
-    }
-    m_net->requireOnlineDevices();
+    logRemoteDevice(0, false);
+    m_coreBjutNet->getWebJfself().refreshOnline();
 }
 
 void WndMain::on_btnOffline2_clicked()
 {
-    if(m_lstOnline.size() >= 2){
-        const OnlineDevice &od = m_lstOnline.at(1);
-        if(std::get<OLDEV_LOCAL>(od)){
-            m_net->sendLogout();
-        }
-        else{
-            QString addr = std::get<OLDEV_IPV4>(od).size() ? std::get<OLDEV_IPV4>(od) : std::get<OLDEV_IPV6>(od);
-            if(addr.size()){
-                m_net->sendOfflineDevice(addr);
-            }
-        }
-    }
-    m_net->requireOnlineDevices();
+    logRemoteDevice(1, false);
+    m_coreBjutNet->getWebJfself().refreshOnline();
 }
 
 void WndMain::on_btnForceOffline1_clicked()
@@ -827,9 +884,9 @@ void WndMain::on_btnForceOffline1_clicked()
     if(m_lstOnline.size() >= 1){
         const OnlineDevice &od = m_lstOnline.at(0);
         if(std::get<OLDEV_ONLINE>(od))
-            m_net->sendForceOfflineDevice(std::get<OLDEV_ID>(od));
+            m_coreBjutNet->getWebJfself().toOffline(std::get<OLDEV_ID>(od));
     }
-    m_net->requireOnlineDevices();
+    m_coreBjutNet->getWebJfself().refreshOnline();
 }
 
 void WndMain::on_btnForceOffline2_clicked()
@@ -837,16 +894,16 @@ void WndMain::on_btnForceOffline2_clicked()
     if(m_lstOnline.size() >= 2){
         const OnlineDevice &od = m_lstOnline.at(1);
         if(std::get<OLDEV_ONLINE>(od))
-            m_net->sendForceOfflineDevice(std::get<OLDEV_ID>(od));
+            m_coreBjutNet->getWebJfself().toOffline(std::get<OLDEV_ID>(od));
     }
-    m_net->requireOnlineDevices();
+    m_coreBjutNet->getWebJfself().refreshOnline();
 }
 
 // recive the info of account service
 void WndMain::on_serviceInfo(const QString &name, int totalFlow)
 {
     if(totalFlow > 0){
-        m_lblFlowUsed->setText(QString("已用：%1 %").arg(int(100.0 * m_net->getUsedFlow() / totalFlow / 1024)));
+        m_lblFlowUsed->setText(QString("已用：%1 %").arg(int(100.0 * m_coreBjutNet->getWebLgn().getFlow() / totalFlow / 1024)));
     }
     else {
          m_lblFlowUsed->setText(QString("已用：-- %"));
@@ -862,22 +919,13 @@ void WndMain::on_serviceInfo(const QString &name, int totalFlow)
 void WndMain::on_remoteVersion(const QString &version, int inner_ver)
 {
     Q_UNUSED(inner_ver);
-    if(m_net->getNetOnline()){
+    if(m_coreBjutNet->getWebLgn().getLoginStatus()){
         m_updater.checkUpdate();
         if(m_updater.needUpdate()){
             m_bNeedUpdate = true;
             QString ver("%1 <font color=#dd3333>最新版本：%2 点我更新！</font>");
             m_lblVersion->setText(ver.arg(version, m_updater.getNewVersion()));
         }
-    }
-}
-//
-void WndMain::on_allServices(const QVariant &services)
-{
-    m_cmbListBook->clear();
-    for(const auto &l : services.value<BjutNet::TypeAllServices>())
-    {
-        m_cmbListBook->addItem(std::get<1>(l), QVariant(std::get<0>(l)));
     }
 }
 

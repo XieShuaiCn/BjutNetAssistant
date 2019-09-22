@@ -5,6 +5,7 @@
 #include <QJsonDocument>
 
 namespace bna{
+namespace core{
 
 BjutNet::BjutNet():
     QThread()
@@ -14,7 +15,7 @@ BjutNet::BjutNet():
     connect(&m_webJfself, &WebJfself::message, this, &BjutNet::message);
     connect(&m_tmCheckLgn, &QTimer::timeout, this, &BjutNet::checkLgn);
     connect(&m_tmCheckOnline, &QTimer::timeout, this, &BjutNet::checkOnline);
-    connect(this, &BjutNet::debug_info, &g_debugTool, &DebugTool::writeInfo);
+    connect(this, &BjutNet::debug_info, DebugTool::getPointer(), &DebugTool::writeString);
 }
 
 
@@ -306,5 +307,6 @@ void BjutNet::run()
     for(int i = 0; i < 3 && !m_webLgn.checkLoginStatus(); ++i)
         m_webLgn.login();
     m_webLgn.checkLoginStatus();
+}
 }
 }

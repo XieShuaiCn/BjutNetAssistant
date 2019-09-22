@@ -6,8 +6,9 @@
 #include <QPushButton>
 #include <QCheckBox>
 #include <QSettings>
+#include "../BjutNetService/BjutNet.h"
+#include "../BjutNetService/Setting.h"
 #include "WndTrayIcon.h"
-#include "BjutNet.h"
 
 using namespace bna;
 using namespace bna::gui;
@@ -18,41 +19,46 @@ WndSetting::WndSetting(WndTrayIcon *tray, QWidget *parent) :
 {
     initUI();
     QWidget::setAttribute(Qt::WA_QuitOnClose,false);
-    auto *service = m_tray->getBjutNet();
+    //auto *service = m_tray->getBjutNetAgent();
     connect(m_chkAutoRun, &QCheckBox::clicked, this, &WndSetting::on_chkAutoRun_clicked);
     connect(m_btnApply, &QPushButton::clicked, this, &WndSetting::on_btnApply_clicked);
     connect(m_btnApplyLogin, &QPushButton::clicked, this, &WndSetting::on_btnApplyLogin_clicked);
-    connect(service, &BjutNet::updateAccount, this, &WndSetting::on_account);
-    connect(service, &BjutNet::updateAutoStart, this, &WndSetting::on_autoStart);
+    //connect(service, &BjutNetAgent::updateAccount, this, &WndSetting::on_account);
+    //connect(service, &BjutNetAgent::updateAutoStart, this, &WndSetting::on_autoStart);
 }
 
 void WndSetting::show()
 {
     QWidget::show();
-    auto *service = m_tray->getBjutNet();
-    service->requireIsAutoStart();
-    service->requireAccount();
+    //auto *service = m_tray->getBjutNetAgent();
+    //service->requireIsAutoStart();
+    //service->requireAccount();
+    on_account(m_tray->getBjutNet()->getAccount(),
+               m_tray->getBjutNet()->getPassword(),
+               m_tray->getBjutNet()->getLoginType());
+    m_chkAutoRun->setChecked(bna::core::Setting::getAutoRun());
 }
 
 void WndSetting::on_chkAutoRun_clicked(bool checked)
 {
-    BjutNet *service = m_tray->getBjutNet();
-    service->sendAutoStart(checked);
-    service->requireIsAutoStart();
+    bna::core::Setting::setAutoRun(checked);
 }
 
 void WndSetting::on_chkDebug_clicked(bool checked)
 {
-    Q_UNUSED(checked);
+    bna::g_bAppDebug = checked;
 }
 
 void WndSetting::on_btnApply_clicked()
 {
     if(m_tray)
     {
-        auto *service = m_tray->getBjutNet();
-        service->sendNewAccount(m_editAccount->text(), m_editPassword->text(), m_cmbType->currentIndex()+1);
+        m_tray->getBjutNet()->setAccount(m_editAccount->text());
+        m_tray->getBjutNet()->setPassword(m_editPassword->text());
+        m_tray->getBjutNet()->setLoginType(m_cmbType->currentIndex()+1);
+        QMessageBox::information(this, "保存账号","账号信息已保存");
     }
+    else
     {
         QMessageBox::information(this, "保存账号","账号信息未保存");
     }

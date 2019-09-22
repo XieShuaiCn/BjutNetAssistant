@@ -8,6 +8,7 @@
 #include <QTimer>
 
 namespace bna{
+namespace core {
 
 class BjutNet : public QThread
 {
@@ -138,5 +139,5 @@ inline WebJfself &BjutNet::getWebJfself()
     return m_webJfself;
 }
 
-}
+}}
 #endif // BJUTNET_H

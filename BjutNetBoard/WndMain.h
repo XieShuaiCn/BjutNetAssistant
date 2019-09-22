@@ -1,11 +1,12 @@
 #ifndef MAINWND_H
 #define MAINWND_H
 
-#include "common.h"
+#include "../BjutNetService/common.h"
 #include "Updater.h"
 #include "HLabel.h"
 #include "HPanel.h"
 #include "WndTrayIcon.h"
+#include "ServiceBridge.h"
 #include <tuple>
 
 class QAction;
@@ -28,9 +29,6 @@ class QProgressDialog;
 namespace bna{
 namespace gui{
 
-class WndTrayIcon;
-class BjutNet;
-
 class WndMain : public QWidget
 {
     Q_OBJECT
@@ -50,7 +48,7 @@ public:
     ~WndMain();
     void show();
 
-Q_SIGNALS:
+signals:
     void showed();
 public slots:
     void initUI();
@@ -71,24 +69,26 @@ public slots:
     void on_btnForceOffline2_clicked();
     void on_lblClientaddr_doubleClicked();
     void on_btnRefreshBook_clicked();
+    void on_cmbListBook_highlight(int index);
     void on_btnSubmitBook_clicked();
     void on_lblShowMsg_clicked();
     void on_btnBjutWebCommon_clicked();
     void on_btnBjutWebMore_clicked();
     void on_lblVersion_clicked();
-    void on_txtMsg_message(const QString& info);
-    void on_account_status(bool login, int flow, int time, int fee);
+    void on_lblFeedback_clicked();
+    void on_txtMsg_MessageWithTime(const QDateTime &time, const QString &info);
+    void on_txtMsg_Message(const QString& info);
+    void on_account_StatusUpdated(bool login, int time, int flow, int fee);
     void on_online_status(const QVariant &var_info);
     // recive the info of account service
     void on_serviceInfo(const QString &name, int totalFlow);
     // recive the version of remote service
     void on_remoteVersion(const QString &version, int inner_ver);
     //
-    void on_allServices(const QVariant &services);
-    //
     void on_bookedService(const QString &name);
 protected slots:
     void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
+    void logRemoteDevice(int index, bool login);
 protected:
     void closeEvent(QCloseEvent *event);
     void paintEvent(QPaintEvent *event);
@@ -173,8 +173,8 @@ private:
     bna::gui::Updater m_updater;
     QProgressDialog *m_dlgProgress;
     WndTrayIcon *m_tray;
-    BjutNet *m_net;
-
+    core::BjutNet *m_coreBjutNet;
+    ServiceBridge m_guiServiceBridge;
 };
 
 }}

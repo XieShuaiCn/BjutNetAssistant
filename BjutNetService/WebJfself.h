@@ -7,6 +7,7 @@
 #include <QPair>
 
 namespace bna{
+namespace core{
 
 struct OnlineClientInfo{
     int nID;
@@ -60,7 +61,7 @@ public:
 signals:
     //监视消息
     void message(const QDateTime& time, const QString& info);
-    void online_status_update(const QVector<OnlineClientInfo> &info);
+    void online_status_update(const QVariant &info);
     // 调试信息
     void debug_info(DebugTool::DebugStatus status, const QString &content, bool with_time = true, bool end_line = true);
 private:
@@ -96,5 +97,9 @@ inline void WebJfself::setPassword(const QString &password)
 {
     m_strPassword = password;
 }
-}
+}}
+
+Q_DECLARE_METATYPE(bna::core::OnlineClientInfo)
+Q_DECLARE_METATYPE(bna::core::ServiceInfo)
+
 #endif // WEBJFSELF_H

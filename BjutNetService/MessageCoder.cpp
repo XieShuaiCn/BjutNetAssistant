@@ -4,7 +4,7 @@
 #include <string.h>
 
 namespace bna {
-
+namespace core{
 
 int MessageCoder::Encrypt(const char *words, int wlen, char *data, int dlen)
 {
@@ -106,4 +106,4 @@ int MessageCoder::Decrypt(const char *data, int dlen, char *words, int wlen)
     return nsize;
 }
 
-}
+}}

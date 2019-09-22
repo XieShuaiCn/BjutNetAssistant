@@ -2,6 +2,7 @@
 #define BNS_MESSAGEVALUE_H
 
 namespace bna{
+namespace core{
 
 const char CHAR_ENQ = '\x05';
 const char CHAR_ACK = '\x06';
@@ -107,5 +108,5 @@ extern template struct MessageValue::Convert<MessageValue::ActionRegist>;
 extern template struct MessageValue::Convert<MessageValue::ActionSys>;
 
 }
-
+}
 #endif // BNS_MESSAGEVALUE_H

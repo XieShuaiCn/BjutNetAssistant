@@ -18,7 +18,7 @@ void WndMain::initUI()
     QFont font_s130;
     font_s130.setPointSize(13);
 
-    this->setWindowTitle("网关登录器 更新");
+    this->setWindowTitle("北工大网关助手 维护工具");
     this->setObjectName(QStringLiteral("WndMain"));
     this->setWindowIcon(QIcon(":/icon/logo.ico"));
     this->setFixedSize(500, 150);

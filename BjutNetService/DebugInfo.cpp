@@ -6,9 +6,19 @@
 #include "common.h"
 
 namespace bna{
+namespace core{
+
+DebugTool& DebugTool::I()
+{
+    static DebugTool s_inst;
+    return s_inst;
+}
 
 void DebugTool::init(const QString &name)
 {
+    if(m_file.isOpen()){
+        m_file.close();
+    }
     m_file.setFileName(name);
     m_file.open(QFile::ReadWrite);
     m_strLastError.clear();
@@ -17,7 +27,10 @@ void DebugTool::init(const QString &name)
 
 void DebugTool::release()
 {
-    if(m_file.isOpen()) m_file.close();
+    if(m_file.isOpen()){
+        m_file.flush();
+        m_file.close();
+    }
 }
 
 void DebugTool::setInfo(const QString &content, bool with_time)
@@ -32,9 +45,14 @@ void DebugTool::setInfo(const QString &content, bool with_time)
     m_strLastError.append(content);
 }
 
-void DebugTool::writeInfo(DebugStatus status, const QString &content, bool with_time, bool end_line)
+void DebugTool::writeString(DebugStatus status, const QString &content, bool with_time, bool end_line)
 {
-    setInfo(content, with_time);
+    writeBytes(status, content.toUtf8(), with_time, end_line);
+}
+
+void DebugTool::writeBytes(DebugStatus status, const QByteArray &content, bool with_time, bool end_line)
+{
+    setInfo(QString::fromUtf8(content), with_time);
 
     if(!m_file.isOpen())
         return;
@@ -66,7 +84,7 @@ void DebugTool::writeInfo(DebugStatus status, const QString &content, bool with_
             break;
         }
         num += m_file.write(QString("[%1] ").arg(s).toUtf8());
-        if(STATUS_DATA == status && content.size() > 100){
+        if(STATUS_DATA == status && content.size() > 200){
             QString dataFileName = "log_data_" + timeNow.toString("yyyyMMddhhmmss_");
             static QDir dirAppTemp(g_strAppTempPath);
             for(int i =0; i < 32; ++i)
@@ -81,22 +99,22 @@ void DebugTool::writeInfo(DebugStatus status, const QString &content, bool with_
             QFile fData(dataFileName);
             bool writeDataOK = false;
             if(fData.open(QFile::WriteOnly)){
-                writeDataOK = 0 < fData.write(content.toUtf8());
+                writeDataOK = 0 < fData.write(content);
                 fData.close();
             }
             if(writeDataOK){
                 num += m_file.write(dataFileName.toUtf8());
             }
             else{
-                num += m_file.write(content.toUtf8());
+                num += m_file.write(content);
             }
         }
         else{
-            num += m_file.write(content.toUtf8());
+            num += m_file.write(content);
         }
     }
     else{
-        num += m_file.write(content.toUtf8());
+        num += m_file.write(content);
     }
     if(end_line)
     {
@@ -105,4 +123,4 @@ void DebugTool::writeInfo(DebugStatus status, const QString &content, bool with_
     m_file.flush();
 }
 
-}
+}}

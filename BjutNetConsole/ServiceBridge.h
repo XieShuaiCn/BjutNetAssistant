@@ -72,8 +72,8 @@ public:
     const std::string &getLastError();
 
 private:
-    bool send_common(MessageValue::Type type, MessageValue::Action act);
-    bool sendAct_common(MessageValue::ActionAct type);
+    bool send_common(core::MessageValue::Type type, core::MessageValue::Action act);
+    bool sendAct_common(core::MessageValue::ActionAct type);
     bool SendAndReceive(const std::string &sdata, std::string &rdata);
 
     UdpSocket *m_socket;
@@ -91,72 +91,72 @@ inline const std::string &ServiceBridge::getLastError()
     return m_strLastError;
 }
 
-inline bool ServiceBridge::sendAct_common(MessageValue::ActionAct type)
+inline bool ServiceBridge::sendAct_common(core::MessageValue::ActionAct type)
 {
-    return send_common(MessageValue::ACT, type);
+    return send_common(core::MessageValue::ACT, type);
 }
 
 inline bool ServiceBridge::sendActLoadAccount()
 {
-    return sendAct_common(MessageValue::ACT_LOAD_ACCOUNT);
+    return sendAct_common(core::MessageValue::ACT_LOAD_ACCOUNT);
 }
 inline bool ServiceBridge::sendActSaveAccount()
 {
-    return sendAct_common(MessageValue::ACT_SAVE_ACCOUNT);
+    return sendAct_common(core::MessageValue::ACT_SAVE_ACCOUNT);
 }
 
 inline bool ServiceBridge::sendActLoginBjut()
 {
-    return sendAct_common(MessageValue::ACT_LOGIN_BJUT);
+    return sendAct_common(core::MessageValue::ACT_LOGIN_BJUT);
 }
 inline bool ServiceBridge::sendActLogoutBjut()
 {
-    return sendAct_common(MessageValue::ACT_LOGOUT_BJUT);
+    return sendAct_common(core::MessageValue::ACT_LOGOUT_BJUT);
 }
 inline bool ServiceBridge::sendActLoginJfself()
 {
-    return sendAct_common(MessageValue::ACT_LOGIN_JFSELF);
+    return sendAct_common(core::MessageValue::ACT_LOGIN_JFSELF);
 }
 inline bool ServiceBridge::sendActLogoutJfself()
 {
-    return sendAct_common(MessageValue::ACT_LOGOUT_JFSELF);
+    return sendAct_common(core::MessageValue::ACT_LOGOUT_JFSELF);
 }
 inline bool ServiceBridge::sendActRefreshNet()
 {
-    return sendAct_common(MessageValue::ACT_REFRESH_NET);
+    return sendAct_common(core::MessageValue::ACT_REFRESH_NET);
 }
 inline bool ServiceBridge::sendActRefreshJfselfAccount()
 {
-    return sendAct_common(MessageValue::ACT_REFRESH_JFSELF_ACCOUNT);
+    return sendAct_common(core::MessageValue::ACT_REFRESH_JFSELF_ACCOUNT);
 }
 inline bool ServiceBridge::sendActRefreshOnline()
 {
-    return sendAct_common(MessageValue::ACT_REFRESH_ONLINE);
+    return sendAct_common(core::MessageValue::ACT_REFRESH_ONLINE);
 }
 
 inline bool ServiceBridge::sendActEnterDebugMode()
 {
-    return sendAct_common(MessageValue::ACT_ENTER_DEBUG_MODE);
+    return sendAct_common(core::MessageValue::ACT_ENTER_DEBUG_MODE);
 }
 
 inline bool ServiceBridge::sendActLeaveDebugMode()
 {
-    return sendAct_common(MessageValue::ACT_LEAVE_DEBUG_MODE);
+    return sendAct_common(core::MessageValue::ACT_LEAVE_DEBUG_MODE);
 }
 
 inline bool ServiceBridge::sendSysExit()
 {
-    return send_common(bna::MessageValue::SYS, bna::MessageValue::SYS_EXIT);
+    return send_common(bna::core::MessageValue::SYS, bna::core::MessageValue::SYS_EXIT);
 }
 
 inline bool ServiceBridge::sendSysPause()
 {
-    return send_common(bna::MessageValue::SYS, bna::MessageValue::SYS_PAUSE);
+    return send_common(bna::core::MessageValue::SYS, bna::core::MessageValue::SYS_PAUSE);
 }
 
 inline bool ServiceBridge::sendSysStart()
 {
-    return send_common(bna::MessageValue::SYS, bna::MessageValue::SYS_START);
+    return send_common(bna::core::MessageValue::SYS, bna::core::MessageValue::SYS_START);
 }
 
 }

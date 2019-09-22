@@ -10,12 +10,13 @@
 #include <QRegExp>
 
 namespace bna{
+namespace core{
 
 WebJfself::WebJfself()
 {
     m_http.setCodec("UTF-8");
     m_lstOnline.reserve(2);
-    connect(this, &WebJfself::debug_info, &g_debugTool, &DebugTool::writeInfo);
+    connect(this, &WebJfself::debug_info, DebugTool::getPointer(), &DebugTool::writeString);
 }
 
 bool WebJfself::login()
@@ -246,7 +247,7 @@ bool WebJfself::refreshOnline()
                     break;
                 }
             }
-            emit online_status_update(m_lstOnline);
+            emit online_status_update(QVariant::fromValue(m_lstOnline));
             return true;
         }
         else {
@@ -409,4 +410,4 @@ bool WebJfself::toOfflineAll()
     }
     return true;
 }
-}
+}}

@@ -1,6 +1,7 @@
 #include "HNetworkCookieJar.h"
 
 namespace bna{
+namespace core{
 
 HNetworkCookieJar::~HNetworkCookieJar()
 {
@@ -47,5 +48,6 @@ QByteArray HNetworkCookieJar::getCookieBytes(const QUrl &url) const
         data.push_back(it.value());
     }
     return data;
+}
 }
 }

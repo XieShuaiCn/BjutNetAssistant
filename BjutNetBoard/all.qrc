@@ -8,5 +8,6 @@
         <file alias="Offline">res/Offline.png</file>
         <file alias="BtnSetting">res/BtnSetting.png</file>
         <file alias="BtnHelp">res/BtnHelp.png</file>
+        <file alias="HelpInfo">res/HelpInfo.png</file>
     </qresource>
 </RCC>

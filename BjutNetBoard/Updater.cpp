@@ -21,7 +21,7 @@ Updater::Updater(QObject *parent) : QObject(parent),
     m_nNewVersion(0), m_nOldVersion(BNA_INNER_VERSION),
     m_strNewVersion("0.0.0"), m_strOldVersion(BNA_VERSION)
 {
-    connect(&m_http, &HttpClient::downloadProgress, this, &Updater::downloadProgress);
+    connect(&m_http, &bna::core::HttpClient::downloadProgress, this, &bna::gui::Updater::downloadProgress);
 }
 
 bool Updater::checkUpdate()

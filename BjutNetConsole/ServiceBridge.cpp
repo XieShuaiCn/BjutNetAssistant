@@ -13,6 +13,7 @@
 using std::string;
 using std::stringstream;
 using boost_err_str = boost::error_info<struct tag_err_str,string>;
+using namespace bna::core;
 
 namespace bna{
 
@@ -32,7 +33,7 @@ bool ServiceBridge::SendAndReceive(const std::string &sdata, std::string &rdata)
         sdata_copy.append(1, '}');
     }
 #ifdef BUILD_DEVELOP
-    printf(" <== \n");
+    printf(" <== %s\n", sdata_copy.data());
 #endif
     size_t size = MessageCoder::Encrypt(sdata_copy.data(), sdata_copy.length(), nullptr, 0);
     if(size <= 0){ return false; }
@@ -54,7 +55,7 @@ bool ServiceBridge::SendAndReceive(const std::string &sdata, std::string &rdata)
         size = MessageCoder::Decrypt(buffer.data(), buffer.length(), const_cast<char*>(rdata.data()), rdata.length());
         if(size != rdata.length()) { return false; }
 #ifdef BUILD_DEVELOP
-        printf(" ==>\n");
+        printf(" ==> %s\n", rdata.data());
 #endif
         return true;
     }
@@ -113,11 +114,11 @@ bool ServiceBridge::startDaemon()
 {
     return StartProcess(CurrentFilePath() +
 #ifdef BNA_OS_WIN
-                        BNS_NAME ".exe"
+                        BNW_NAME ".exe"
 #elif defined(BNA_OS_LINUX)
-                        BNS_NAME ".sh"
+                        BNW_NAME ".sh"
 #else
-                        BNS_NAME
+                        BNW_NAME
 #endif
                         );
 }
@@ -128,7 +129,7 @@ bool ServiceBridge::killDaemon()
         sendSysExit();
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         if(sendSYN()){
-            return KillProcess(BNS_NAME);
+            return KillProcess(BNW_NAME);
         }
     }
     return true;

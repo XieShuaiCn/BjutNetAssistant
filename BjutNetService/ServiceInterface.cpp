@@ -12,6 +12,7 @@
 #include "Setting.h"
 
 namespace bna{
+namespace core{
 
 const QByteArray g_acbENQ(1, CHAR_ENQ);
 const QByteArray g_acbACK(1, CHAR_ACK);
@@ -464,7 +465,7 @@ QByteArray ServiceInterface::ProcessCommand(const QByteArray &cmd, const QHostAd
                                 buffer = __ServiceInterface_AckSuccToByteArray(seed, true);
                             }
                             else{
-                                buffer = __ServiceInterface_ErrMsgToByteArray(g_debugTool.lastErrorString(), seed);
+                                buffer = __ServiceInterface_ErrMsgToByteArray(DebugTool::I().lastErrorString(), seed);
                             }
                             break;
                         }
@@ -589,4 +590,4 @@ bool ServiceInterface::Decrypt(QByteArray &src, QByteArray &dst)
 }
 
 }
-
+}

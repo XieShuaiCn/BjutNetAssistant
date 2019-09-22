@@ -9,6 +9,7 @@ class QApplication;
 class QUdpSocket;
 
 namespace bna{
+namespace core{
 
 class BjutNet;
 
@@ -40,5 +41,5 @@ private:
     QDateTime m_dtTokenCreated;
     const long long m_nTokenVaild;//seconds
 };
-}
+}}
 #endif // BNS_SERVICEINTERFACE_H

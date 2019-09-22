@@ -82,7 +82,8 @@ void ConsoleInputPasswd(const std::string &tip, std::string &passwd, char echo)
 {
 #ifdef BNA_OS_WIN
     // Windows system
-    puts(tip.c_str());
+    // puts会加换行，printf会转换数值，所以putchar
+    for(auto ch : tip) putchar(ch);
     char ch;
     while((ch=getch())!='\r')
     {
@@ -99,7 +100,6 @@ void ConsoleInputPasswd(const std::string &tip, std::string &passwd, char echo)
             passwd.pop_back();
         }
     }
-    passwd.push_back('\0');
     putchar('\r');
     putchar('\n');
 

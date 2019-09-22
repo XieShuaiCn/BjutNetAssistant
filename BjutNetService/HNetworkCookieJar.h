@@ -6,6 +6,7 @@
 #include <QtNetwork/QNetworkCookieJar>
 
 namespace bna{
+namespace core{
 
 class HNetworkCookieJar : public QNetworkCookieJar
 {
@@ -19,5 +20,5 @@ public:
     QByteArray getCookieBytes(const QUrl &url) const;
 };
 
-}
+}}
 #endif // HNETWORKCOOKIEJAR_H

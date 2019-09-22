@@ -4,19 +4,21 @@
 #include <QLocalSocket>
 #include <QDesktopServices>
 #include <QMessageBox>
-#include "BjutNet.h"
+#include "../BjutNetService/BjutNet.h"
 #include "WndMain.h"
 #include "WndSetting.h"
+#include "WndHelp.h"
 
 namespace bna {
-
 namespace gui {
 
-WndTrayIcon::WndTrayIcon(QApplication *app,QObject *parent):
+WndTrayIcon::WndTrayIcon(QApplication *app, core::BjutNet *core_bjut, QObject *parent):
     QSystemTrayIcon(parent),
     m_app(app),
+    m_coreBjutNet(core_bjut),
     m_wndMain(Q_NULLPTR),
-    m_wndSetting(Q_NULLPTR)
+    m_wndSetting(Q_NULLPTR),
+    m_wndHelp(Q_NULLPTR)
 {
     if(m_vecBjutWeb.empty()){
         int id = 1;
@@ -38,22 +40,18 @@ WndTrayIcon::WndTrayIcon(QApplication *app,QObject *parent):
     this->setContextMenu(m_menuTray);
     //
     m_actMenuShowMain = new QAction("显示主窗口");
-    m_actMenuRestartDamon = new QAction("重新启动服务");
     m_actMenuLogin = new QAction("上线");
     m_actMenuLogout = new QAction("下线");
     m_actMenuSetting = new QAction("设置");
-    m_actMenuQuitAll = new QAction("完全退出");
     m_actMenuQuit = new QAction("退出");
     m_menuBjutWeb = new QMenu("常用网址");
     m_menuTray->addAction(m_actMenuShowMain);
-    m_menuTray->addAction(m_actMenuRestartDamon);
     m_menuTray->addMenu(m_menuBjutWeb);
     m_menuTray->addSeparator();
     m_menuTray->addAction(m_actMenuLogin);
     m_menuTray->addAction(m_actMenuLogout);
     m_menuTray->addSeparator();
     m_menuTray->addAction(m_actMenuSetting);
-    m_menuTray->addAction(m_actMenuQuitAll);
     m_menuTray->addAction(m_actMenuQuit);
     //initBjutWebMenu();
     //双击间隔200ms
@@ -63,33 +61,16 @@ WndTrayIcon::WndTrayIcon(QApplication *app,QObject *parent):
 
     connect(this, &WndTrayIcon::activated, this, &WndTrayIcon::on_actived);
     connect(m_actMenuShowMain, &QAction::triggered, this, &WndTrayIcon::cmdShowMainWnd);
-    connect(m_actMenuRestartDamon, &QAction::triggered, this, &WndTrayIcon::cmdRestartDamon);
     connect(m_actMenuLogin, &QAction::triggered, this, &WndTrayIcon::cmdLoginLgn);
     connect(m_actMenuLogout, &QAction::triggered, this, &WndTrayIcon::cmdLogoutLgn);
     connect(m_actMenuSetting, &QAction::triggered, this, &WndTrayIcon::cmdShowSettingWnd);
     connect(m_actMenuQuit, &QAction::triggered, this, &WndTrayIcon::cmdExitApp);
-    connect(m_actMenuQuitAll, &QAction::triggered, this, &WndTrayIcon::cmdExitAll);
     connect(&m_tmClick, &QTimer::timeout, this, &WndTrayIcon::on_clicked);
     connect(m_menuBjutWeb, &QMenu::aboutToShow, this, &WndTrayIcon::initBjutWebMenu);
-
-    m_bjutnet = new BjutNet;
-    Q_ASSERT(m_bjutnet!=nullptr);
-    m_bjutnet->start();
 }
 
 WndTrayIcon::~WndTrayIcon()
 {
-    if(m_bjutnet)
-    {
-        if(m_bjutnet->isRunning()){
-            m_bjutnet->stop();
-            if(!m_bjutnet->wait(500)){ // ms
-                m_bjutnet->terminate();
-            }
-        }
-        m_bjutnet->deleteLater();
-        m_bjutnet = Q_NULLPTR;
-    }
     if(m_wndSetting)
     {
         m_wndSetting->close();
@@ -110,7 +91,11 @@ void WndTrayIcon::on_clicked()
     int fee;
     const char* flowUnit[] = {"KB", "MB", "GB", "TB"};
     int flowUnitIndex = 0;
-    m_bjutnet->getNetInfo(online, flow, time, fee);
+    core::WebLgn &lgn = m_coreBjutNet->getWebLgn();
+    online = lgn.getLoginStatus();
+    flow = lgn.getFlow();
+    time = lgn.getTime();
+    fee = lgn.getFee();
     float ftime = float(time) / 60;
     float fflow = float(flow);
     while(fflow > 1024)
@@ -162,23 +147,26 @@ void WndTrayIcon::cmdShowMainWnd()
 {
     if (!m_wndMain)
     {
-        m_wndMain = new WndMain(this);
+        m_wndMain = new WndMain(this, nullptr);
     }
     m_wndMain->show();
-}
-
-void WndTrayIcon::cmdRestartDamon()
-{
-    m_bjutnet->restartDaemon();
 }
 
 void WndTrayIcon::cmdShowSettingWnd()
 {
     if(!m_wndSetting)
     {
-        m_wndSetting = new WndSetting(this);
+        m_wndSetting = new WndSetting(this, nullptr);
     }
     m_wndSetting->show();
+}
+
+void WndTrayIcon::cmdShowHelpWnd()
+{
+    if(!m_wndHelp){
+        m_wndHelp = new WndHelp();
+    }
+    m_wndHelp->show();
 }
 
 void WndTrayIcon::cmdExitApp()
@@ -191,18 +179,19 @@ void WndTrayIcon::cmdExitApp()
 
 void WndTrayIcon::cmdExitAll()
 {
-    m_bjutnet->stopDaemon();
     cmdExitApp();
 }
 
 void WndTrayIcon::cmdLoginLgn()
 {
-    m_bjutnet->sendLogin();
+    m_coreBjutNet->getWebLgn().login();
+    m_coreBjutNet->start_monitor();
 }
 
 void WndTrayIcon::cmdLogoutLgn()
 {
-    m_bjutnet->sendLogout();
+    m_coreBjutNet->stop_monitor();
+    m_coreBjutNet->getWebLgn().logout();
 }
 
 void WndTrayIcon::increaseBjutWebFrequency(int id, long freq_inc)
@@ -213,7 +202,8 @@ void WndTrayIcon::increaseBjutWebFrequency(int id, long freq_inc)
             break;
         }
     }
-    std::stable_sort(m_vecBjutWeb.begin(), m_vecBjutWeb.end(), [](const BjutWebItemInfo &a, const BjutWebItemInfo &b){
+    std::stable_sort(m_vecBjutWeb.begin(), m_vecBjutWeb.end(),
+                     [](const BjutWebItemInfo &a, const BjutWebItemInfo &b){
         return a.frequency > b.frequency;
     });
 }
@@ -226,7 +216,8 @@ void WndTrayIcon::updateBjutWebFrequency(int id, long frequency)
             break;
         }
     }
-    std::stable_sort(m_vecBjutWeb.begin(), m_vecBjutWeb.end(), [](const BjutWebItemInfo &a, const BjutWebItemInfo &b){
+    std::stable_sort(m_vecBjutWeb.begin(), m_vecBjutWeb.end(),
+                     [](const BjutWebItemInfo &a, const BjutWebItemInfo &b){
         return a.frequency > b.frequency;
     });
 }
@@ -235,15 +226,7 @@ void WndTrayIcon::on_actived(QSystemTrayIcon::ActivationReason reason)
 {
     switch (reason) {
     case QSystemTrayIcon::Context:
-        if(m_tmClick.isActive())
-        {//双击
-            m_tmClick.stop();
-            m_menuTray->exec();
-        }
-        else
-        {//单击计时器
-            m_tmClick.start();
-        }
+        m_menuTray->exec();
         break;
     case QSystemTrayIcon::DoubleClick:
         cmdShowMainWnd();

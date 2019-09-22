@@ -7,6 +7,7 @@
 #include <QNetworkAccessManager>
 
 namespace bna{
+namespace core{
 
 class HttpClient : public QObject
 {
@@ -45,5 +46,5 @@ inline int HttpClient::downUrlData(const QUrl &url, QByteArray &content)
 {
     return downUrlData(url, QByteArray(), content, false);
 }
-}
+}}
 #endif // HTTPCLIENT_H

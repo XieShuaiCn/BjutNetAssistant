@@ -1,7 +1,7 @@
 #ifndef BNA_GUI_UTILITY_H
 #define BNA_GUI_UTILITY_H
 
-#include "common.h"
+#include "../BjutNetService/common.h"
 #include <QHostAddress>
 #include <QVector>
 

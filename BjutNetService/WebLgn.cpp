@@ -12,6 +12,7 @@
 #include <QtNetwork/QHostInfo>
 
 namespace bna{
+namespace core{
 
 WebLgn::WebLgn() :
     m_loginType(IPv4),
@@ -21,7 +22,7 @@ WebLgn::WebLgn() :
     m_nFee(0.0f)
 {
     m_http.setCodec("GBK");
-    connect(this, &WebLgn::debug_info, &g_debugTool, &DebugTool::writeInfo);
+    connect(this, &WebLgn::debug_info, DebugTool::getPointer(), &DebugTool::writeString);
 }
 
 
@@ -125,7 +126,7 @@ bool WebLgn::loginOnLAN(LoginType type)
     QString content;
     int ret_code = m_http.postUrlHtml(QUrl(url), data, content);
     if(ret_code<100){
-        g_debugTool.setInfo("Can not post data to server.");
+        DebugTool::I().setInfo("Can not post data to server.");
         return false;
     }
     //若返回跳转网页，继续解析跳转网页
@@ -144,7 +145,7 @@ bool WebLgn::loginOnLAN(LoginType type)
         ret_code = m_http.postUrlHtml(QUrl(url), data, content);
     }
     if(ret_code<100){
-        g_debugTool.setInfo("Can not post data to server.");
+        DebugTool::I().setInfo("Can not post data to server.");
         return false;
     }
     if(content.contains("<title>登录成功窗</title>"))
@@ -621,4 +622,4 @@ void WebLgn::network_status_change(bool online)
         }
     }
 }
-}
+}}

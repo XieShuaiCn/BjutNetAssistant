@@ -1,8 +1,8 @@
 #ifndef UPDATER_H
 #define UPDATER_H
 
-#include "common.h"
-#include "HttpClient.h"
+#include "../BjutNetService/common.h"
+#include "../BjutNetService/HttpClient.h"
 
 namespace bna {
 namespace gui {
@@ -35,7 +35,7 @@ protected:
     QString m_strOldVersion;
     QString m_strNewIntroduction;
     QString m_strOnlineFileURL;
-    bna_gui_HttpClient m_http;
+    bna::core::HttpClient m_http;
     const QString m_strHostName = "http://bnl.hrrcn.com/";
     const QString m_strOssHostName = "http://bjutnetlogin.oss-cn-beijing.aliyuncs.com/";
 };

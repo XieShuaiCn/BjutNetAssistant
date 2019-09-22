@@ -1,7 +1,7 @@
 #ifndef HPANEL_H
 #define HPANEL_H
 
-#include "common.h"
+#include "../BjutNetService/common.h"
 #include <QFrame>
 #include <QColor>
 #include <QLabel>

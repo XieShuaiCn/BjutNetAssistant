@@ -156,7 +156,7 @@ void bna::gui::WndMain::initUI()
     m_btnSubmitBook->setText(QString("预约套餐"));
     m_frmBjutWeb->setText(QString("常用入口"));
     m_btnBjutWebMore->setText(QString("更多入口>>"));
-    m_lblShowMsg->setText(QString("     Log"));
+    m_lblShowMsg->setText(QString("   Log"));
     m_lblVersion->setText(QString("版本号：") + m_updater.getOldVersion());
     m_lblFeedback->setText(QString("意见反馈"));
     //根据objectName关联信号

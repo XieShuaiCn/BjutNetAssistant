@@ -9,6 +9,7 @@
 #include <QProcess>
 
 namespace bna{
+namespace core{
 
 #define BNA_AUTOSTART_LINUX_FILENAME "BjutNetService.sh.desktop"
 #define BNA_AUTOSTART_MAC_FILENAME "BjutNetService.plist"
@@ -172,4 +173,4 @@ bool Setting::getAutoRun()
 
 #undef BNA_AUTOSTART_LINUX_FILENAME
 
-}
+}}

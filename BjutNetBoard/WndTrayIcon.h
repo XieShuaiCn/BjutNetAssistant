@@ -1,7 +1,7 @@
 #ifndef WNDTRAYICON_H
 #define WNDTRAYICON_H
 
-#include "common.h"
+#include "../BjutNetService/common.h"
 #include <QUrl>
 #include <QAction>
 #include <QVector>
@@ -9,16 +9,14 @@
 #include <QSystemTrayIcon>
 #include <QLocalServer>
 
-class bna_gui_WndMain;
-class bna_gui_WndSetting;
-class bna_gui_BjutNet;
-
 namespace bna {
-namespace gui {
-
+namespace core {
 class BjutNet;
+}
+namespace gui {
 class WndMain;
 class WndSetting;
+class WndHelp;
 
 struct BjutWebItemInfo{
     int id;
@@ -30,13 +28,13 @@ struct BjutWebItemInfo{
 class WndTrayIcon : public QSystemTrayIcon
 {
 public:
-    WndTrayIcon(QApplication *app, QObject *parent = Q_NULLPTR);
+    WndTrayIcon(QApplication *app, bna::core::BjutNet *core_bjut, QObject *parent = Q_NULLPTR);
     ~WndTrayIcon();
-    PROPERTY_READ(BjutNet*, BjutNet, m_bjutnet)
+    PROPERTY_READ(bna::core::BjutNet*, BjutNet, m_coreBjutNet)
     PROPERTY_READ_WRITE(WndMain*, MainWindow, m_wndMain)
     PROPERTY_READ_CONST(QVector<BjutWebItemInfo>, BjutWebList, m_vecBjutWeb)
 
-Q_SIGNALS:
+signals:
     void quitApp();
 
 public slots:
@@ -44,8 +42,8 @@ public slots:
     void cmdExitApp();
     void cmdExitAll();
     void cmdShowMainWnd();
-    void cmdRestartDamon();
     void cmdShowSettingWnd();
+    void cmdShowHelpWnd();
     void cmdLoginLgn();
     void cmdLogoutLgn();
 
@@ -61,17 +59,16 @@ protected slots:
     QTimer m_tmClick;
 
     QApplication *m_app;
+    bna::core::BjutNet *m_coreBjutNet;
     WndMain *m_wndMain;
     WndSetting *m_wndSetting;
-    BjutNet *m_bjutnet;
+    WndHelp *m_wndHelp;
     QMenu *m_menuTray;
     QAction *m_actMenuShowMain;
-    QAction *m_actMenuRestartDamon;
     QAction *m_actMenuLogout;
     QAction *m_actMenuLogin;
     QAction *m_actMenuSetting;
     QAction *m_actMenuQuit;
-    QAction *m_actMenuQuitAll;
 
     QMenu *m_menuBjutWeb;
 

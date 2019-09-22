@@ -8,6 +8,7 @@
 #include <QNetworkConfigurationManager>
 
 namespace bna{
+namespace core{
 
 class WebLgn : public QObject
 {
@@ -141,5 +142,5 @@ inline bool WebLgn::getLoginStatus() const
     return m_isOnline;
 }
 
-}
+}}
 #endif // BJUTNET_H

@@ -1,5 +1,5 @@
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef BNS_COMMON_H
+#define BNS_COMMON_H
 
 #include <QObject>
 #include <QString>
@@ -28,12 +28,12 @@ namespace bna{
 
 extern bool g_bAppDebug;
 
-extern DebugTool g_debugTool;
-
 extern QString g_strAppTempPath;
 
 extern QString g_strAppDirPath;
 
+namespace core{
 QString RandString(int length);
 }
-#endif // COMMON_H
+}
+#endif // BNS_COMMON_H

@@ -4,6 +4,7 @@
 #include "common.h"
 
 namespace bna{
+namespace core{
 
 class Setting
 {
@@ -17,5 +18,5 @@ public:
 };
 
 }
-
+}
 #endif // SETTING_H

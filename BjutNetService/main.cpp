@@ -1,6 +1,7 @@
-#ifndef BUILD_DEVELOP
-#pragma comment(linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"")//remove console
-#endif
+// TODO: remove console
+//#ifndef BUILD_DEVELOP
+//#pragma comment(linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"")//remove console
+//#endif
 
 #include "common.h"
 #include <QDir>
@@ -10,6 +11,7 @@
 #include "ServiceInterface.h"
 
 using namespace bna;
+using namespace bna::core;
 
 int main(int argc, char *argv[])
 {
@@ -41,7 +43,7 @@ int main(int argc, char *argv[])
     }
     g_strAppTempPath = tmpName;
     QDir("/").mkpath(g_strAppTempPath);
-    g_debugTool.init(QDir(g_strAppTempPath).absoluteFilePath("bns.log"));
+    DebugTool::getInstance().init(QDir(g_strAppTempPath).absoluteFilePath("bns.log"));
     g_strAppDirPath = QtSingleApplication::applicationDirPath();
 
 #ifdef BUILD_DEVELOP
@@ -60,18 +62,18 @@ int main(int argc, char *argv[])
              << " Running..." << endl;
 #endif
 
-    bna::BjutNet bjutnet;
-    bna::ServiceInterface si(&bjutnet, &app);
+    bna::core::BjutNet bjutnet;
+    bna::core::ServiceInterface si(&bjutnet, &app);
 
     bjutnet.loadAccount();
     if(si.Initilize()){
         int app_ret = app.exec();
-        g_debugTool.release();
+        DebugTool::getInstance().release();
         return app_ret;
     }
     else{
         qDebug() << "Fail to initialize service. Exit now." << endl;
-        g_debugTool.release();
+        DebugTool::getInstance().release();
         app.exit(0);
         return 0;
     }

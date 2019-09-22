@@ -13,6 +13,8 @@
 #include "../BjutNetService/MessageCoder.h"
 #include "../BjutNetService/Version.h"
 
+using namespace bna::core;
+
 namespace bna {
 namespace gui {
 
@@ -221,7 +223,7 @@ bool ServiceBridge::sendSyncHello()
     return parseJsonAndVarify(buf, seed);
 }
 
-bool ServiceBridge::send_common(bna::MessageValue::Type type, bna::MessageValue::Action act)
+bool ServiceBridge::send_common(MessageValue::Type type, MessageValue::Action act)
 {
     int seed = qrand();
     QString sdata = QString("{\"type\":%1,\"act\":%2,\"seed\":%3}")
