@@ -43,9 +43,9 @@ bool Setting::setAutoRun(bool bAutoRun)
                             autoStart.remove(startScriptNew.filePath());
                         }
                         if(!startScript.copy(startScriptNew.filePath())) {
-                            g_debugTool.setInfo(startScript.errorString());
+                            DebugTool::I().setInfo(startScript.errorString());
                             if(g_bAppDebug){
-                                g_debugTool.writeInfo(DebugTool::STATUS_FAIL, startScript.errorString());
+                                DebugTool::I().writeFail(startScript.errorString());
                             }
                             return false;
                         }
