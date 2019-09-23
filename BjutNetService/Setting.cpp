@@ -70,9 +70,9 @@ bool Setting::setAutoRun(bool bAutoRun)
                         autoStart.remove(startScriptNew.fileName());
                     }
                     if(!startScriptNew.open(QFile::WriteOnly)){
-                        g_debugTool.setInfo("Can not create script file.");
+                        DebugTool::I().setInfo("Can not create script file.");
                         if(g_bAppDebug){
-                            g_debugTool.writeInfo(DebugTool::STATUS_FAIL, "Can not open file:"+startScriptNew.fileName());
+                            DebugTool::I().writeFail("Can not open file:"+startScriptNew.fileName());
                         }
                         return false;
                     }
@@ -107,11 +107,11 @@ bool Setting::setAutoRun(bool bAutoRun)
                     procRegPlist.setArguments(procArg);
                     procRegPlist.start();
                     if(!procRegPlist.waitForFinished()){
-                        g_debugTool.setInfo("Can not regist autostart.");
-                        g_debugTool.setInfo(procRegPlist.errorString());
+                        DebugTool::I().setInfo("Can not regist autostart.");
+                        DebugTool::I().setInfo(procRegPlist.errorString());
                         if(g_bAppDebug){
-                            g_debugTool.writeInfo(DebugTool::STATUS_FAIL, "Can not regist autostart:"+startScriptNew.fileName());
-                            g_debugTool.writeInfo(DebugTool::STATUS_INFO, procRegPlist.errorString());
+                            DebugTool::I().writeFail("Can not regist autostart:"+startScriptNew.fileName());
+                            DebugTool::I().writeInfo(procRegPlist.errorString());
                         }
                         return false;
                     }
@@ -128,9 +128,9 @@ bool Setting::setAutoRun(bool bAutoRun)
                         procRegPlist.setProgram("launchctl");
                         procRegPlist.start("launchctl", procArg);
                         if(!procRegPlist.waitForFinished()){
-                            g_debugTool.setInfo("Can not unregist autostart.");
+                            DebugTool::I().setInfo("Can not unregist autostart.");
                             if(g_bAppDebug){
-                                g_debugTool.writeInfo(DebugTool::STATUS_FAIL, "Can not unregist autostart:"+startScriptNew.fileName());
+                                DebugTool::I().writeFail("Can not unregist autostart:"+startScriptNew.fileName());
                             }
                             return false;
                         }

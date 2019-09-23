@@ -25,11 +25,21 @@ void bna::gui::WndMain::layoutUI()
     QFont font_s115;
     QFont font_s120;
     QFont font_s130;
-    font_s100.setPointSize(12);
-    font_s105.setPointSizeF(12.5);
-    font_s115.setPointSizeF(13.5);
-    font_s120.setPointSize(14);
-    font_s130.setPointSize(15);
+    font_s100.setPointSize(11);
+    font_s105.setPointSizeF(11.5);
+    font_s115.setPointSizeF(12.5);
+    font_s120.setPointSize(13);
+    font_s130.setPointSize(14);
+    font_s100.setBold(false);
+    font_s100.setWeight(QFont::ExtraLight);
+    font_s105.setBold(false);
+    font_s105.setWeight(QFont::ExtraLight);
+    font_s115.setBold(false);
+    font_s115.setWeight(QFont::ExtraLight);
+    font_s120.setBold(false);
+    font_s120.setWeight(QFont::ExtraLight);
+    font_s130.setBold(false);
+    font_s130.setWeight(QFont::ExtraLight);
     //窗口控件
 
     //状态图
