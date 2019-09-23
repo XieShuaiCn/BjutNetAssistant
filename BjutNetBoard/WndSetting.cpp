@@ -56,6 +56,7 @@ void WndSetting::on_btnApply_clicked()
         m_tray->getBjutNet()->setAccount(m_editAccount->text());
         m_tray->getBjutNet()->setPassword(m_editPassword->text());
         m_tray->getBjutNet()->setLoginType(m_cmbType->currentIndex()+1);
+        m_tray->getBjutNet()->saveAccount();
         QMessageBox::information(this, "保存账号","账号信息已保存");
     }
     else
