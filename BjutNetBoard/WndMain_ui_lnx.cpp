@@ -162,7 +162,7 @@ void bna::gui::WndMain::layoutUI()
     m_btnBjutWebMore->setFont(font_s105);
 
     //消息日志框
-    m_lblShowMsg->setGeometry(QRect(15, 450, 540, 20));
+    m_lblShowMsg->setGeometry(QRect(35, 450, 540, 20));
     m_txtMsg->setGeometry(QRect(15, 475, 540, 115));
     //版本号
     m_lblVersion->setFont(font_s100);

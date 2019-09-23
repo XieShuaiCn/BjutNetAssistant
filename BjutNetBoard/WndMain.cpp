@@ -301,24 +301,22 @@ void WndMain::paintEvent(QPaintEvent *event)
     {
         painter.setBrush(QBrush(QColor(50,50,50)));
         painter.setPen(Qt::NoPen);
+        QPolygon polyTriangle(3);
+        polyTriangle.setPoint(0, m_lblShowMsg->pos().x()-m_lblShowMsg->height()+4,
+                                 m_lblShowMsg->pos().y()+4);
         if(m_bShowMsg){
-            QPolygon polyTriangle(3);
-            polyTriangle.setPoint(0, m_lblShowMsg->pos().x()+5, m_lblShowMsg->pos().y()+5);
-            polyTriangle.setPoint(1, m_lblShowMsg->pos().x()+m_lblShowMsg->height()-5,
-                                     m_lblShowMsg->pos().y()+5);
-            polyTriangle.setPoint(2, m_lblShowMsg->pos().x()+m_lblShowMsg->height()/2,
-                                     m_lblShowMsg->pos().y()+m_lblShowMsg->height()-5);
-            painter.drawPolygon(polyTriangle);
+            polyTriangle.setPoint(1, polyTriangle.at(0).x()+m_lblShowMsg->height()-8,
+                                     polyTriangle.at(0).y());
+            polyTriangle.setPoint(2, polyTriangle.at(0).x()+m_lblShowMsg->height()/2-4,
+                                     polyTriangle.at(0).y()+m_lblShowMsg->height()-8);
         }
         else{
-            QPolygon polyTriangle(3);
-            polyTriangle.setPoint(0, m_lblShowMsg->pos().x()+5, m_lblShowMsg->pos().y()+5);
-            polyTriangle.setPoint(1, m_lblShowMsg->pos().x()+m_lblShowMsg->height()-5,
-                                     m_lblShowMsg->pos().y()+m_lblShowMsg->height()/2);
-            polyTriangle.setPoint(2, m_lblShowMsg->pos().x()+5,
-                                     m_lblShowMsg->pos().y()+m_lblShowMsg->height()-5);
-            painter.drawPolygon(polyTriangle);
+            polyTriangle.setPoint(1, polyTriangle.at(0).x()+m_lblShowMsg->height()-8,
+                                     polyTriangle.at(0).y()+m_lblShowMsg->height()/2-4);
+            polyTriangle.setPoint(2, polyTriangle.at(0).x(),
+                                     polyTriangle.at(0).y()+m_lblShowMsg->height()-8);
         }
+        painter.drawPolygon(polyTriangle);
     }
 }
 
