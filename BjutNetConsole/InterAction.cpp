@@ -36,8 +36,6 @@ void InterAction::ShowMenu()
     cout << "    atm   |  The switch of print menu after a operation.   " << endl;
     cout << "    ats   |  The switch of start service when power on.    " << endl;
     cout << "    addr  |  Show my ip address.                           " << endl;
-    cout << "    stdm  |  Start daemon.                                 " << endl;
-    cout << "    spdm  |  Stop daemon.                                  " << endl;
     cout << "  =========================================================" << endl;
 #if defined(_DEBUG) || defined(BUILD_DEVELOP)
     cout << "    enter_debug     Enter debug mode.                      " << endl;
@@ -136,12 +134,6 @@ bool InterAction::Process()
             if(cmd == "addr") {
                 ShowMyAddress();
             }
-            else if(cmd == "stdm"){
-                StartDaemon();
-            }
-            else if(cmd == "spdm"){
-                StopDaemon();
-            }
             else{
                 processed = false;
             }
@@ -182,11 +174,11 @@ bool InterAction::Connected()
             return true;
         }
         else{
-            cout << "The version of <BjutNetService> is lower than me. Please upgrade the remote <BjutNetService>." << endl;
+            cout << "The version of <" BNA_NAME "> is different from me. Please upgrade the lower one." << endl;
         }
     }
     else{
-        cout << "Can not connect to <BjutNetService>." << endl;
+        cout << "Can not connect to <" BNA_NAME ">." << endl;
     }
     return false;
 }
@@ -523,7 +515,7 @@ bool InterAction::SetAutoMenu()
 bool InterAction::SetAutoStart()
 {
     if(Connected()){
-        cout << " Do you want to start <BjutNetService> automatically? (y/n) ";
+        cout << " Do you want to start <" BNA_NAME "> automatically? (y/n) ";
         string input;
         cin >> input;
         bool succ = false;
@@ -723,10 +715,10 @@ bool InterAction::ShowVersion()
     int inner_ver;
     if(Connected()){
         if(m_service.sendGetVersion(version, inner_ver)){
-            cout << BNS_NAME << "  " << BNA_VERSION << " (" << BNA_INNER_VERSION << ")" << endl;
+            cout << BNW_NAME << "  " << BNA_VERSION << " (" << BNA_INNER_VERSION << ")" << endl;
         }
         else{
-            cout << BNS_NAME << "  Fail to query version." << endl;
+            cout << BNW_NAME << "  Fail to query version." << endl;
         }
     }
     cout << BNC_NAME << "  " << BNA_VERSION << " (" << BNA_INNER_VERSION << ")" << endl << endl;
