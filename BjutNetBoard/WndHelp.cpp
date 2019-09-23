@@ -4,6 +4,7 @@ namespace bna{
 namespace gui{
 WndHelp::WndHelp(QWidget *parent) : QWidget(parent)
 {
+    this->setWindowTitle("北工大网关助手 帮助信息");
     m_lblImage = new HLabel(this);
     m_lblImage->setPixmap(QPixmap(":/png/HelpInfo"));
     m_lblImage->setGeometry(0, 0, 575, 495);
