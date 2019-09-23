@@ -7,7 +7,7 @@ CONFIG -= qt
 INCLUDEPATH += ../BjutNetService/
 
 # BUild binary file for developer
-DEFINES += BUILD_DEVELOP
+#DEFINES += BUILD_DEVELOP
 
 CONFIG(debug, debug|release){
 DEFINES += _DEBUG
