@@ -7,6 +7,7 @@
 #include <QDir>
 #include <QDirIterator>
 #include <QCryptographicHash>
+#include "../BjutNetService/Version.h"
 
 int main(int argc, char *argv[])
 {
@@ -68,12 +69,16 @@ int main(int argc, char *argv[])
         jfilesarray.append(jf);
     }
     QJsonObject jo;
-    jo.insert("version", "3.2.0");
-    jo.insert("inner_ver", 16);
+    jo.insert("version", BNA_VERSION);
+    jo.insert("inner_ver", BNA_INNER_VERSION);
 #ifdef Q_OS_WIN
     jo.insert("platform", "Windows");
 #elif defined(Q_OS_LINUX)
     jo.insert("platform", "Linux64");
+#elif defined(Q_OS_MAC)
+    jo.insert("platform", "Mac");
+#else
+    jo.insert("platform", "Unix");
 #endif
     jo.insert("files", jfilesarray);
     QJsonDocument jdoc;

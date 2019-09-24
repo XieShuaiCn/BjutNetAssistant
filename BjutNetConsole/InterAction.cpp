@@ -715,7 +715,7 @@ bool InterAction::ShowVersion()
     int inner_ver;
     if(Connected()){
         if(m_service.sendGetVersion(version, inner_ver)){
-            cout << BNW_NAME << "  " << BNA_VERSION << " (" << BNA_INNER_VERSION << ")" << endl;
+            cout << BNW_NAME << "  " << version << " (" << inner_ver << ")" << endl;
         }
         else{
             cout << BNW_NAME << "  Fail to query version." << endl;

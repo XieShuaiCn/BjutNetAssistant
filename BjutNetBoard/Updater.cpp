@@ -145,10 +145,12 @@ bool Updater::runMaintainTool()
 {
 #ifdef Q_OS_WIN32
     return QProcess::startDetached("maintain.exe");
-#else
+#elif defined(Q_OS_LINUX)
     QString binFile = QDir(QApplication::applicationDirPath())
             .absoluteFilePath("maintain.sh");
     return QProcess::startDetached(binFile);
+#elif defined(Q_OS_MAC)
+    return false;
 #endif
 }
 }}
