@@ -26,7 +26,12 @@ win32{
 RC_FILE += version.rc
 }
 unix{
+macx{
+ICON = logo.icns
+}
+!macx{
 RC_ICONS = logo.ico
+}
 }
 
 # Use Precompiled headers (PCH)
