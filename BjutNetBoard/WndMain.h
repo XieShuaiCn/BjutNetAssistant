@@ -89,6 +89,7 @@ public slots:
 protected slots:
     void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
     void logRemoteDevice(int index, bool login);
+    void updateFlowUsed(double used, double total);
 protected:
     void closeEvent(QCloseEvent *event);
     void paintEvent(QPaintEvent *event);

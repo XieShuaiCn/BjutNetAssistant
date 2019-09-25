@@ -121,7 +121,7 @@ void bna::gui::WndMain::initUI()
     //设置各控件的文本内容
     this->setWindowTitle(QString("北工大网关登录器"));
     m_lblService->setText(QString("未检测到套餐"));
-    m_lblFlowUsed->setText(QString("已用：-- %"));
+    m_lblFlowUsed->setText(QString("Used"));
     m_lblStatus->setText(QString("状态"));
     m_lblStatusFlag->setPixmap(QPixmap(":/png/Offline"));
     m_lblStatusFlag->setToolTip(QString("离线"));

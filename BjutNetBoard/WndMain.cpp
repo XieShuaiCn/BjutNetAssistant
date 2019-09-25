@@ -299,7 +299,8 @@ void WndMain::paintEvent(QPaintEvent *event)
             painter.setBrush(Qt::NoBrush);
             painter.setPen(penSolidGrayDark);
             painter.drawPolygon(polySide);
-            painter.drawLine(polySide[2], polySide[5]);
+            // central axis
+            //painter.drawLine(polySide[2], polySide[5]);
             // top plane's border
             painter.setPen(penSolidGrayLight);
             painter.drawArc(m_rectFlowGraphTop, nAngleStart16, -360*16+nAngleLength16);
@@ -400,7 +401,6 @@ void WndMain::on_account_StatusUpdated(bool login, int time, int flow, int fee)
         return;
     }
     QString timeUnit[] = {"分钟", "小时"};
-    QString flowUnit[] = {"KB", "MB", "GB", "TB"};
     //QString feeUnit[] = {"元"};
     if(time < 60)
     {
@@ -412,38 +412,9 @@ void WndMain::on_account_StatusUpdated(bool login, int time, int flow, int fee)
         m_lcdNumTime->display(float(time) / 60);
         m_lblTimeUnit->setText(timeUnit[1]);
     }
-    QString strFlowTip;
-    int flowUnitIndex = 0;
-    float fflow = flow;
-    while(fflow > 1024)
-    {
-        fflow /= 1024;
-        ++flowUnitIndex;
-    }
-    fflow = double(int(fflow*1000)) / 1000.0;
-    m_lcdNumFlow->display(fflow);
-    m_lblFlowUnit->setText(flowUnit[flowUnitIndex]);
     m_lcdNumFee->display(float(fee) / 100);
-    strFlowTip.append(QString("流量状态：已用%1%2").arg(fflow).arg(flowUnit[flowUnitIndex]));
     int totalFlow = m_coreBjutNet->getWebJfself().getTotalFlow();//MB
-    if(totalFlow > 0){
-        m_lblFlowUsed->setText(QString("已用：%1 %").arg(int(100.0 * flow / totalFlow / 1024)));
-        fflow = totalFlow-flow/1024;
-        flowUnitIndex = 1;
-        while(fflow > 1024)
-        {
-            fflow /= 1024;
-            ++flowUnitIndex;
-        }
-        fflow = double(int(fflow*1000)) / 1000.0;
-        strFlowTip.append(QString("，剩余%1%2").arg(fflow).arg(flowUnit[flowUnitIndex]));
-        m_frmFlowGraph->setToolTip(strFlowTip);
-        this->update();
-    }
-    auto service = m_coreBjutNet->getWebJfself().getServiceName();
-    if(service.size()){
-        m_lblService->setText(service);
-    }
+    updateFlowUsed(static_cast<double>(flow) / 1024.0, static_cast<double>(totalFlow));
 }
 
 void WndMain::on_online_status(const QVariant &var_info)
@@ -955,12 +926,8 @@ void WndMain::on_btnForceOffline2_clicked()
 // recive the info of account service
 void WndMain::on_serviceInfo(const QString &name, int totalFlow)
 {
-    if(totalFlow > 0){
-        m_lblFlowUsed->setText(QString("已用：%1 %").arg(int(100.0 * m_coreBjutNet->getWebLgn().getFlow() / totalFlow / 1024)));
-    }
-    else {
-         m_lblFlowUsed->setText(QString("已用：-- %"));
-    }
+    int flow = m_coreBjutNet->getWebLgn().getFlow();// KB
+    updateFlowUsed(static_cast<double>(flow) / 1024.0, static_cast<double>(totalFlow));
     if(name.size()){
         m_lblService->setText(name);
     }
@@ -997,5 +964,70 @@ void WndMain::downloadProgress(qint64 bytesReceived, qint64 bytesTotal)
     if(m_dlgProgress) {
         m_dlgProgress->setValue(100.0 * bytesReceived / bytesTotal);
     }
+}
+
+void WndMain::updateFlowUsed(double used, double total)
+{
+    QString flowUnit[] = {"MB", "GB", "TB"};
+    QString strFlowTip;
+    int flowUnitIndex = 0;
+    double fflow = used;
+    while(fflow > 1024)
+    {
+        fflow /= 1024;
+        ++flowUnitIndex;
+    }
+    fflow = round(fflow*1000) / 1000.0;
+    m_lcdNumFlow->display(fflow);
+    m_lblFlowUnit->setText(flowUnit[flowUnitIndex]);
+    strFlowTip.append(QString("流量状态: 已用%1%2").arg(fflow).arg(flowUnit[flowUnitIndex]));
+    if(total > 0){
+        // used flow
+        double dFlowUsed = 100.0 * used / total;
+        int nFlowUsed = static_cast<int>(dFlowUsed);
+        if(nFlowUsed < 10){
+            m_lblFlowUsed->setText(QString("Used\n%1%").arg(nFlowUsed));
+        }
+        else{
+            m_lblFlowUsed->setText(QString("Used:%1%").arg(nFlowUsed));
+        }
+        QFontMetrics fmFlowUsed = m_lblFlowUsed->fontMetrics();
+        QRect rectFlowUsedText = fmFlowUsed.boundingRect(m_lblFlowUsed->text());
+        QRect rectFlowUsed;
+        rectFlowUsed.setLeft(m_rectFlowGraph.x()+(m_rectFlowGraph.width()-rectFlowUsedText.width())/2-10);
+        if(nFlowUsed < 10){
+            rectFlowUsed.setTop(m_rectFlowGraph.y()+int(0.1*m_rectFlowGraph.height()));
+        }
+        else if(nFlowUsed < 50){
+            rectFlowUsed.setTop(m_rectFlowGraph.y()+int((0.1+0.1*(nFlowUsed-10)/40)*m_rectFlowGraph.height()));
+        }
+        else if(nFlowUsed < 100){
+            rectFlowUsed.setTop(m_rectFlowGraph.y()+int((0.2+0.05*(nFlowUsed-50)/50)*m_rectFlowGraph.height()));
+        }
+        else{
+            rectFlowUsed.setTop(m_rectFlowGraph.y()+int(0.25*m_rectFlowGraph.height()));
+        }
+        rectFlowUsed.setWidth(rectFlowUsedText.width());
+        rectFlowUsed.setHeight(40);
+        m_lblFlowUsed->setGeometry(rectFlowUsed);
+        // flow tip
+        fflow = fabs(total-used);
+        flowUnitIndex = 0;
+        while(fflow > 1024)
+        {
+            fflow /= 1024;
+            ++flowUnitIndex;
+        }
+        fflow = round(fflow*1000) / 1000.0;
+        if(used < total){
+            strFlowTip.append(QString(" | 剩余%1%2").arg(fflow).arg(flowUnit[flowUnitIndex]));
+        }
+        else{
+            strFlowTip.append(QString(" | 超出%1%2").arg(fflow).arg(flowUnit[flowUnitIndex]));
+        }
+    }
+    m_frmFlowGraph->setToolTip(strFlowTip);
+    // update UI
+    this->update();
 }
 }}
