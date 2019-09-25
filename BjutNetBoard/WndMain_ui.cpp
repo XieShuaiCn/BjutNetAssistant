@@ -79,10 +79,6 @@ void bna::gui::WndMain::initUI()
     m_btnOffline2->setVisible(false);
     m_btnForceOffline2 = new QPushButton(m_frmOnline);
     m_btnForceOffline2->setVisible(false);
-    //m_lblCopyTip = new QLabel(m_frmOnline);
-    //m_lblCopyTip->setGeometry(QRect(m_frmOnline->width()-85, 50, 80, 25));
-    //m_lblCopyTip->setFont(font_s120);
-    //m_lblCopyTip->setStyleSheet("color:#808080;");
 
     //预约套餐
     m_frmOperation = new HPanel(this);
@@ -113,6 +109,14 @@ void bna::gui::WndMain::initUI()
     m_lblFeedback = new HLabel(this);
 
     layoutUI();
+
+    // UI relative variable
+    m_rectFlowGraph = QRect(m_frmGraph->pos()+m_frmFlowGraph->pos(),
+                            m_frmFlowGraph->size());
+    m_rectFlowGraphTop = QRect(m_rectFlowGraph.topLeft()+QPoint(0, m_nFlowGraphThickness),
+                            m_rectFlowGraph.size()-QSize(0, m_nFlowGraphThickness*3));
+    m_rectFlowGraphBottom = QRect(m_rectFlowGraphTop.topLeft()+QPoint(0, m_nFlowGraphThickness),
+                            m_rectFlowGraphTop.size());
 
     //设置各控件的文本内容
     this->setWindowTitle(QString("北工大网关登录器"));

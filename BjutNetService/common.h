@@ -11,6 +11,13 @@
 #define UNUSED(x) (void)x
 #endif
 
+#ifndef BNA_PI
+#define BNA_PI (3.14159265358979323846)
+#endif
+#ifndef BNA_2PI
+#define BNA_2PI (6.28318530717958647692)
+#endif
+
 #define PROPERTY_READ(type, name, var) \
     type get##name() const { return (var); }
 

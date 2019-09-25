@@ -60,10 +60,6 @@ void bna::gui::WndMain::layoutUI()
     m_frmFlowGraph->setGeometry(QRect(115,0,161,161));
     m_frmFlowGraph->setFrameShape(QFrame::NoFrame);
     m_frmFlowGraph->setFrameShadow(QFrame::Plain);
-    m_rectFlowGraphTop = QRect(m_frmGraph->pos()+m_frmFlowGraph->pos(),
-                            m_frmFlowGraph->size()-QSize(0, m_nFlowGraphThickness));
-    m_rectFlowGraphBottom = QRect(m_rectFlowGraphTop.topLeft()+QPoint(0, m_nFlowGraphThickness),
-                            m_rectFlowGraphTop.size());
     //账户状态
     m_frmInfo->setGeometry(QRect(310, 10, 250, 120));
     m_frmInfo->setFrameShape(QFrame::NoFrame);

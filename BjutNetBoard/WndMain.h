@@ -99,6 +99,7 @@ private:
     QSize m_szFrameAdvanced;
     QSize m_szFrameShowMsg;
     QFrame *m_frmGraph;
+    QRect m_rectFlowGraph;
     QRect m_rectFlowGraphTop;
     QRect m_rectFlowGraphBottom;
     int m_nFlowGraphThickness;
@@ -165,6 +166,7 @@ private:
     //逻辑控制所需变量
     bool m_bShowDetail = false;
     bool m_bShowMsg = false;
+    bool m_bDraw2DFlowPie = false;
     bool m_bApplyLogin;
     bool m_bNeedUpdate;
     QVector<BjutWebItemInfo> m_vecBjutWeb;
