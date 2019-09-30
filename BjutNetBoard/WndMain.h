@@ -7,7 +7,9 @@
 #include "HPanel.h"
 #include "WndTrayIcon.h"
 #include "ServiceBridge.h"
+#include <QMutex>
 #include <tuple>
+#include <mutex>
 
 class QAction;
 class QApplication;
@@ -54,7 +56,7 @@ public slots:
     void initUI();
     void layoutUI();
     void initBjutWeb();
-    void on_show();
+    void showEvent();
     void on_btnRefresh_clicked();
     void on_btnSetting_clicked();
     void on_btnHelp_clicked();
@@ -94,6 +96,9 @@ protected:
     void closeEvent(QCloseEvent *event);
     void paintEvent(QPaintEvent *event);
     void resizeEvent(QResizeEvent *event);
+    void timerEvent(QTimerEvent *event);
+
+    void drawFlowPie(QPainter &painter, const QBrush &brushPie, double dFlowRate);
 private:
     //界面所需变量
     QSize m_szFrameSimple;
@@ -168,7 +173,14 @@ private:
     bool m_bShowDetail = false;
     bool m_bShowMsg = false;
     bool m_bDraw2DFlowPie = false;
-    bool m_bApplyLogin;
+    QMutex m_mtxFlowPieFlash;
+    int m_nFlowPieTimerID = 0;
+    bool m_bFlowPieFlashOver = false;
+    bool m_bFlowPieFlashEnter = false;
+    double m_dFlowPieDegree = 0.;
+    double m_dFlowPieDegreeMax = 0.;
+    double m_dFlowPieDegreeSpeed = 0.;
+
     bool m_bNeedUpdate;
     QVector<BjutWebItemInfo> m_vecBjutWeb;
     //int m_strOnlineID[2];

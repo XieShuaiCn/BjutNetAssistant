@@ -1,3 +1,5 @@
+//#define DEBUG_FLOW
+
 #include "WndMain.h"
 #include <math.h>
 #include <QDateTime>
@@ -45,7 +47,7 @@ WndMain::WndMain(WndTrayIcon *tray, QWidget *parent) :
     m_szFrameAdvanced.setHeight(495);
     m_szFrameShowMsg.setWidth(575);
     m_szFrameShowMsg.setHeight(620);
-    m_nFlowGraphThickness = 15;
+    m_nFlowGraphThickness = 10;
     tray->setMainWindow(this);
     m_coreBjutNet = tray->getBjutNet();
     //初始化界面
@@ -136,7 +138,7 @@ void WndMain::show()
     QWidget::activateWindow();
     //后台处理事件
     QCoreApplication::processEvents();
-    on_show();
+    showEvent();
 }
 
 void WndMain::closeEvent(QCloseEvent *event)
@@ -155,76 +157,176 @@ void WndMain::paintEvent(QPaintEvent *event)
     // 设置反锯齿
     painter.setRenderHint(QPainter::Antialiasing);
     //绘制流量图
-    QFile f("flow.txt");
-    f.open(QIODevice::ReadOnly);
-    auto data = f.readAll();
-    f.close();
-    int nCurrentFlow = QString(data).toInt();
-    //int nCurrentFlow = m_coreBjutNet->getWebLgn().getFlow() / 1024;//MB
-    int nTotalFlow = m_coreBjutNet->getWebJfself().getTotalFlow();//MB
-    double dFlowRate = -1.0;
-    if(nTotalFlow > 0){
-        dFlowRate = 1.0 * nCurrentFlow / nTotalFlow;
+    static QRect rectPaintFlowGraph(m_rectFlowGraph);
+    if(event->rect().contains(rectPaintFlowGraph)) {
+        double dFlowRate = -1.0, dFlowRateFlash = -1.0;
+        if(m_bFlowPieFlashEnter){
+            dFlowRate = m_dFlowPieDegreeMax;
+            dFlowRateFlash = m_dFlowPieDegree;
+        }
+        else{
+            int nCurrentFlow = m_coreBjutNet->getWebLgn().getFlow() / 1024;//MB
+            int nTotalFlow = m_coreBjutNet->getWebJfself().getTotalFlow();//MB
+#if defined(BUILD_DEVELOP) && defined(DEBUG_FLOW)
+            QFile f("flow.txt");
+            f.open(QIODevice::ReadOnly);
+            auto data = f.readAll();
+            f.close();
+            nCurrentFlow = QString(data).toInt();
+#endif
+            if(nTotalFlow > 0){
+                dFlowRate = 1.0 * nCurrentFlow / nTotalFlow;
+                dFlowRateFlash = dFlowRate;
+            }
+        }
+        QBrush brushPie(Qt::SolidPattern);
+        if(dFlowRate < 0.5){
+            brushPie.setColor(QColor(60,180,60));
+        }
+        else if(dFlowRate < 0.75) {//流量大于0.5，变orange警示
+            brushPie.setColor(QColor(int(75+180*(dFlowRate-0.5)/0.25),
+                                     180,
+                                     40));
+        }
+        else if(dFlowRate < 1.) { //流量大于0.75，变红警示
+            brushPie.setColor(QColor(255,
+                                     int(180-140*(dFlowRate-0.75)/0.25),
+                                     40));
+        }
+        else{
+            brushPie.setColor(QColor(255, 40, 40));
+        }
+        drawFlowPie(painter, brushPie, dFlowRateFlash);
     }
-    //flowRate = 0.20;
-    if(m_bDraw2DFlowPie){
-        // 2D chart
-        QBrush brushPie(QColor(60,180,60));
-        if(nTotalFlow > 0 && dFlowRate < 0.998)
+    //draw a thin line as spliter in online devices' box
+    static QRect rectPaintSplitLine(m_frmOnline->x(), m_frmOnline->y()+m_frmOnline->height()/2+3,
+                                    m_frmOnline->width(), 5);
+    if(m_bShowDetail && event->rect().contains(rectPaintSplitLine)){
+        QPen penSpliter(QColor(180, 180, 180));
+        int y = rectPaintSplitLine.y()+2;
+        penSpliter.setWidth(1);
+        penSpliter.setStyle(Qt::DashLine);
+        painter.setPen(penSpliter);
+        painter.drawLine(m_frmOnline->x(), y, m_frmOnline->x()+m_frmOnline->width(), y);
+    }
+    // draw a triangle of lblShowMsg
+    static QRect rectPaintMsgTriangle(m_lblShowMsg->x()-m_lblShowMsg->height(),
+                                      m_lblShowMsg->y(),
+                                      m_lblShowMsg->height(), m_lblShowMsg->height());
+    if(m_bShowDetail && event->rect().contains(rectPaintMsgTriangle)){
+        painter.setBrush(QBrush(QColor(50,50,50)));
+        painter.setPen(Qt::NoPen);
+        QPolygon polyTriangle(3);
+        polyTriangle.setPoint(0, m_lblShowMsg->x()-m_lblShowMsg->height()+4,
+                                 m_lblShowMsg->y()+4);
+        if(m_bShowMsg){
+            polyTriangle.setPoint(1, polyTriangle.at(0).x()+m_lblShowMsg->height()-8,
+                                     polyTriangle.at(0).y());
+            polyTriangle.setPoint(2, polyTriangle.at(0).x()+m_lblShowMsg->height()/2-4,
+                                     polyTriangle.at(0).y()+m_lblShowMsg->height()-8);
+        }
+        else{
+            polyTriangle.setPoint(1, polyTriangle.at(0).x()+m_lblShowMsg->height()-8,
+                                     polyTriangle.at(0).y()+m_lblShowMsg->height()/2-4);
+            polyTriangle.setPoint(2, polyTriangle.at(0).x(),
+                                     polyTriangle.at(0).y()+m_lblShowMsg->height()-8);
+        }
+        painter.drawPolygon(polyTriangle);
+    }
+}
+
+void WndMain::resizeEvent(QResizeEvent *event)
+{
+    QWidget::resizeEvent(event);
+    m_lblVersion->setGeometry(QRect(10, this->height()-24, 250, 20));
+    m_lblFeedback->setGeometry(QRect(this->width()-70, this->height()-24, 70, 20));
+}
+
+void WndMain::timerEvent(QTimerEvent *event)
+{
+    QWidget::timerEvent(event);
+    if(event->timerId() <= 0){
+        return;
+    }
+    if(event->timerId() == m_nFlowPieTimerID){
+        m_mtxFlowPieFlash.lock();
+        m_dFlowPieDegree += m_dFlowPieDegreeSpeed;
+        if(m_dFlowPieDegree >= m_dFlowPieDegreeMax){
+            m_dFlowPieDegree = m_dFlowPieDegreeMax;
+            killTimer(m_nFlowPieTimerID);
+            m_nFlowPieTimerID = 0;
+            m_bFlowPieFlashEnter = false;
+            m_bFlowPieFlashOver = true;
+        }
+        m_mtxFlowPieFlash.unlock();
+        this->update(m_rectFlowGraph);
+    }
+}
+
+void WndMain:: showEvent()
+{
+    initBjutWeb();
+    m_updater.checkUpdate();
+    if(m_updater.needUpdate()){
+        m_bNeedUpdate = true;
+        QString ver("%1 <font color=#dd3333>最新版本：%2 点我更新！</font>");
+        m_lblVersion->setText(ver.arg(m_updater.getOldVersion(), m_updater.getNewVersion()));
+    }
+    on_btnRefresh_clicked();
+}
+
+void WndMain::drawFlowPie(QPainter &painter, const QBrush &brushPie, double dFlowRate)
+{
+    double dAngleLength = 360.0;
+    double dAngleStart = -90.0;
+    int nAngleLength16 = int(dAngleLength * 16.0);
+    int nAngleStart16 = int(dAngleStart * 16.0);
+    if(dFlowRate >= 0.){
+        dAngleLength = 360.0 * dFlowRate;
+        dAngleStart = 90.0 - dAngleLength / 2.0;
+        nAngleLength16 = int(dAngleLength * 16.0);
+        nAngleStart16 = int(dAngleStart * 16.0);
+    }
+    const QBrush brushGrayDark(QColor(100,100,100));
+    const QBrush brushGray(QColor(150,150,150));
+    const QBrush brushGrayLight(QColor(200,200,200));
+    const QPen penSolidGrayDark(brushGrayDark, 1.0, Qt::SolidLine);
+    const QPen penSolidGrayLight(brushGrayLight, 1.0, Qt::SolidLine);
+    const QPen penSolidGray(brushGray, 1.0, Qt::SolidLine);
+    const QPen penDashGray(brushGray, 1.0, Qt::DashLine);
+    if(m_bDraw2DFlowPie){           // 2D chart
+        QPoint posCenter = m_rectFlowGraph.center();
+        if(dFlowRate >= 0. && dFlowRate < 0.999)
         {
             int nAngleStart = 90;
             int nAngleLength = 360;
             //绘制底色
             nAngleLength = 360 * dFlowRate;
-            if(nAngleLength >= 360){
-                nAngleLength = 360;//
-                brushPie.setColor(QColor(240, 60, 60));
-            }
-            else {
-                painter.setBrush(QBrush(QColor(220,220,220)));
-                painter.setPen(QPen(QColor(200,200,200)));
-                painter.drawEllipse(m_rectFlowGraph);
-                if(nAngleLength < 180){}
-                else if(nAngleLength < 270)//流量大于一半，变红警示
-                {
-                    brushPie.setColor(QColor(int(75+180*(dFlowRate-0.5)/0.25),
-                                             180,
-                                             40));
-                }
-                else if(nAngleLength < 361)//流量大于一半，变红警示
-                {
-                    brushPie.setColor(QColor(255,
-                                             int(180-140*(dFlowRate-0.75)/0.25),
-                                             40));
-                }
-            }
+            // background circle
+            painter.setBrush(QBrush(QColor(220,220,220)));
+            painter.setPen(penSolidGrayLight);
+            painter.drawEllipse(m_rectFlowGraph);
+            // foreground pie
             painter.setBrush(brushPie);
             painter.setPen(Qt::NoPen);
             painter.drawPie(m_rectFlowGraph, nAngleStart*16, -nAngleLength*16);
         }
         else {
             painter.setBrush(brushPie);
-            painter.setPen(Qt::NoPen);
+            painter.setPen(penSolidGrayLight);
             painter.drawEllipse(m_rectFlowGraph);
+            if(dFlowRate > 0.99){
+                painter.setPen(penSolidGrayDark);
+                painter.drawLine(posCenter, QPoint(posCenter.x(), m_rectFlowGraph.top()));
+            }
         }
     }
     else {
         // 3D chart
         QPointF posCenter1 = m_rectFlowGraphTop.center();
         QPointF posCenter2 = m_rectFlowGraphBottom.center();
-        const QBrush brushGreen(QColor(60,180,60));
-        const QBrush brushGrayDark(QColor(100,100,100));
-        const QBrush brushGrayLight(QColor(150,150,150));
-        const QBrush brushRed(QColor(255, 40, 40));
-        const QPen penSolidGrayDark(brushGrayDark, 1.0, Qt::SolidLine);
-        const QPen penSolidGrayLight(brushGrayLight, 1.0, Qt::SolidLine);
-        const QPen penDashGrayLight(brushGrayLight, 1.0, Qt::DashLine);
-        if(nTotalFlow > 0 && dFlowRate < 0.998)
+        if(dFlowRate > 0. && dFlowRate < 0.999)
         {
-            double dAngleLength = 360.0 * dFlowRate;
-            double dAngleStart = 90.0 - dAngleLength / 2.0;
-            int nAngleLength16 = int(dAngleLength * 16.0);
-            int nAngleStart16 = int(dAngleStart * 16.0);
             QPolygonF polySide(6);
             polySide[0] = QPointF(posCenter2.x()-m_rectFlowGraphBottom.width()*0.5*sin(dFlowRate*BNA_PI),
                               posCenter2.y()-m_rectFlowGraphBottom.height()*0.5*cos(dFlowRate*BNA_PI));
@@ -236,23 +338,10 @@ void WndMain::paintEvent(QPaintEvent *event)
             polySide[4] = QPointF(posCenter2.x()+m_rectFlowGraphBottom.width()*0.5*sin(dFlowRate*BNA_PI),
                               posCenter2.y()-m_rectFlowGraphBottom.height()*0.5*cos(dFlowRate*BNA_PI));
             polySide[5] = posCenter2;
-            // set the color of pie
-            QBrush brushPie(brushGreen);
-            if(dAngleLength <= 180) { }
-            else if(dAngleLength <= 270) {// greater than 0.5, warn with orange
-                brushPie.setColor(QColor(int(75+180*(dFlowRate-0.5)/0.25),
-                                         180,
-                                         40));
-            }
-            else { //greater than 0.75, warn with red color.
-                brushPie.setColor(QColor(255,
-                                         int(180-140*(dFlowRate-0.75)/0.25),
-                                         40));
-            }
             // bottom plane's back border (dash line)
             if(dAngleLength < 180.0){
                 painter.setBrush(Qt::NoBrush);
-                painter.setPen(penDashGrayLight);
+                painter.setPen(penDashGray);
                 painter.drawArc(m_rectFlowGraphBottom, 0, 180*16);
             }
             // === begin drawing plane ===
@@ -277,11 +366,11 @@ void WndMain::paintEvent(QPaintEvent *event)
                 painter.setPen(penSolidGrayDark);
                 painter.drawArc(m_rectFlowGraphBottom, 0, nAngleStart16);
                 painter.drawArc(m_rectFlowGraphBottom, 180*16, -nAngleStart16);
-                painter.setPen(penSolidGrayLight);
+                painter.setPen(penSolidGray);
                 painter.drawArc(m_rectFlowGraphBottom, nAngleStart16, -360*16+nAngleLength16);
             }
             else{
-                painter.setPen(penSolidGrayLight);
+                painter.setPen(penSolidGray);
                 painter.drawArc(m_rectFlowGraphBottom, 0, -180*16);
             }
             // outer side plane's border
@@ -289,7 +378,7 @@ void WndMain::paintEvent(QPaintEvent *event)
                 painter.setPen(penSolidGrayDark);
             }
             else{
-                painter.setPen(penSolidGrayLight);
+                painter.setPen(penSolidGray);
             }
             painter.drawLine(m_rectFlowGraphTop.left(), m_rectFlowGraphTop.y()+m_rectFlowGraphTop.height()*0.5,
                              m_rectFlowGraphBottom.left(), m_rectFlowGraphBottom.y()+m_rectFlowGraphBottom.height()*0.5);
@@ -300,28 +389,24 @@ void WndMain::paintEvent(QPaintEvent *event)
             painter.setPen(penSolidGrayDark);
             painter.drawPolygon(polySide);
             // central axis
-            //painter.drawLine(polySide[2], polySide[5]);
+            painter.drawLine(polySide[2], polySide[5]);
             // top plane's border
-            painter.setPen(penSolidGrayLight);
-            painter.drawArc(m_rectFlowGraphTop, nAngleStart16, -360*16+nAngleLength16);
-            painter.setPen(penSolidGrayDark);
             painter.drawArc(m_rectFlowGraphTop, nAngleStart16, nAngleLength16);
+            painter.setPen(penSolidGray);
+            painter.drawArc(m_rectFlowGraphTop, nAngleStart16, -360*16+nAngleLength16);
         }
         else {
-            if(nTotalFlow > 0 && dFlowRate >= 0.99){// > 100%
-                painter.setBrush(brushRed);
-            }
-            else{// unKnown
-                painter.setBrush(brushGreen);
-            }
+            painter.setBrush(brushPie);
             painter.setPen(Qt::NoPen);
             // bottom plane
             painter.drawPie(m_rectFlowGraphBottom, 0, -180*16);
             // side plane
             painter.drawRect(m_rectFlowGraphTop.left(), m_rectFlowGraphTop.y()+m_rectFlowGraphTop.height()*0.5,
                              m_rectFlowGraphTop.width(), m_nFlowGraphThickness+1);
-
+            // top plane
             painter.setPen(penSolidGrayDark);
+            painter.drawEllipse(m_rectFlowGraphTop);
+            painter.setBrush(Qt::NoBrush);
             // bottom plane's border
             painter.drawArc(m_rectFlowGraphBottom, 0, -180*16);
             // side plane's border
@@ -329,9 +414,7 @@ void WndMain::paintEvent(QPaintEvent *event)
                              m_rectFlowGraphBottom.left(), m_rectFlowGraphBottom.y()+m_rectFlowGraphBottom.height()*0.5);
             painter.drawLine(m_rectFlowGraphTop.right()+1, m_rectFlowGraphTop.y()+m_rectFlowGraphTop.height()*0.5,
                              m_rectFlowGraphBottom.right()+1, m_rectFlowGraphBottom.y()+m_rectFlowGraphBottom.height()*0.5);
-            // top plane
-            painter.drawEllipse(m_rectFlowGraphTop);
-            if(nTotalFlow > 0 && dFlowRate >= 0.99){// > 100%
+            if(dFlowRate >= 0.999){// > 100%
                 painter.drawLine(posCenter1.x(),
                                  posCenter1.y(),
                                  posCenter2.x(),
@@ -339,52 +422,17 @@ void WndMain::paintEvent(QPaintEvent *event)
             }
         }
     }
-    //draw a thin line as spliter in online devices' box
-    {
-        QPen penSpliter(QColor(180, 180, 180));
-        int y = m_frmOnline->y()+m_frmOnline->height()/2+5;
-        penSpliter.setWidth(1);
-        penSpliter.setStyle(Qt::DashLine);
-        painter.setPen(penSpliter);
-        painter.drawLine(m_frmOnline->x(), y, m_frmOnline->x()+m_frmOnline->width(), y);
-    }
-    // draw a triangle of lblShowMsg
-    {
-        painter.setBrush(QBrush(QColor(50,50,50)));
-        painter.setPen(Qt::NoPen);
-        QPolygon polyTriangle(3);
-        polyTriangle.setPoint(0, m_lblShowMsg->pos().x()-m_lblShowMsg->height()+4,
-                                 m_lblShowMsg->pos().y()+4);
-        if(m_bShowMsg){
-            polyTriangle.setPoint(1, polyTriangle.at(0).x()+m_lblShowMsg->height()-8,
-                                     polyTriangle.at(0).y());
-            polyTriangle.setPoint(2, polyTriangle.at(0).x()+m_lblShowMsg->height()/2-4,
-                                     polyTriangle.at(0).y()+m_lblShowMsg->height()-8);
-        }
-        else{
-            polyTriangle.setPoint(1, polyTriangle.at(0).x()+m_lblShowMsg->height()-8,
-                                     polyTriangle.at(0).y()+m_lblShowMsg->height()/2-4);
-            polyTriangle.setPoint(2, polyTriangle.at(0).x(),
-                                     polyTriangle.at(0).y()+m_lblShowMsg->height()-8);
-        }
-        painter.drawPolygon(polyTriangle);
-    }
-}
-
-void WndMain:: on_show()
-{
-    initBjutWeb();
-    m_updater.checkUpdate();
-    if(m_updater.needUpdate()){
-        m_bNeedUpdate = true;
-        QString ver("%1 <font color=#dd3333>最新版本：%2 点我更新！</font>");
-        m_lblVersion->setText(ver.arg(m_updater.getOldVersion(), m_updater.getNewVersion()));
-    }
-    on_btnRefresh_clicked();
 }
 
 void WndMain::on_account_StatusUpdated(bool login, int time, int flow, int fee)
 {
+#if defined(BUILD_DEVELOP) && defined(DEBUG_FLOW)
+    QFile f("flow.txt");
+    f.open(QIODevice::ReadOnly);
+    auto data = f.readAll();
+    f.close();
+    flow = QString(data).toInt()*1024;
+#endif
     if(login)
     {
         m_lblStatusFlag->setPixmap(QPixmap(":/png/Online"));
@@ -562,20 +610,19 @@ void WndMain::on_txtMsg_Message(const QString& info)
     m_txtMsg->append(QDateTime::currentDateTime().toString("[yyyy-MM-dd hh:mm:ss] ") + (info.endsWith('\n') ? info : (info + '\n')));
 }
 
-
-void WndMain::resizeEvent(QResizeEvent *event)
-{
-    Q_UNUSED(event);
-    m_lblVersion->setGeometry(QRect(10, this->height()-24, 250, 20));
-    m_lblFeedback->setGeometry(QRect(this->width()-70, this->height()-24, 70, 20));
-}
-
 void WndMain::on_btnRefresh_clicked()
 {
     m_btnRefresh->setEnabled(false);
     on_txtMsg_Message("[INFO] Refresh all");
     WebLgn &lgn = m_coreBjutNet->getWebLgn();
     WebJfself &jfself = m_coreBjutNet->getWebJfself();
+    // repaint flash
+    m_mtxFlowPieFlash.lock();
+    if(m_bFlowPieFlashOver){
+        m_bFlowPieFlashOver = false;
+    }
+    m_mtxFlowPieFlash.unlock();
+    // refresh
     jfself.refreshAccount();
     jfself.refreshOnline();
     if(jfself.getServiceName().size()){
@@ -982,10 +1029,25 @@ void WndMain::updateFlowUsed(double used, double total)
     m_lblFlowUnit->setText(flowUnit[flowUnitIndex]);
     strFlowTip.append(QString("流量状态: 已用%1%2").arg(fflow).arg(flowUnit[flowUnitIndex]));
     if(total > 0){
-        // used flow
+        // calculate used flow
         double dFlowUsed = 100.0 * used / total;
-        int nFlowUsed = static_cast<int>(dFlowUsed);
-        if(nFlowUsed < 10){
+        // update flash
+        m_mtxFlowPieFlash.lock();
+        if(!m_bFlowPieFlashOver && !m_bFlowPieFlashEnter){
+            if(m_nFlowPieTimerID>0){
+                killTimer(m_nFlowPieTimerID);
+            }
+            m_dFlowPieDegree = 0.;
+            m_dFlowPieDegreeMax = used / total;
+            m_dFlowPieDegreeSpeed = std::min(std::max(m_dFlowPieDegreeMax / 10., 0.025), 0.1);
+            m_nFlowPieTimerID = startTimer(50, Qt::PreciseTimer);
+            m_bFlowPieFlashEnter = (m_nFlowPieTimerID > 0);
+            this->update(m_rectFlowGraph);
+        }
+        m_mtxFlowPieFlash.unlock();
+        // update label
+        int nFlowUsed = static_cast<int>(round(dFlowUsed));
+        if(nFlowUsed <= 10){
             m_lblFlowUsed->setText(QString("Used\n%1%").arg(nFlowUsed));
         }
         else{
@@ -994,21 +1056,70 @@ void WndMain::updateFlowUsed(double used, double total)
         QFontMetrics fmFlowUsed = m_lblFlowUsed->fontMetrics();
         QRect rectFlowUsedText = fmFlowUsed.boundingRect(m_lblFlowUsed->text());
         QRect rectFlowUsed;
-        rectFlowUsed.setLeft(m_rectFlowGraph.x()+(m_rectFlowGraph.width()-rectFlowUsedText.width())/2-10);
-        if(nFlowUsed < 10){
-            rectFlowUsed.setTop(m_rectFlowGraph.y()+int(0.1*m_rectFlowGraph.height()));
-        }
-        else if(nFlowUsed < 50){
-            rectFlowUsed.setTop(m_rectFlowGraph.y()+int((0.1+0.1*(nFlowUsed-10)/40)*m_rectFlowGraph.height()));
-        }
-        else if(nFlowUsed < 100){
-            rectFlowUsed.setTop(m_rectFlowGraph.y()+int((0.2+0.05*(nFlowUsed-50)/50)*m_rectFlowGraph.height()));
+        QPoint posCenter = m_rectFlowGraph.center();
+        QSize szFlowGraph = m_rectFlowGraph.size();
+        QSize szFlowGraph_2 = m_rectFlowGraph.size()*0.5;
+        if(m_bDraw2DFlowPie){
+            if(nFlowUsed <= 10){
+                rectFlowUsed.setTop(m_rectFlowGraph.y() + 5);
+                rectFlowUsed.setLeft(posCenter.x() +
+                                     rectFlowUsedText.width()*0.025*(nFlowUsed-9));//(-0.25,0.025]
+            }
+            else if(nFlowUsed <= 25){
+                rectFlowUsed.setTop(m_rectFlowGraph.y() + 15 +
+                                    szFlowGraph_2.height()*(nFlowUsed-10)/50);//(0,1]
+                rectFlowUsed.setLeft(posCenter.x());
+            }
+            else if(nFlowUsed <= 50){
+                rectFlowUsed.setTop(m_rectFlowGraph.y() - 0.5 * rectFlowUsedText.height() +
+                                    szFlowGraph.height()*(0.3+0.008*(nFlowUsed-25)));//(0.3,0.5]
+                rectFlowUsed.setLeft(posCenter.x()+3);
+            }
+            else if(nFlowUsed <= 75) {
+                rectFlowUsed.setTop(posCenter.y() +
+                                    rectFlowUsedText.height()*(-0.5+1.*(nFlowUsed-50)/25));//(-0.5,+0.5]
+                rectFlowUsed.setLeft(posCenter.x());
+            }
+            else if(nFlowUsed <= 100){
+                rectFlowUsed.setTop(posCenter.y() +
+                                    rectFlowUsedText.height()*0.02*(100-nFlowUsed));//(0.5, 0]
+                rectFlowUsed.setLeft(posCenter.x() +
+                                     rectFlowUsedText.width()*0.02*(75-nFlowUsed));//(0, -0.5]
+            }
+            else{
+                rectFlowUsed.setTop(posCenter.y()+rectFlowUsedText.height()*0.5);
+                rectFlowUsed.setLeft(posCenter.x()-rectFlowUsedText.width()*0.5);
+            }
         }
         else{
-            rectFlowUsed.setTop(m_rectFlowGraph.y()+int(0.25*m_rectFlowGraph.height()));
+            rectFlowUsed.setLeft(posCenter.x()-rectFlowUsedText.width()*0.5);
+            if(nFlowUsed < 10){
+                rectFlowUsed.setLeft(posCenter.x()-rectFlowUsedText.width()*0.25);
+                rectFlowUsed.setTop(m_rectFlowGraph.y()+rectFlowUsedText.height());
+            }
+            else if(nFlowUsed < 50){
+                rectFlowUsed.setTop(m_rectFlowGraph.y()+rectFlowUsedText.height()+
+                                    (szFlowGraph_2.height()-rectFlowUsedText.height()*2) *
+                                    0.6*(nFlowUsed-10)/40);
+            }
+            else if(nFlowUsed < 100){
+                rectFlowUsed.setTop(m_rectFlowGraph.y()+rectFlowUsedText.height()+
+                                    (szFlowGraph_2.height()-rectFlowUsedText.height()*2) *
+                                    (0.6+0.4*(nFlowUsed-50)/50));
+            }
+            else{
+                rectFlowUsed.setTop(posCenter.y()-rectFlowUsedText.height());
+            }
         }
+        rectFlowUsed.setLeft(rectFlowUsed.left()-m_frmGraph->x());
+        rectFlowUsed.setTop(rectFlowUsed.top()-m_frmGraph->y());
         rectFlowUsed.setWidth(rectFlowUsedText.width());
-        rectFlowUsed.setHeight(40);
+        if(nFlowUsed <= 10){
+            rectFlowUsed.setHeight(rectFlowUsedText.height()*2+4);
+        }
+        else{
+            rectFlowUsed.setHeight(rectFlowUsedText.height()+2);
+        }
         m_lblFlowUsed->setGeometry(rectFlowUsed);
         // flow tip
         fflow = fabs(total-used);

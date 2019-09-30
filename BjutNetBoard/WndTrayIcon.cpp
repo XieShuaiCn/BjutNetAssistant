@@ -104,7 +104,8 @@ void WndTrayIcon::on_clicked()
         ++flowUnitIndex;
     }
     float ffee = float(fee) / 100;
-    status.sprintf("已用时间：%.2f小时，已用流量：%.2f%s，剩余金额：%.2f元", ftime, fflow, flowUnit[flowUnitIndex], ffee);
+    status.sprintf("%s线,已用时间：%.2f小时，已用流量：%.2f%s，剩余金额：%.2f元",
+                   (online?"在":"离"), ftime, fflow, flowUnit[flowUnitIndex], ffee);
     //return status;
     this->showMessage("北工大校园网助手", status, QSystemTrayIcon::NoIcon);
     m_tmClick.stop();
