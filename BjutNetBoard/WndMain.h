@@ -56,7 +56,6 @@ public slots:
     void initUI();
     void layoutUI();
     void initBjutWeb();
-    void showEvent();
     void on_btnRefresh_clicked();
     void on_btnSetting_clicked();
     void on_btnHelp_clicked();
@@ -80,14 +79,14 @@ public slots:
     void on_lblFeedback_clicked();
     void on_txtMsg_MessageWithTime(const QDateTime &time, const QString &info);
     void on_txtMsg_Message(const QString& info);
-    void on_account_StatusUpdated(bool login, int time, int flow, int fee);
-    void on_online_status(const QVariant &var_info);
+    void updateAccountStatus(bool login, int time, int flow, int fee);
+    void updateOnlineDevices(const QVariant &var_info);
     // recive the info of account service
-    void on_serviceInfo(const QString &name, int totalFlow);
+    void updateServiceInfo(const QString &name, int totalFlow);
     // recive the version of remote service
-    void on_remoteVersion(const QString &version, int inner_ver);
+    void updateRemoteVerInfo(const QString &version, int inner_ver);
     //
-    void on_bookedService(const QString &name);
+    void updateBookedService(const QString &name);
 protected slots:
     void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
     void logRemoteDevice(int index, bool login);
@@ -97,6 +96,7 @@ protected:
     void paintEvent(QPaintEvent *event);
     void resizeEvent(QResizeEvent *event);
     void timerEvent(QTimerEvent *event);
+    void showEvent(QShowEvent *event);
 
     void drawFlowPie(QPainter &painter, const QBrush &brushPie, double dFlowRate);
 private:

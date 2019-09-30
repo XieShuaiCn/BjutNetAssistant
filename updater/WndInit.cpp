@@ -32,11 +32,11 @@ WndInit::WndInit(QApplication *app)
     m_strBinDir = app->applicationDirPath();
     m_strBinFile = QDir(m_strBinDir).absoluteFilePath(m_strBinName);
     this->setWindowTitle("网关登录器 更新");
-    connect(this, &QProgressDialog::canceled, this, &WndInit::cancel_init);
-    connect(&m_tmInit, &QTimer::timeout, this, &WndInit::init_updater);
+    connect(this, &QProgressDialog::canceled, this, &WndInit::cancelInit);
+    connect(&m_tmInit, &QTimer::timeout, this, &WndInit::initUpdater);
 }
 
-void WndInit::cancel_init()
+void WndInit::cancelInit()
 {
     m_bCancel = true;
 }
@@ -49,7 +49,7 @@ void WndInit::show()
     m_tmInit.start();
 }
 
-void WndInit::init_updater()
+void WndInit::initUpdater()
 {
     m_tmInit.stop();
     // create temp file.

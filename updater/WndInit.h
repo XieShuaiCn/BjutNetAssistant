@@ -16,9 +16,9 @@ public slots:
 
     void show();
 
-    void cancel_init();
+    void cancelInit();
 
-    void init_updater();
+    void initUpdater();
 
 private:
 

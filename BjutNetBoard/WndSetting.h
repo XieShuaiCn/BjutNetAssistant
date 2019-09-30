@@ -33,9 +33,7 @@ public slots:
     void on_chkDebug_clicked(bool checked);
     void on_btnApply_clicked();
     void on_btnApplyLogin_clicked();
-    void on_account(const QString &name, const QString &passwd, int type);
-    //
-    void on_autoStart(bool autostart);
+    void updateAccountInfo(const QString &name, const QString &passwd, int type);
 
 private:
     WndTrayIcon *m_tray;
@@ -55,9 +53,6 @@ private:
     QPushButton *m_btnApplyLogin;
 
     QLabel *m_lblURL;
-
-    //QPushButton *m_btnOK;
-    //QPushButton *m_btnCancel;
 };
 
 }
