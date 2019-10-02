@@ -1,6 +1,8 @@
 #include "BjutNet.h"
 #include <QFile>
 #include <QDir>
+#include <QCoreApplication>
+#include <QElapsedTimer>
 #include <QJsonObject>
 #include <QJsonDocument>
 
@@ -8,13 +10,10 @@ namespace bna{
 namespace core{
 
 BjutNet::BjutNet():
-    QThread()
+    m_nTimerCheckLgn(-1), m_nTimerCheckOnline(-1)
 {
-    m_bRun = false;
     connect(&m_webLgn, &WebLgn::message, this, &BjutNet::message);
     connect(&m_webJfself, &WebJfself::message, this, &BjutNet::message);
-    connect(&m_tmCheckLgn, &QTimer::timeout, this, &BjutNet::checkLgn);
-    connect(&m_tmCheckOnline, &QTimer::timeout, this, &BjutNet::checkOnline);
     connect(this, &BjutNet::debug_info, DebugTool::getPointer(), &DebugTool::writeString);
 }
 
@@ -188,6 +187,8 @@ void BjutNet::synchronizeAccount()
     m_webJfself.setPassword(m_strPassword);
 }
 
+#define RESTART_TIMER_LGN   restartTimer(m_nTimerCheckLgn, m_nTimerCheckLgnInterval, Qt::VeryCoarseTimer)
+
 void BjutNet::checkLgn()
 {
     static int sleepsec = 1;
@@ -200,13 +201,17 @@ void BjutNet::checkLgn()
     {
         lastOnlined = time;
         //首次登录时或间隔一段时间输出信息
-        if(m_tmCheckLgn.interval() != 1000*30)
-            m_tmCheckLgn.start(1000*30);
+        if(m_nTimerCheckLgnInterval != 1000*30){//30s
+            m_nTimerCheckLgnInterval = (1000*30);
+            RESTART_TIMER_LGN;
+        }
     }
     else if(!m_webLgn.checkCampusNet())//非校园网
     {
-        if(m_tmCheckLgn.interval() != 1000*30)
-            m_tmCheckLgn.start(1000*30);
+        if(m_nTimerCheckLgnInterval != 1000*30){//30s
+            m_nTimerCheckLgnInterval = 1000*30;
+            RESTART_TIMER_LGN;
+        }
     }
     else//校园网未登录
     {
@@ -214,19 +219,33 @@ void BjutNet::checkLgn()
                 && lastOnlined.toSecsSinceEpoch() - lastOnlined.toSecsSinceEpoch() < 300)//5mins
         {
             ++nOfflined;
+#ifdef BUILD_DEVELOP
+            message(QDateTime::currentDateTime(), QString("offline in short time. %1").arg(nOfflined));
+#endif
         }
 
         else if(nOfflined > 3)
         {
             nOfflined = 0;
-            for(int i = 0; i< 3; ++i)
+            for(int i = 0; i< 5; ++i)
             {
                 m_webJfself.refreshOnline();
                 m_webJfself.toOfflineAll();
-                sleep(1);
+#ifdef BUILD_DEVELOP
+                message(QDateTime::currentDateTime(), QString("CheckLgn: offline all."));
+#endif
+                QElapsedTimer t;
+                t.start();
+                while(t.elapsed()<1000){// wait a second
+                    QCoreApplication::processEvents(QEventLoop::DialogExec);
+                }
                 m_webJfself.refreshAccount();
-                if(!m_webJfself.gethasOnline())
+                if(!m_webJfself.gethasOnline()){
+#ifdef BUILD_DEVELOP
+                    message(QDateTime::currentDateTime(), QString("CheckLgn: no online."));
+#endif
                     break;
+                }
             }
         }
         else {
@@ -248,65 +267,71 @@ void BjutNet::checkLgn()
                 sleepsec *= 2;
             }
         }
-        m_tmCheckLgn.start(sleepsec);
+        m_nTimerCheckLgnInterval = (sleepsec * 1000);
+        RESTART_TIMER_LGN;
     }
 }
+#undef RESTART_TIMER_LGN
+#define RESTART_TIMER_ONLINE restartTimer(m_nTimerCheckOnline, m_nTimerCheckOnlineInterval, Qt::VeryCoarseTimer)
 
 void BjutNet::checkOnline()
 {
     m_webJfself.refreshAccount();
     if(m_webJfself.refreshOnline())
     {
-        if(m_tmCheckOnline.interval() != 1000*60*30)
-            m_tmCheckOnline.start(1000*60*30);
+        int interval = std::min(1000*60*30, m_nTimerCheckOnlineInterval*2);//max 30min
+        if(m_nTimerCheckOnlineInterval != interval){
+            m_nTimerCheckOnlineInterval = interval;
+            RESTART_TIMER_ONLINE;
+        }
     }
     else {
-        if(m_tmCheckOnline.interval() != 1000*60)
-            m_tmCheckOnline.start(1000*60);
+        if(m_nTimerCheckOnlineInterval != 1000*30) {//30s
+            m_nTimerCheckOnlineInterval = 1000*30;
+            RESTART_TIMER_ONLINE;
+        }
     }
 }
+#undef RESTART_TIMER_ONLINE
 
 bool BjutNet::start_monitor()
 {
-    m_tmCheckLgn.start(100);//30sec
-    m_tmCheckOnline.start(100);//30min
-//    m_bRun = true;
-//    if(!this->isRunning())
-//    {    //启动线程
-//        this->start(IdlePriority);
-        connect(&m_netCfgMan, &QNetworkConfigurationManager::onlineStateChanged, &m_webLgn, &WebLgn::network_status_change);
-//    }
+    // timer
+    m_nTimerCheckLgnInterval = 100;
+    m_nTimerCheckOnlineInterval = 100;
+    restartTimer(m_nTimerCheckOnline, m_nTimerCheckOnlineInterval, Qt::VeryCoarseTimer);
+    restartTimer(m_nTimerCheckLgn, m_nTimerCheckLgnInterval, Qt::VeryCoarseTimer);
+    // The moniter of physical net line
+    connect(&m_netCfgMan, &QNetworkConfigurationManager::onlineStateChanged, &m_webLgn, &WebLgn::network_status_change);
     return true;
 }
 
 bool BjutNet::stop_monitor()
 {
-    m_tmCheckLgn.stop();
-    m_tmCheckOnline.stop();
-//    m_bRun = false;
-//    if(this->isRunning())
-//    {
-//        //this->quit();
-//        this->wait();
-//        //this->terminate();
-        disconnect(&m_netCfgMan, &QNetworkConfigurationManager::onlineStateChanged, &m_webLgn, &WebLgn::network_status_change);
-//    }
+    disconnect(&m_netCfgMan, &QNetworkConfigurationManager::onlineStateChanged, &m_webLgn, &WebLgn::network_status_change);
+    if(m_nTimerCheckLgn>0){ killTimer(m_nTimerCheckLgn);}
+    if(m_nTimerCheckOnline>0){ killTimer(m_nTimerCheckOnline);}
     return true;
 }
 
-
-void BjutNet::run()
+int BjutNet::restartTimer(int &id, int interval, Qt::TimerType timerType)
 {
-    for(int i = 0; i < 3 && !m_webJfself.checkLogin(); ++i)
-        m_webJfself.login();
-    if(m_webJfself.checkLogin())
-    {
-        m_webJfself.refreshAccount();
-        m_webJfself.refreshOnline();
+    if(id > 0){
+        killTimer(id);
     }
-    for(int i = 0; i < 3 && !m_webLgn.checkLoginStatus(); ++i)
-        m_webLgn.login();
-    m_webLgn.checkLoginStatus();
+    id = startTimer(interval, timerType);
+    return id;
 }
+
+void BjutNet::timerEvent(QTimerEvent *event)
+{
+    if (event->timerId() == m_nTimerCheckLgn){
+        checkLgn();
+    }
+    else if (event->timerId() == m_nTimerCheckOnline){
+        checkOnline();
+    }
+}
+
 }
 }

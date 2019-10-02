@@ -10,7 +10,7 @@
 namespace bna{
 namespace core {
 
-class BjutNet : public QThread
+class BjutNet : public QObject
 {
     Q_OBJECT
 public:
@@ -51,18 +51,26 @@ public:
     WebLgn &getWebLgn();
 
     WebJfself &getWebJfself();
+
+    // restart timer,(stop and then start)
+    int restartTimer(int &id, int interval, Qt::TimerType timerType = Qt::CoarseTimer);
+
 signals:
     //监视消息
     void message(const QDateTime& time, const QString& info);
     // 调试信息
     void debug_info(DebugTool::DebugStatus status, const QString &content, bool with_time = true, bool end_line = true);
+
 protected:
-    void run();
+    //
+    void timerEvent(QTimerEvent *event);
+
 private:
     QNetworkConfigurationManager m_netCfgMan;
-    std::atomic_bool m_bRun;
-    QTimer m_tmCheckLgn;
-    QTimer m_tmCheckOnline;
+    int m_nTimerCheckLgn;
+    int m_nTimerCheckLgnInterval;
+    int m_nTimerCheckOnline;
+    int m_nTimerCheckOnlineInterval;
     //用户配置信息
     QString m_strAccount;
     QString m_strPassword;
@@ -138,6 +146,5 @@ inline WebJfself &BjutNet::getWebJfself()
 {
     return m_webJfself;
 }
-
 }}
 #endif // BJUTNET_H

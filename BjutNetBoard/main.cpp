@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
     bna::g_strAppDirPath = QtSingleApplication::applicationDirPath();
 
 #ifdef BUILD_DEVELOP
-    g_bAppDebug = true;
+    bna::g_bAppDebug = true;
     qDebug() << " Application information (DEBUG MODE):" << endl
              << "   DirPath: " << QtSingleApplication::applicationDirPath() << endl
              << "   FilePath" << QtSingleApplication::applicationFilePath() << endl
@@ -78,8 +78,8 @@ int main(int argc, char *argv[])
              << "   Version: " << QtSingleApplication::applicationVersion() << endl
              << "   Pid: " << QtSingleApplication::applicationPid() << endl
              << "   CurrentPath: " << QDir::currentPath() << endl
-             << "   TempPath: " << g_strAppTempPath << endl
-             << "   LogFile: " << g_debugTool.fileName() << endl
+             << "   TempPath: " << bna::g_strAppTempPath << endl
+             << "   LogFile: " << DebugTool::I().fileName() << endl
              << " ######################################################################" << endl
              << " Running..." << endl;
 #endif
