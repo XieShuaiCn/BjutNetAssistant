@@ -1,5 +1,5 @@
-#ifndef WNDSETTING_H
-#define WNDSETTING_H
+#ifndef BNA_GUI_WNDSETTING_H
+#define BNA_GUI_WNDSETTING_H
 
 #include "../BjutNetService/common.h"
 #include <QWidget>
@@ -12,6 +12,7 @@ class QTextEdit;
 class QCheckBox;
 class QLabel;
 class QComboBox;
+class QRadioButton;
 
 namespace bna {
 namespace gui {
@@ -31,6 +32,8 @@ public slots:
     void show();
     void on_chkAutoRun_clicked(bool checked);
     void on_chkDebug_clicked(bool checked);
+    void on_rdFlowGraphPie2D_clicked(bool checked);
+    void on_rdFlowGraphPie3D_clicked(bool checked);
     void on_btnApply_clicked();
     void on_btnApplyLogin_clicked();
     void updateAccountInfo(const QString &name, const QString &passwd, int type);
@@ -42,7 +45,12 @@ private:
     QCheckBox *m_chkAppDebug;
     QLabel *m_lblAutoRun;
 
-    QFrame *m_frmAccount;
+    HPanel *m_frmGUI;
+    HPanel *m_frmFlowGraph;
+    QRadioButton *m_rdFlowGraphPie2D;
+    QRadioButton *m_rdFlowGraphPie3D;
+
+    HPanel *m_frmAccount;
     QLabel *m_lblAccount;
     QLabel *m_lblPassword;
     QLabel *m_lblType;
@@ -59,4 +67,4 @@ private:
 }
 
 
-#endif // WNDSETTING_H
+#endif // BNA_GUI_WNDSETTING_H

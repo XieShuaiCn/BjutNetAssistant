@@ -1,5 +1,5 @@
-#ifndef WNDTRAYICON_H
-#define WNDTRAYICON_H
+#ifndef BNA_GUI_WNDTRAYICON_H
+#define BNA_GUI_WNDTRAYICON_H
 
 #include "../BjutNetService/common.h"
 #include <QUrl>
@@ -79,4 +79,4 @@ protected slots:
 
 Q_DECLARE_METATYPE(bna::gui::BjutWebItemInfo)
 
-#endif // WNDTRAYICON_H
+#endif // BNA_GUI_WNDTRAYICON_H

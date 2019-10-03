@@ -1,5 +1,5 @@
-#ifndef HPANEL_H
-#define HPANEL_H
+#ifndef BNA_GUI_HPANEL_H
+#define BNA_GUI_HPANEL_H
 
 #include "../BjutNetService/common.h"
 #include <QFrame>
@@ -40,4 +40,4 @@ inline void HPanel::setBorderStyle(double width, double round, QColor color)
     m_colorBorder = color;
 }
 }}
-#endif // HPANEL_H
+#endif // BNA_GUI_HPANEL_H

@@ -17,10 +17,11 @@ class BjutNet : public QObject
     Q_OBJECT
 public:
     BjutNet();
+    ~BjutNet();
     //加载账号信息
-    bool loadAccount(const QString path = QString());
+    bool loadAccount();
     //保存账号信息
-    bool saveAccount(const QString path = QString());
+    bool saveAccount();
     //同步账号信息
     void synchronizeAccount();
     //检查登录状态
@@ -88,6 +89,7 @@ private:
     bool m_bAutoLogin = true;
     WebLgn m_webLgn;
     WebJfself m_webJfself;
+    bool m_bNeedSaveAccount = false;
 };
 
 //////////////////////////// inline implementation ////////////////
@@ -103,6 +105,7 @@ inline void BjutNet::setAccount(const QString &account)
     m_strAccount = account;
     m_webLgn.setAccount(account);
     m_webJfself.setAccount(account);
+    m_bNeedSaveAccount = true;
 }
 
 inline QString BjutNet::getPassword() const
@@ -115,6 +118,7 @@ inline void BjutNet::setPassword(const QString &password)
     m_strPassword = password;
     m_webLgn.setPassword(password);
     m_webJfself.setPassword(password);
+    m_bNeedSaveAccount = true;
 }
 
 inline WebLgn::LoginType BjutNet::getLoginType() const
@@ -126,6 +130,7 @@ inline void BjutNet::setLoginType(const WebLgn::LoginType type)
 {
     m_loginType = type;
     m_webLgn.setLoginType(type);
+    m_bNeedSaveAccount = true;
 }
 
 inline void BjutNet::setLoginType(const int type)
@@ -134,6 +139,7 @@ inline void BjutNet::setLoginType(const int type)
     {
         m_loginType = WebLgn::LoginType(type);
         m_webLgn.setLoginType(m_loginType);
+        m_bNeedSaveAccount = true;
     }
 }
 
@@ -145,6 +151,7 @@ inline bool BjutNet::getAutoLogin()
 inline void BjutNet::setAutoLogin(bool autologin/* = true*/)
 {
     m_bAutoLogin = autologin;
+    m_bNeedSaveAccount = true;
 }
 
 inline WebLgn &BjutNet::getWebLgn()

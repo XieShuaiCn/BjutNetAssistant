@@ -8,6 +8,7 @@
 #include "WndMain.h"
 #include "WndSetting.h"
 #include "WndHelp.h"
+#include "UISetting.h"
 
 namespace bna {
 namespace gui {

@@ -1,5 +1,5 @@
-#ifndef HLABEL_H
-#define HLABEL_H
+#ifndef BNA_GUI_HLABEL_H
+#define BNA_GUI_HLABEL_H
 
 #include <QtWidgets/QLabel>
 class QMouseEvent;
@@ -24,4 +24,4 @@ protected:
 };
 }
 }
-#endif // HLABEL_H
+#endif // BNA_GUI_HLABEL_H

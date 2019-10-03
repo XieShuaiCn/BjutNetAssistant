@@ -102,7 +102,7 @@ void bna::gui::WndMain::initUI()
     m_lblShowMsg = new HLabel(this);
     m_txtMsg = new QTextEdit(this);
     m_txtMsg->setReadOnly(true);
-    m_txtMsg->setVisible(false);
+    m_txtMsg->setVisible(m_bShowLog);
     //版本号
     m_lblVersion = new HLabel(this);
     // feedback

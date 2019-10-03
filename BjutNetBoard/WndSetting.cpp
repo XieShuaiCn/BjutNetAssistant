@@ -5,13 +5,15 @@
 #include <QComboBox>
 #include <QPushButton>
 #include <QCheckBox>
-#include <QSettings>
+#include <QRadioButton>
 #include "../BjutNetService/BjutNet.h"
 #include "../BjutNetService/Setting.h"
+#include "WndMain.h"
 #include "WndTrayIcon.h"
+#include "UISetting.h"
 
-using namespace bna;
-using namespace bna::gui;
+namespace bna{
+namespace gui{
 
 WndSetting::WndSetting(WndTrayIcon *tray, QWidget *parent) :
     QWidget(parent),
@@ -20,6 +22,8 @@ WndSetting::WndSetting(WndTrayIcon *tray, QWidget *parent) :
     initUI();
     QWidget::setAttribute(Qt::WA_QuitOnClose,false);
     connect(m_chkAutoRun, &QCheckBox::clicked, this, &WndSetting::on_chkAutoRun_clicked);
+    connect(m_rdFlowGraphPie2D, &QRadioButton::clicked, this, &WndSetting::on_rdFlowGraphPie2D_clicked);
+    connect(m_rdFlowGraphPie3D, &QRadioButton::clicked, this, &WndSetting::on_rdFlowGraphPie3D_clicked);
     connect(m_btnApply, &QPushButton::clicked, this, &WndSetting::on_btnApply_clicked);
     connect(m_btnApplyLogin, &QPushButton::clicked, this, &WndSetting::on_btnApplyLogin_clicked);
 }
@@ -31,6 +35,8 @@ void WndSetting::show()
                m_tray->getBjutNet()->getPassword(),
                m_tray->getBjutNet()->getLoginType());
     m_chkAutoRun->setChecked(bna::core::Setting::getAutoRun());
+    m_rdFlowGraphPie2D->setChecked(UISetting::I().getFlowGraphType()==UISetting::FLOW_GRAPH_PIE_2D);
+    m_rdFlowGraphPie3D->setChecked(UISetting::I().getFlowGraphType()==UISetting::FLOW_GRAPH_PIE_3D);
 }
 
 void WndSetting::on_chkAutoRun_clicked(bool checked)
@@ -41,6 +47,24 @@ void WndSetting::on_chkAutoRun_clicked(bool checked)
 void WndSetting::on_chkDebug_clicked(bool checked)
 {
     bna::g_bAppDebug = checked;
+}
+
+void WndSetting::on_rdFlowGraphPie2D_clicked(bool checked)
+{
+    if(checked){
+        UISetting::I().setFlowGraphType(UISetting::FLOW_GRAPH_PIE_2D);
+        m_tray->getMainWindow()->setFlowGraphType(UISetting::FLOW_GRAPH_PIE_2D);
+        m_tray->getMainWindow()->update();
+    }
+}
+
+void WndSetting::on_rdFlowGraphPie3D_clicked(bool checked)
+{
+    if(checked){
+        UISetting::I().setFlowGraphType(UISetting::FLOW_GRAPH_PIE_3D);
+        m_tray->getMainWindow()->setFlowGraphType(UISetting::FLOW_GRAPH_PIE_3D);
+        m_tray->getMainWindow()->update();
+    }
 }
 
 void WndSetting::on_btnApply_clicked()
@@ -74,3 +98,5 @@ void WndSetting::updateAccountInfo(const QString &name, const QString &passwd, i
     m_editPassword->setText(passwd);
     m_cmbType->setCurrentIndex((1 <= type && type <= 3) ? type - 1 : 0);
 }
+
+}}

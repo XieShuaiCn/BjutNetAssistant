@@ -1,5 +1,5 @@
-#ifndef SERVICEBRIDGE_H
-#define SERVICEBRIDGE_H
+#ifndef BNA_GUI_SERVICEBRIDGE_H
+#define BNA_GUI_SERVICEBRIDGE_H
 
 #include <vector>
 #include <tuple>
@@ -164,4 +164,4 @@ inline bool ServiceBridge::sendSysStart()
 }
 
 }}
-#endif // SERVICEBRIDGE_H
+#endif // BNA_GUI_SERVICEBRIDGE_H

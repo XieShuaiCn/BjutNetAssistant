@@ -1,5 +1,5 @@
-#ifndef MAINWND_H
-#define MAINWND_H
+#ifndef BNA_GUI_MAINWND_H
+#define BNA_GUI_MAINWND_H
 
 #include "../BjutNetService/common.h"
 #include "Updater.h"
@@ -7,6 +7,7 @@
 #include "HPanel.h"
 #include "WndTrayIcon.h"
 #include "ServiceBridge.h"
+#include "UISetting.h"
 #include <QMutex>
 #include <tuple>
 #include <mutex>
@@ -49,6 +50,7 @@ public:
     WndMain(WndTrayIcon *tray, QWidget *parent = Q_NULLPTR);
     ~WndMain();
     void show();
+    void setFlowGraphType(UISetting::FlowGraphType type);
 
 signals:
     void showed();
@@ -171,7 +173,7 @@ private:
 
     //逻辑控制所需变量
     bool m_bShowDetail = false;
-    bool m_bShowMsg = false;
+    bool m_bShowLog = false;
     bool m_bDraw2DFlowPie = false;
     QMutex m_mtxFlowPieFlash;
     int m_nFlowPieTimerID = 0;
@@ -192,7 +194,12 @@ private:
     ServiceBridge m_guiServiceBridge;
 };
 
+inline void WndMain::setFlowGraphType(UISetting::FlowGraphType type)
+{
+    m_bDraw2DFlowPie = (type == UISetting::FLOW_GRAPH_PIE_2D);
+}
+
 }}
 
 
-#endif // MAINWND_H
+#endif // BNA_GUI_MAINWND_H

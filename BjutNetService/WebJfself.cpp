@@ -21,13 +21,14 @@ WebJfself::WebJfself()
 
 bool WebJfself::login()
 {
-    if(m_strAccount.size() == 0 || m_strPassword.size() == 0){
+    if(!isVaild()){
         if(g_bAppDebug)
         {
             emit debug_info(DebugTool::STATUS_FAIL, QString("Please set account before logining jfself."));
         }
         return false;
     }
+
     QString content;
     QByteArray data;
     int status = m_http.getUrlHtml(QUrl("https://jfself.bjut.edu.cn/nav_login"), content);
@@ -103,6 +104,9 @@ bool WebJfself::login()
 
 bool WebJfself::checkLogin()
 {
+    if(!isVaild()){
+        return false;
+    }
     const QByteArray htmlTag("html");
     QByteArray content;
     int status = m_http.downUrlData(QUrl(QString("https://jfself.bjut.edu.cn/refreshaccount?t=%1")
@@ -120,9 +124,14 @@ bool WebJfself::checkLogin()
 
 bool WebJfself::refreshAccount()
 {
+    if(!isVaild()){
+        return false;
+    }
     if(!checkLogin()){
         login();
-        if(!checkLogin()) return false;
+        if(!checkLogin()){
+            return false;
+        }
     }
     QByteArray content;
     QString strUrl = QString("https://jfself.bjut.edu.cn/refreshaccount?t=%1").arg(1.0 * qrand() / RAND_MAX);
@@ -205,9 +214,14 @@ bool WebJfself::refreshAccount()
 
 bool WebJfself::refreshOnline()
 {
+    if(!isVaild()){
+        return false;
+    }
     if(!checkLogin()){
         login();
-        if(!checkLogin()) return false;
+        if(!checkLogin()){
+            return false;
+        }
     }
     QString content;
     int status = m_http.getUrlHtml(QUrl(QString("https://jfself.bjut.edu.cn/nav_offLine")),
@@ -271,6 +285,9 @@ bool WebJfself::refreshOnline()
 //刷新套餐
 bool WebJfself::refreshBookService()
 {
+    if(!isVaild()){
+        return false;
+    }
     m_lstBookService.clear();
     m_strCurrentBookService.clear();
     if(!checkLogin()){
@@ -338,6 +355,9 @@ bool WebJfself::refreshBookService()
 //预约套餐
 bool WebJfself::submitBookService(int id)
 {
+    if(!isVaild()){
+        return false;
+    }
     if(!checkLogin()){
         login();
         if(!checkLogin()) return false;
@@ -356,6 +376,9 @@ bool WebJfself::submitBookService(int id)
 
 bool WebJfself::toOffline(int id)
 {
+    if(!isVaild()){
+        return false;
+    }
     if(!checkLogin()){
         login();
         if(!checkLogin()) return false;

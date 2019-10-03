@@ -28,6 +28,7 @@
 #include "WndTrayIcon.h"
 #include "WndHelp.h"
 #include "Utility.h"
+#include "UISetting.h"
 
 using namespace bna::core;
 
@@ -41,6 +42,14 @@ WndMain::WndMain(WndTrayIcon *tray, QWidget *parent) :
     m_bNeedUpdate(false),
     m_tray(tray)
 {
+    // read configure
+    m_bDraw2DFlowPie = (UISetting::I().getFlowGraphType() == UISetting::FLOW_GRAPH_PIE_2D);
+    if(UISetting::I().getFlowGraphType() == UISetting::FLOW_GRAPH_DEFALUT){
+        UISetting::I().setFlowGraphType(UISetting::FLOW_GRAPH_PIE_3D);
+    }
+    m_bShowDetail = UISetting::I().getShowDetail();
+    m_bShowLog = UISetting::I().getShowLog();
+    // init const var
     m_szFrameSimple.setWidth(575);
     m_szFrameSimple.setHeight(195);
     m_szFrameAdvanced.setWidth(575);
@@ -50,6 +59,7 @@ WndMain::WndMain(WndTrayIcon *tray, QWidget *parent) :
     m_nFlowGraphThickness = 10;
     tray->setMainWindow(this);
     m_coreBjutNet = tray->getBjutNet();
+
     //初始化界面
     initUI();
     //bjut web
@@ -98,6 +108,15 @@ WndMain::WndMain(WndTrayIcon *tray, QWidget *parent) :
     }
     //光标
     m_txtMsg->setFocus();
+    // change frame size
+    if(m_bShowDetail){
+        m_bShowDetail = !m_bShowDetail;
+        on_btnDetail_clicked();
+        if(m_bShowLog){
+            m_bShowLog = !m_bShowLog;
+            on_lblShowMsg_clicked();
+        }
+    }
 }
 
 WndMain::~WndMain()
@@ -219,7 +238,7 @@ void WndMain::paintEvent(QPaintEvent *event)
         QPolygon polyTriangle(3);
         polyTriangle.setPoint(0, m_lblShowMsg->x()-m_lblShowMsg->height()+4,
                                  m_lblShowMsg->y()+4);
-        if(m_bShowMsg){
+        if(m_bShowLog){
             polyTriangle.setPoint(1, polyTriangle.at(0).x()+m_lblShowMsg->height()-8,
                                      polyTriangle.at(0).y());
             polyTriangle.setPoint(2, polyTriangle.at(0).x()+m_lblShowMsg->height()/2-4,
@@ -489,7 +508,7 @@ void WndMain::on_btnDetail_clicked()
     m_bShowDetail = !m_bShowDetail;
     if(m_bShowDetail)
     {
-        this->setFixedSize(m_bShowMsg ? m_szFrameShowMsg : m_szFrameAdvanced);
+        this->setFixedSize(m_bShowLog ? m_szFrameShowMsg : m_szFrameAdvanced);
         m_btnDetail->setText(QString("<<简洁"));
         m_frmOnline->setVisible(true);
         m_frmOperation->setVisible(true);
@@ -503,12 +522,13 @@ void WndMain::on_btnDetail_clicked()
         m_frmOperation->setVisible(false);
         m_frmBjutWeb->setVisible(false);
     }
+    UISetting::I().setShowDetail(m_bShowDetail);
 }
 
 void WndMain::on_lblShowMsg_clicked()
 {
-    m_bShowMsg = !m_bShowMsg;
-    if(m_bShowMsg)
+    m_bShowLog = !m_bShowLog;
+    if(m_bShowLog)
     {
         this->setFixedSize(m_szFrameShowMsg);
     }
@@ -516,7 +536,8 @@ void WndMain::on_lblShowMsg_clicked()
     {
         this->setFixedSize(m_bShowDetail ? m_szFrameAdvanced : m_szFrameSimple);
     }
-    this->m_txtMsg->setVisible(m_bShowMsg);
+    this->m_txtMsg->setVisible(m_bShowLog);
+    UISetting::I().setShowLog(m_bShowLog);
 }
 
 void WndMain::on_btnLogout_clicked()

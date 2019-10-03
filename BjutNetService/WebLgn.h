@@ -24,6 +24,8 @@ public:
     };
     //构造函数
     WebLgn();
+    // if the account is vaild.
+    bool isVaild() const;
     //登录网关
     bool login();
     bool loginOnLAN(LoginType type = AutoLoginType);
@@ -90,6 +92,11 @@ private:
 };
 
 /////////////////////// inline implementation /////////////////////////
+
+inline bool WebLgn::isVaild() const
+{
+    return m_strAccount.size() && m_strPassword.size();
+}
 
 inline int WebLgn::getTime() const
 {

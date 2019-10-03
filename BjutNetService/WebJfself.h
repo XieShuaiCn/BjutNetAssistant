@@ -28,6 +28,8 @@ class WebJfself : public QObject
     Q_OBJECT
 public:
     WebJfself();
+    // if the account is vaild.
+    bool isVaild() const;
     //登录
     bool login();
     //检查登录状态
@@ -81,6 +83,13 @@ private:
     QString m_strCurrentBookService;
 };
 
+////////////////////////////// inline implements ////////////////////////////
+
+inline bool WebJfself::isVaild() const
+{
+    return m_strAccount.size() && m_strPassword.size();
+}
+
 inline const QString &WebJfself::getAccount() const
 {
     return m_strAccount;
@@ -97,6 +106,7 @@ inline void WebJfself::setPassword(const QString &password)
 {
     m_strPassword = password;
 }
+
 }}
 
 Q_DECLARE_METATYPE(bna::core::OnlineClientInfo)

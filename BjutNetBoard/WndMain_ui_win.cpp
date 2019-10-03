@@ -29,11 +29,6 @@ void bna::gui::WndMain::layoutUI()
     font_s115.setPointSizeF(11.5);
     font_s120.setPointSize(12);
     font_s130.setPointSize(13);
-    //窗口
-    this->setObjectName(QStringLiteral("WndMain"));
-    this->setWindowIcon(QIcon(":/icon/logo.ico"));
-    //设置固定窗口大小
-    this->setFixedSize(m_szFrameSimple);
     //窗口控件
 
     //状态图

@@ -18,52 +18,19 @@ BjutNet::BjutNet():
     connect(this, &BjutNet::debug_info, DebugTool::getPointer(), &DebugTool::writeString);
 }
 
-
-bool BjutNet::loadAccount(const QString path)
+BjutNet::~BjutNet()
 {
-    QFileInfo *fi;
-    if(path.length() == 0)
-    {
-        QString conf_file_home = (QDir::homePath() + "/.bjutnet/account.json");
-        fi = new QFileInfo(conf_file_home);
-        if(!fi->exists())
-        {
-#ifndef Q_OS_WIN
-            delete fi;
-            QString conf_file_etc = "/etc/bjutnet.d/account.json";
-            fi = new QFileInfo(conf_file_etc);
-            if(!fi->exists())
-            {
-#endif
-                delete fi;
-                QString conf_file_model = (QDir::currentPath() + "/account.json");
-                fi = new QFileInfo(conf_file_model);
-                if(!fi->exists())
-                {
-                    emit message(QDateTime::currentDateTime(), "cannot find any configure files.\n");
-                    delete fi;
-                    return false;
-                }
-#ifndef Q_OS_WIN
-            }
-#endif
-        }
+    if(m_bNeedSaveAccount){
+        saveAccount();
     }
-    else
-    {
-        fi = new QFileInfo(path);
-    }
-    if(!fi->exists())
-    {
-        emit message(QDateTime::currentDateTime(), "cannot find the configure file("+fi->fileName()+").\n");
-        delete fi;
-        return false;
-    }
-    if(fi->isReadable())
-    {
-        QFile f(fi->filePath());
-        delete fi;
-        f.open(QFile::ReadOnly);
+}
+
+
+bool BjutNet::loadAccount()
+{
+    QString conf_file_home = QDir::home().absoluteFilePath(".bjutnet/account.json");
+    QFile f(conf_file_home);
+    if(f.exists() && (f.isOpen() || f.open(QFile::ReadOnly))){
         QJsonParseError jp_err;
         const QJsonDocument jd = QJsonDocument::fromJson(f.readAll(), &jp_err);
         f.close();
@@ -106,6 +73,7 @@ bool BjutNet::loadAccount(const QString path)
             if(m_bAutoLogin){
                 start_monitor();
             }
+            m_bNeedSaveAccount = false;
             return true;
         }
         else{
@@ -121,39 +89,16 @@ bool BjutNet::loadAccount(const QString path)
     return false;
 }
 
-bool BjutNet::saveAccount(const QString path)
+bool BjutNet::saveAccount()
 {
-    QFile f(path);
-    QDir d;
-    if(path.length() == 0)
+    QString conf_file_home = QDir::home().absoluteFilePath(".bjutnet/account.json");
+    QFile f(conf_file_home);
+    if(!f.exists())
     {
-
-        QString conf_file_home = (QDir::homePath() + "/.bjutnet/account.json");
-        f.setFileName(conf_file_home);
-        if(!f.exists())
-        {
-#ifndef Q_OS_WIN
-            QString conf_file_etc = "/etc/bjutnet.d/account.json";
-            f.setFileName(conf_file_etc);
-            //etc没有写入权限
-            if(!f.exists() || !f.open(QFile::WriteOnly) || !f.isWritable())
-            {
-#endif
-                QString conf_file_model = (QDir::currentPath() + "/account.json");
-                f.setFileName(conf_file_model);
-                if(!f.exists() || !f.open(QFile::WriteOnly) || !f.isWritable())
-                {
-                    //不存在，则创建目录
-                    d.setPath(QDir::homePath());
-                    d.mkdir(".bjutnet");
-                    f.setFileName(conf_file_home);
-                }
-#ifndef Q_OS_WIN
-            }
-#endif
-        }
+        // create path, if not exists
+        QDir::home().mkdir(".bjutnet");
     }
-    if(f.isOpen() || f.open(QFile::WriteOnly))//文件已打开或打开成功
+    if(f.isOpen() || f.open(QFile::WriteOnly))//open file
     {
         f.setPermissions(QFile::ReadOwner|QFile::WriteOwner);
         QJsonObject jo;
@@ -171,6 +116,7 @@ bool BjutNet::saveAccount(const QString path)
         {
             emit debug_info(DebugTool::STATUS_SUCCESS, QString("Save account json:") + f.fileName(), true, true);
         }
+        m_bNeedSaveAccount = false;
         return true;
     }
     else if(g_bAppDebug)

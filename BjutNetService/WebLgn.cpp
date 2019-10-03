@@ -28,7 +28,7 @@ WebLgn::WebLgn() :
 
 bool WebLgn::login()
 {
-    if(m_strAccount.length() == 0)
+    if(!isVaild())
     {
         if(g_bAppDebug)
         {
@@ -37,6 +37,7 @@ bool WebLgn::login()
         emit message(QDateTime::currentDateTime(), QString("没有设置账户信息。"));
         return false;
     }
+
     QString test =  m_http.getUrlHtml(QUrl("http://lgn.bjut.edu.cn"));
     if(test.size() == 0)
     {
@@ -64,6 +65,16 @@ bool WebLgn::login()
 
 bool WebLgn::loginOnLAN(LoginType type)
 {
+    if(!isVaild())
+    {
+        if(g_bAppDebug)
+        {
+            emit debug_info(DebugTool::STATUS_FAIL, QString("Please set account before logining bjut net."));
+        }
+        emit message(QDateTime::currentDateTime(), QString("没有设置账户信息。"));
+        return false;
+    }
+
     QString url;
     int v46s = 0;
     bool ipv4_login = false;
@@ -181,6 +192,16 @@ bool WebLgn::loginOnLAN(LoginType type)
 
 bool WebLgn::loginOnWIFI(LoginType type)
 {
+    if(!isVaild())
+    {
+        if(g_bAppDebug)
+        {
+            emit debug_info(DebugTool::STATUS_FAIL, QString("Please set account before logining bjut net."));
+        }
+        emit message(QDateTime::currentDateTime(), QString("没有设置账户信息。"));
+        return false;
+    }
+
     QString url;
     bool ipv6_succ = true;
 

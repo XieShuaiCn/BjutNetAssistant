@@ -1,5 +1,5 @@
-#ifndef UPDATER_H
-#define UPDATER_H
+#ifndef BNA_GUI_UPDATER_H
+#define BNA_GUI_UPDATER_H
 
 #include "../BjutNetService/common.h"
 #include "../BjutNetService/HttpClient.h"
@@ -40,4 +40,4 @@ protected:
     const QString m_strOssHostName = "http://bjutnetlogin.oss-cn-beijing.aliyuncs.com/";
 };
 }}
-#endif // UPDATER_H
+#endif // BNA_GUI_UPDATER_H
