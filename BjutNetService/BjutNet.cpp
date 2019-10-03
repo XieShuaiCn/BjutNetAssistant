@@ -187,31 +187,37 @@ void BjutNet::synchronizeAccount()
     m_webJfself.setPassword(m_strPassword);
 }
 
-#define RESTART_TIMER_LGN   restartTimer(m_nTimerCheckLgn, m_nTimerCheckLgnInterval, Qt::VeryCoarseTimer)
+#define RESTART_TIMER_LGN(interval)           \
+    if((interval) != m_nTimerCheckLgnInterval) {      \
+        m_nTimerCheckLgnInterval = (interval);         \
+        restartTimer(m_nTimerCheckLgn, m_nTimerCheckLgnInterval, Qt::VeryCoarseTimer); \
+    }
 
 void BjutNet::checkLgn()
 {
-    static int sleepsec = 1;
+    static bool bLastSucc = false;
+    static int nOfflined = 0;
     static QDateTime lastOfflined = QDateTime::currentDateTime();
     static QDateTime lastOnlined = QDateTime::currentDateTime();
-    static int nOfflined = 0;
-    bool suc = m_webLgn.checkLoginStatus();
+    bool succ1 = m_webLgn.checkLoginStatus();// logined
+    int sleeptime = 1000;
+
     QDateTime time = QDateTime::currentDateTime();
-    if (suc)
+    if (succ1)
     {
         lastOnlined = time;
         //首次登录时或间隔一段时间输出信息
-        if(m_nTimerCheckLgnInterval != 1000*30){//30s
-            m_nTimerCheckLgnInterval = (1000*30);
-            RESTART_TIMER_LGN;
+        if(!bLastSucc){
+            RESTART_TIMER_LGN(1000*2)
+        }
+        else{
+            sleeptime = std::min(1000*30, m_nTimerCheckLgnInterval*2);
+            RESTART_TIMER_LGN(sleeptime)
         }
     }
     else if(!m_webLgn.checkCampusNet())//非校园网
     {
-        if(m_nTimerCheckLgnInterval != 1000*30){//30s
-            m_nTimerCheckLgnInterval = 1000*30;
-            RESTART_TIMER_LGN;
-        }
+        RESTART_TIMER_LGN(1000*30)//30s
     }
     else//校园网未登录
     {
@@ -223,9 +229,12 @@ void BjutNet::checkLgn()
             message(QDateTime::currentDateTime(), QString("offline in short time. %1").arg(nOfflined));
 #endif
         }
+        else {
+            nOfflined = 1;
+        }
+        lastOfflined = time;
 
-        else if(nOfflined > 3)
-        {
+        if(nOfflined > 3) {
             nOfflined = 0;
             for(int i = 0; i< 5; ++i)
             {
@@ -248,28 +257,18 @@ void BjutNet::checkLgn()
                 }
             }
         }
-        else {
-            nOfflined = 0;
-        }
-        lastOfflined = time;
-        //登录
-        suc = m_webLgn.login();
-        time = QDateTime::currentDateTime();
-        if (suc)
+        // log in
+        if (m_webLgn.login())
         {
-            sleepsec = 1;
+            sleeptime = 1000;
         }
         else
         {
-            //this->sleep(sleepsec);
-            if(sleepsec < 1024)//最大17分钟试一次
-            {
-                sleepsec *= 2;
-            }
+            sleeptime = std::min(m_nTimerCheckLgnInterval*2, 1024*1000);//max 17 mins
         }
-        m_nTimerCheckLgnInterval = (sleepsec * 1000);
-        RESTART_TIMER_LGN;
+        RESTART_TIMER_LGN(sleeptime);
     }
+    bLastSucc = succ1;
 }
 #undef RESTART_TIMER_LGN
 #define RESTART_TIMER_ONLINE restartTimer(m_nTimerCheckOnline, m_nTimerCheckOnlineInterval, Qt::VeryCoarseTimer)
