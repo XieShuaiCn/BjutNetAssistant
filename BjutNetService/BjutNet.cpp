@@ -155,6 +155,7 @@ bool BjutNet::saveAccount(const QString path)
     }
     if(f.isOpen() || f.open(QFile::WriteOnly))//文件已打开或打开成功
     {
+        f.setPermissions(QFile::ReadOwner|QFile::WriteOwner);
         QJsonObject jo;
         jo.insert("version", 2);
         jo.insert("account", m_strAccount);
