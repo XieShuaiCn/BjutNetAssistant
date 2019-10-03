@@ -6,6 +6,8 @@
 #include "WebJfself.h"
 #include <QThread>
 #include <QTimer>
+#include <QDateTime>
+#include <QMutex>
 
 namespace bna{
 namespace core {
@@ -61,6 +63,10 @@ signals:
     // 调试信息
     void debug_info(DebugTool::DebugStatus status, const QString &content, bool with_time = true, bool end_line = true);
 
+protected slots:
+    void online_status_changed(const QVariant &info);
+    void login_status_changed(bool login, int time, int flow, int fee);
+
 protected:
     //
     void timerEvent(QTimerEvent *event);
@@ -69,8 +75,12 @@ private:
     QNetworkConfigurationManager m_netCfgMan;
     int m_nTimerCheckLgn;
     int m_nTimerCheckLgnInterval;
+    QDateTime m_dtLastCheckLgn;
+    QMutex m_mtxCheckLgn;
     int m_nTimerCheckOnline;
     int m_nTimerCheckOnlineInterval;
+    QDateTime m_dtLastCheckOnline;
+    QMutex m_mtxCheckOnline;
     //用户配置信息
     QString m_strAccount;
     QString m_strPassword;
@@ -146,5 +156,6 @@ inline WebJfself &BjutNet::getWebJfself()
 {
     return m_webJfself;
 }
+
 }}
 #endif // BJUTNET_H

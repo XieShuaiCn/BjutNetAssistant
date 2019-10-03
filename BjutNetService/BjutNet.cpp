@@ -1,6 +1,7 @@
 #include "BjutNet.h"
 #include <QFile>
 #include <QDir>
+#include <QMutexLocker>
 #include <QCoreApplication>
 #include <QElapsedTimer>
 #include <QJsonObject>
@@ -195,6 +196,15 @@ void BjutNet::synchronizeAccount()
 
 void BjutNet::checkLgn()
 {
+    if(!m_mtxCheckLgn.tryLock()){
+        return;
+    }
+    static QDateTime lastCheckTime;
+    if(lastCheckTime.isValid() && lastCheckTime.msecsTo(QDateTime::currentDateTime()) < 1000){
+        m_mtxCheckLgn.unlock();
+        return;
+    }
+    //
     static bool bLastSucc = false;
     static int nOfflined = 0;
     static QDateTime lastOfflined = QDateTime::currentDateTime();
@@ -269,12 +279,22 @@ void BjutNet::checkLgn()
         RESTART_TIMER_LGN(sleeptime);
     }
     bLastSucc = succ1;
+    lastCheckTime = QDateTime::currentDateTime();
+    m_mtxCheckLgn.unlock();
 }
 #undef RESTART_TIMER_LGN
 #define RESTART_TIMER_ONLINE restartTimer(m_nTimerCheckOnline, m_nTimerCheckOnlineInterval, Qt::VeryCoarseTimer)
 
 void BjutNet::checkOnline()
 {
+    if(!m_mtxCheckOnline.tryLock()){
+        return;
+    }
+    static QDateTime lastCheckTime;
+    if(lastCheckTime.isValid() && lastCheckTime.msecsTo(QDateTime::currentDateTime()) < 1000){
+        m_mtxCheckOnline.unlock();
+        return;
+    }
     m_webJfself.refreshAccount();
     if(m_webJfself.refreshOnline())
     {
@@ -290,8 +310,33 @@ void BjutNet::checkOnline()
             RESTART_TIMER_ONLINE;
         }
     }
+    lastCheckTime = QDateTime::currentDateTime();
+    m_mtxCheckOnline.unlock();
 }
 #undef RESTART_TIMER_ONLINE
+
+void BjutNet::online_status_changed(const QVariant &info)
+{
+    Q_UNUSED(info);
+    static QVariant bLastStatus;
+    if(bLastStatus != info){
+        bLastStatus.setValue<OnlineClientInfo>(info.value<OnlineClientInfo>());
+        checkLgn();
+    }
+}
+
+void BjutNet::login_status_changed(bool login, int time, int flow, int fee)
+{
+    Q_UNUSED(login);
+    Q_UNUSED(time);
+    Q_UNUSED(flow);
+    Q_UNUSED(fee);
+    static bool bLastStatus = false;
+    if(bLastStatus != login){
+        bLastStatus = login;
+        checkOnline();
+    }
+}
 
 bool BjutNet::start_monitor()
 {
@@ -300,6 +345,8 @@ bool BjutNet::start_monitor()
     m_nTimerCheckOnlineInterval = 100;
     restartTimer(m_nTimerCheckOnline, m_nTimerCheckOnlineInterval, Qt::VeryCoarseTimer);
     restartTimer(m_nTimerCheckLgn, m_nTimerCheckLgnInterval, Qt::VeryCoarseTimer);
+    connect(&m_webLgn, &WebLgn::status_update, this, &BjutNet::login_status_changed);
+    connect(&m_webJfself, &WebJfself::online_status_update, this, &BjutNet::online_status_changed);
     // The moniter of physical net line
     connect(&m_netCfgMan, &QNetworkConfigurationManager::onlineStateChanged, &m_webLgn, &WebLgn::network_status_change);
     return true;
@@ -308,8 +355,16 @@ bool BjutNet::start_monitor()
 bool BjutNet::stop_monitor()
 {
     disconnect(&m_netCfgMan, &QNetworkConfigurationManager::onlineStateChanged, &m_webLgn, &WebLgn::network_status_change);
-    if(m_nTimerCheckLgn>0){ killTimer(m_nTimerCheckLgn);}
-    if(m_nTimerCheckOnline>0){ killTimer(m_nTimerCheckOnline);}
+    disconnect(&m_webLgn, &WebLgn::status_update, this, &BjutNet::login_status_changed);
+    disconnect(&m_webJfself, &WebJfself::online_status_update, this, &BjutNet::online_status_changed);
+    if(m_nTimerCheckLgn>0){
+        killTimer(m_nTimerCheckLgn);
+        m_nTimerCheckLgn=0;
+    }
+    if(m_nTimerCheckOnline>0){
+        killTimer(m_nTimerCheckOnline);
+        m_nTimerCheckOnline = 0;
+    }
     return true;
 }
 

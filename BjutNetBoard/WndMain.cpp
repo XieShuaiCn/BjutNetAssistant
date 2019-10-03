@@ -458,10 +458,10 @@ void WndMain::on_btnRefresh_clicked()
     }
     //更新页面显示的流量状态
     //on_txtMsg_Message(QDateTime::currentDateTime(), "检查网络状态");
-    bool loged = lgn.checkLoginStatus();
+    bool logined = lgn.checkLoginStatus();
     //on_account_status(lgn.getTime() > 0, lgn.getTime(), lgn.getFlow(), lgn.getFee());
     // 没有登陆外网时，连不上服务器，不检查更新
-    if(loged){
+    if(logined){
         //on_txtMsg_Message(QDateTime::currentDateTime(), "检查版本更新");
         m_updater.checkUpdate();
         if(m_updater.needUpdate()){
