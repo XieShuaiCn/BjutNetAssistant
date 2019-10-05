@@ -345,7 +345,7 @@ void WndMain::drawFlowPie(QPainter &painter, const QBrush &brushPie, double dFlo
         // 3D chart
         QPointF posCenter1 = m_rectFlowGraphTop.center();
         QPointF posCenter2 = m_rectFlowGraphBottom.center();
-        if(dFlowRate > 0. && dFlowRate < 0.999)
+        if(dFlowRate >= 0. && dFlowRate < 0.999)
         {
             QPolygonF polySide(6);
             polySide[0] = QPointF(posCenter2.x()-m_rectFlowGraphBottom.width()*0.5*sin(dFlowRate*BNA_PI),
@@ -1019,7 +1019,7 @@ void WndMain::updateFlowUsed(double used, double total)
             }
             m_dFlowPieDegree = 0.;
             m_dFlowPieDegreeMax = used / total;
-            m_dFlowPieDegreeSpeed = std::min(std::max(m_dFlowPieDegreeMax / 10., 0.025), 0.1);
+            m_dFlowPieDegreeSpeed = std::min(std::max(m_dFlowPieDegreeMax / 20., 0.02), 0.1);
             m_nFlowPieTimerID = startTimer(50, Qt::PreciseTimer);
             m_bFlowPieFlashEnter = (m_nFlowPieTimerID > 0);
             this->update(m_rectFlowGraph);
