@@ -22,15 +22,23 @@ WndTrayIcon::WndTrayIcon(QApplication *app, core::BjutNet *core_bjut, QObject *p
     m_wndHelp(Q_NULLPTR)
 {
     if(m_vecBjutWeb.empty()){
-        int id = 1;
-        m_vecBjutWeb.append({id++, QString("学校首页"), QUrl("http://www.bjut.edu.cn/"), 0});
-        m_vecBjutWeb.append({id++, QString("综合服务门户"), QUrl("https://my.bjut.edu.cn/"), 0});
-        m_vecBjutWeb.append({id++, QString("自助服务系统"), QUrl("https://jfself.bjut.edu.cn/"), 0});
-        m_vecBjutWeb.append({id++, QString("软件正版化平台"), QUrl("http://ca.bjut.edu.cn/"), 0});
-        m_vecBjutWeb.append({id++, QString("邮件系统"), QUrl("https://mail.bjut.edu.cn/"), 0});
-        m_vecBjutWeb.append({id++, QString("网关登陆页面"), QUrl("http://lgn.bjut.edu.cn/"), 0});
-        m_vecBjutWeb.append({id++, QString("研究生管理信息系统"), QUrl("http://webrecdoc.bjut.edu.cn/pyxx/"), 0});
-        m_vecBjutWeb.append({id++, QString("财务信息门户"), QUrl("http://172.27.12.88/WFManager/homesso.jsp"), 0});
+        m_vecBjutWeb.append({1, QString("学校首页"), QUrl("http://www.bjut.edu.cn/"), 0});
+        m_vecBjutWeb.append({2, QString("综合服务门户"), QUrl("https://my.bjut.edu.cn/"), 0});
+        m_vecBjutWeb.append({3, QString("自助服务系统"), QUrl("https://jfself.bjut.edu.cn/"), 0});
+        m_vecBjutWeb.append({4, QString("软件正版化平台"), QUrl("http://ca.bjut.edu.cn/"), 0});
+        m_vecBjutWeb.append({5, QString("邮件系统"), QUrl("https://mail.bjut.edu.cn/"), 0});
+        m_vecBjutWeb.append({6, QString("网关登陆页面"), QUrl("http://lgn.bjut.edu.cn/"), 0});
+        m_vecBjutWeb.append({7, QString("研究生管理信息系统"), QUrl("http://webrecdoc.bjut.edu.cn/pyxx/"), 0});
+        m_vecBjutWeb.append({8, QString("财务信息门户"), QUrl("http://172.27.12.88/WFManager/homesso.jsp"), 0});
+
+        UISetting &uisettings = UISetting::getInstance();
+        for(BjutWebItemInfo &t : m_vecBjutWeb){
+            t.frequency = uisettings.getBjutWebFrequency(t.id);
+        }
+        std::stable_sort(m_vecBjutWeb.begin(), m_vecBjutWeb.end(),
+                         [](const BjutWebItemInfo &a, const BjutWebItemInfo &b){
+            return a.frequency > b.frequency;
+        });
     }
 
     this->setToolTip("北工大校园网助手");
@@ -201,6 +209,7 @@ void WndTrayIcon::increaseBjutWebFrequency(int id, long freq_inc)
     for(auto &w : m_vecBjutWeb){
         if(w.id == id){
             w.frequency += freq_inc;
+            UISetting::I().setBjutWebFrequency(id, w.frequency);
             break;
         }
     }
@@ -215,6 +224,7 @@ void WndTrayIcon::updateBjutWebFrequency(int id, long frequency)
     for(auto &w : m_vecBjutWeb){
         if(w.id == id){
             w.frequency = frequency;
+            UISetting::I().setBjutWebFrequency(id, frequency);
             break;
         }
     }

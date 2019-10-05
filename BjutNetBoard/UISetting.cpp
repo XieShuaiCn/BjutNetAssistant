@@ -56,6 +56,17 @@ bool UISetting::load()
             m_typeFlowGraph = FLOW_GRAPH_DEFALUT;
         }
     }
+    int nBjutWebSize = gui_settings.beginReadArray("BjutWebFrequency");
+    for(int i = 0; i < nBjutWebSize; ++i){
+        gui_settings.setArrayIndex(i);
+        bool ok;
+        int id =gui_settings.value("id").toInt(&ok);
+        int freq = gui_settings.value("freq").toInt();
+        if(ok){
+            m_mapBjutWebFrequency.insert(id, freq);
+        }
+    }
+    gui_settings.endArray();
     return true;
 }
 
@@ -75,6 +86,15 @@ bool UISetting::save()
     gui_settings.setValue("ShowDetail", QVariant(m_bShowDetail));
     gui_settings.setValue("ShowLog", QVariant(m_bShowLog));
     gui_settings.setValue("FlowGraphType", QVariant(int(m_typeFlowGraph)));
+    gui_settings.beginWriteArray("BjutWebFrequency", m_mapBjutWebFrequency.size());
+    int nBjutWebIdx = 0;
+    for(auto it = m_mapBjutWebFrequency.cbegin(), itend = m_mapBjutWebFrequency.cend();
+        it != itend; ++it){
+        gui_settings.setArrayIndex(nBjutWebIdx++);
+        gui_settings.setValue("id", it.key());
+        gui_settings.setValue("freq", it.value());
+    }
+    gui_settings.endArray();
     gui_settings.sync();
     return true;
 }

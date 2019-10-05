@@ -2,6 +2,7 @@
 #define BNA_GUI_UISETTING_H
 
 #include "../BjutNetService/common.h"
+#include <QMap>
 
 namespace bna {
 namespace gui {
@@ -35,10 +36,15 @@ public:
     void setShowLog(bool show);
     bool getShowLog() const;
 
+    void setBjutWebFrequency(int id, int freq);
+    const QMap<int, int> &getBjutWebFrequency() const;
+    int getBjutWebFrequency(int id) const;
+
 private:
     FlowGraphType m_typeFlowGraph;
     bool m_bShowDetail;
     bool m_bShowLog;
+    QMap<int, int> m_mapBjutWebFrequency;
 };
 
 ////////////////////// inline implements /////////////////////////
@@ -82,6 +88,22 @@ inline bool UISetting::getShowLog() const
 {
     return m_bShowLog;
 }
+
+inline void UISetting::setBjutWebFrequency(int id, int freq)
+{
+    m_mapBjutWebFrequency[id] = freq;
+}
+
+inline const QMap<int, int> &UISetting::getBjutWebFrequency() const
+{
+    return m_mapBjutWebFrequency;
+}
+
+inline int UISetting::getBjutWebFrequency(int id) const
+{
+    return m_mapBjutWebFrequency.value(id, 0);
+}
+
 }
 }
 
