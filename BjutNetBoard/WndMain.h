@@ -49,7 +49,6 @@ class WndMain : public QWidget
 public:
     WndMain(WndTrayIcon *tray, QWidget *parent = Q_NULLPTR);
     ~WndMain();
-    void show();
     void setFlowGraphType(UISetting::FlowGraphType type);
 
 signals:

@@ -38,15 +38,25 @@ bool UISetting::load()
     QSettings gui_settings(conf_file, QSettings::IniFormat);
 #endif
     QVariant var;
-    var = gui_settings.value("ShowDetail", QVariant(false));
+    var = gui_settings.value("InnerVersion", 0);
+    if(var.canConvert(QVariant::Int)){
+        int innerver = var.toInt();
+        m_bNewInstall = (innerver == 0);
+        m_bNewUpdate = (innerver != BNA_INNER_VERSION);
+    }
+    else{
+        m_bNewInstall = true;
+        m_bNewUpdate = false;
+    }
+    var = gui_settings.value("ShowDetail", false);
     if(var.canConvert(QVariant::Bool)){
         m_bShowDetail = var.toBool();
     }
-    var = gui_settings.value("ShowLog", QVariant(false));
+    var = gui_settings.value("ShowLog", false);
     if(var.canConvert(QVariant::Bool)){
         m_bShowLog = var.toBool();
     }
-    var = gui_settings.value("FlowGraphType", QVariant(0));
+    var = gui_settings.value("FlowGraphType", 0);
     if(var.canConvert(QVariant::Int)){
         int v = var.toInt();
         if(v >= FLOW_GRAPH_DEFALUT && v < FLOW_GRAPH_TYPE_SIZE){
@@ -83,9 +93,13 @@ bool UISetting::save()
     }
     QSettings gui_settings(conf_file, QSettings::IniFormat);
 #endif
-    gui_settings.setValue("ShowDetail", QVariant(m_bShowDetail));
-    gui_settings.setValue("ShowLog", QVariant(m_bShowLog));
-    gui_settings.setValue("FlowGraphType", QVariant(int(m_typeFlowGraph)));
+    if(m_bNewInstall || m_bNewUpdate){
+        gui_settings.setValue("Version", BNA_VERSION);
+        gui_settings.setValue("InnerVersion", BNA_INNER_VERSION);
+    }
+    gui_settings.setValue("ShowDetail", m_bShowDetail);
+    gui_settings.setValue("ShowLog", m_bShowLog);
+    gui_settings.setValue("FlowGraphType", int(m_typeFlowGraph));
     gui_settings.beginWriteArray("BjutWebFrequency", m_mapBjutWebFrequency.size());
     int nBjutWebIdx = 0;
     for(auto it = m_mapBjutWebFrequency.cbegin(), itend = m_mapBjutWebFrequency.cend();

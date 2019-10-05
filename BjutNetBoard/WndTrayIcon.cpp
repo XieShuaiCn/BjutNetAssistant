@@ -160,6 +160,8 @@ void WndTrayIcon::cmdShowMainWnd()
         m_wndMain = new WndMain(this, nullptr);
     }
     m_wndMain->show();
+    m_wndMain->activateWindow();
+    m_wndMain->raise();
 }
 
 void WndTrayIcon::cmdShowSettingWnd()
@@ -169,6 +171,8 @@ void WndTrayIcon::cmdShowSettingWnd()
         m_wndSetting = new WndSetting(this, nullptr);
     }
     m_wndSetting->show();
+    m_wndSetting->activateWindow();
+    m_wndSetting->raise();
 }
 
 void WndTrayIcon::cmdShowHelpWnd()
@@ -176,7 +180,12 @@ void WndTrayIcon::cmdShowHelpWnd()
     if(!m_wndHelp){
         m_wndHelp = new WndHelp();
     }
+    if(m_wndMain){
+        m_wndHelp->move(m_wndMain->pos());
+    }
     m_wndHelp->show();
+    m_wndHelp->activateWindow();
+    m_wndHelp->raise();
 }
 
 void WndTrayIcon::cmdExitApp()

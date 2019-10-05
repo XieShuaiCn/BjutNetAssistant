@@ -30,21 +30,22 @@ public:
     void setFlowGraphType(int type);
     FlowGraphType getFlowGraphType() const;
 
-    void setShowDetail(bool show);
-    bool getShowDetail() const;
-
-    void setShowLog(bool show);
-    bool getShowLog() const;
-
     void setBjutWebFrequency(int id, int freq);
     const QMap<int, int> &getBjutWebFrequency() const;
     int getBjutWebFrequency(int id) const;
+
+    PROPERTY_READ_WRITE(bool, ShowDetail, m_bShowDetail)
+    PROPERTY_READ_WRITE(bool, ShowLog, m_bShowLog)
+    PROPERTY_READ(bool, NewInstall, m_bNewInstall)
+    PROPERTY_READ(bool, NewUpdate, m_bNewUpdate)
 
 private:
     FlowGraphType m_typeFlowGraph;
     bool m_bShowDetail;
     bool m_bShowLog;
     QMap<int, int> m_mapBjutWebFrequency;
+    bool m_bNewInstall;
+    bool m_bNewUpdate;
 };
 
 ////////////////////// inline implements /////////////////////////
@@ -68,25 +69,6 @@ inline void UISetting::setFlowGraphType(int type)
 inline UISetting::FlowGraphType UISetting::getFlowGraphType() const
 {
     return m_typeFlowGraph;
-}
-
-inline void UISetting::setShowDetail(bool show)
-{
-    m_bShowDetail = show;
-}
-inline bool UISetting::getShowDetail() const
-{
-    return m_bShowDetail;
-}
-
-inline void UISetting::setShowLog(bool show)
-{
-    m_bShowLog = show;
-}
-
-inline bool UISetting::getShowLog() const
-{
-    return m_bShowLog;
 }
 
 inline void UISetting::setBjutWebFrequency(int id, int freq)

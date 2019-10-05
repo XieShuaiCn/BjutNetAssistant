@@ -117,6 +117,9 @@ WndMain::WndMain(WndTrayIcon *tray, QWidget *parent) :
             on_lblShowMsg_clicked();
         }
     }
+    if(UISetting::I().getNewInstall()){
+        on_btnHelp_clicked();
+    }
 }
 
 WndMain::~WndMain()
@@ -148,16 +151,6 @@ void WndMain::initBjutWeb()
         m_menuBjutWeb->addAction(act);
         connect(act, &QAction::triggered, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
     }
-}
-
-void WndMain::show()
-{
-    QWidget::show();
-    QWidget::raise();
-    QWidget::activateWindow();
-    //后台处理事件
-    QCoreApplication::processEvents();
-    //showEvent();
 }
 
 void WndMain::closeEvent(QCloseEvent *event)
