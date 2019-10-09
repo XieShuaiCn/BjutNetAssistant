@@ -5,6 +5,9 @@
 #include <QFrame>
 #include <QColor>
 #include <QLabel>
+#include <QMutex>
+
+class QGraphicsOpacityEffect;
 
 namespace bna{
 namespace gui{
@@ -20,8 +23,10 @@ public:
     void setBorderStyle(double width, double round, QColor color);
     void setText(const QString &text);
 public slots:
+    virtual void setVisible(bool visible);
 protected:
     void paintEvent(QPaintEvent *event);
+    void timerEvent(QTimerEvent *event);
 
 private:
     QLabel *m_lblText;
@@ -31,6 +36,14 @@ private:
     double m_dBorderWidth;
     double m_dBorderRound;
     QColor m_colorBorder;
+    QGraphicsOpacityEffect *m_effectOpacity;
+    int m_nOpacityEffectTimer;
+    qreal m_fOpacityStart;
+    qreal m_fOpacityStop;
+    qreal m_fOpacityStep;
+    QMutex m_mtxToVisible;
+    bool m_bToVisible;
+    bool m_bToInvisible;
 };
 
 inline void HPanel::setBorderStyle(double width, double round, QColor color)

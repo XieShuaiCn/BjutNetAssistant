@@ -279,12 +279,6 @@ void WndMain::showEvent(QShowEvent *event)
 {
     QWidget::showEvent(event);
     initBjutWeb();
-    m_updater.checkUpdate();
-    if(m_updater.needUpdate()){
-        m_bNeedUpdate = true;
-        QString ver("%1 <font color=#dd3333>最新版本：%2 点我更新！</font>");
-        m_lblVersion->setText(ver.arg(m_updater.getOldVersion(), m_updater.getNewVersion()));
-    }
     on_btnRefresh_clicked();
 }
 

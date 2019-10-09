@@ -3,6 +3,8 @@
 #include <QFrame>
 #include <QPaintEvent>
 #include <QPen>
+#include <QGraphicsEffect>
+#include <QPropertyAnimation>
 
 namespace bna {
 namespace gui {
@@ -13,10 +15,19 @@ HPanel::HPanel(QWidget* parent, Qt::WindowFlags f) :
     m_bShowBorder(true),
     m_dBorderWidth(2.),
     m_dBorderRound(5.),
-    m_colorBorder(QColor::fromRgb(180,180,180))
+    m_colorBorder(QColor::fromRgb(180,180,180)),
+    m_nOpacityEffectTimer(-1),
+    m_fOpacityStart(0.0),
+    m_fOpacityStop(0.0),
+    m_fOpacityStep(0.0),
+    m_bToVisible(false),
+    m_bToInvisible(false)
 {
     m_lblText = new QLabel(this);
     m_lblText->setGeometry(QRect(25, 0, 100, 20));
+    m_effectOpacity = new QGraphicsOpacityEffect(this);
+    m_effectOpacity->setOpacity(0.0);
+    setGraphicsEffect(m_effectOpacity);
 }
 
 void HPanel::setText(const QString &text)
@@ -74,4 +85,74 @@ void HPanel::paintEvent(QPaintEvent *event)
         }
     }
 }
+
+void HPanel::timerEvent(QTimerEvent *event)
+{
+    QWidget::timerEvent(event);
+    if(event->timerId() == m_nOpacityEffectTimer){
+        // go step
+        m_fOpacityStart += m_fOpacityStep;
+        m_fOpacityStart = std::min(std::max(m_fOpacityStart, 0.0), 1.0);
+        m_effectOpacity->setOpacity(m_fOpacityStart);
+        // completed
+        if(std::abs(m_fOpacityStart-m_fOpacityStop) < 1e-3){
+            if(m_fOpacityStop < 0.1){
+                QWidget::setVisible(false);
+            }
+            else{
+                QWidget::setVisible(true);
+            }
+            killTimer(m_nOpacityEffectTimer);
+            m_nOpacityEffectTimer = 0;
+            m_mtxToVisible.lock();
+            m_bToVisible = false;
+            m_bToInvisible = false;
+            m_mtxToVisible.unlock();
+        }
+    }
+}
+
+void HPanel::setVisible(bool visible)
+{
+    if(visible){
+        if(isVisible() && !m_bToInvisible){
+            QWidget::setVisible(true);
+            return;
+        }
+        m_mtxToVisible.lock();
+        m_bToVisible = true;
+        m_bToInvisible = false;
+        m_mtxToVisible.unlock();
+
+        if(!isVisible()){
+             QWidget::setVisible(true);
+        }
+        if(m_nOpacityEffectTimer>0){
+            killTimer(m_nOpacityEffectTimer);
+        }
+        m_fOpacityStart = m_effectOpacity->opacity();
+        m_fOpacityStop = 1.;
+        m_fOpacityStep = 0.1;
+        m_nOpacityEffectTimer = startTimer(30, Qt::PreciseTimer);
+    }
+    else{
+        if(!isVisible() && !m_bToVisible){
+            QWidget::setVisible(false);
+            return;
+        }
+        m_mtxToVisible.lock();
+        m_bToInvisible = true;
+        m_bToVisible = false;
+        m_mtxToVisible.unlock();
+
+        if(m_nOpacityEffectTimer>0){
+            killTimer(m_nOpacityEffectTimer);
+        }
+        m_fOpacityStart = m_effectOpacity->opacity();
+        m_fOpacityStop = 0.;
+        m_fOpacityStep = -0.1;
+        m_nOpacityEffectTimer = startTimer(30, Qt::PreciseTimer);
+    }
+}
+
 }}
