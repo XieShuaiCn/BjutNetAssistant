@@ -11,8 +11,8 @@
 namespace bna{
 namespace core{
 
-#define BNA_AUTOSTART_LINUX_FILENAME "BjutNetService.sh.desktop"
-#define BNA_AUTOSTART_MAC_FILENAME "BjutNetService.plist"
+#define BNA_AUTOSTART_LINUX_FILENAME "BjutNetBoard.sh.desktop"
+#define BNA_AUTOSTART_MAC_FILENAME "BjutNetBoard.plist"
 
 bool Setting::setAutoRun(bool bAutoRun)
 {

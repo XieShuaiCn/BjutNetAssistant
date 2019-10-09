@@ -125,7 +125,7 @@ void bna::gui::WndMain::initUI()
                             m_rectFlowGraphTop.size());
 
     //设置各控件的文本内容
-    this->setWindowTitle(QString("北工大网关登录器"));
+    this->setWindowTitle(QString(BNA_NAME_CN));
     m_lblService->setText(QString("未检测到套餐"));
     m_lblFlowUsed->setText(QString("Used:--"));
     m_lblStatus->setText(QString("状态"));
