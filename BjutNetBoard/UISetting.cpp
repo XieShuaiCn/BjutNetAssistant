@@ -26,8 +26,9 @@ UISetting& UISetting::I()
 
 bool UISetting::load()
 {
+    // TODO: move Innerversion to BjutNetAssistant
 #ifdef Q_OS_WIN
-    QSettings gui_settings("HKEY_CURRENT_USER\\Software\\HrrcnTech\\BjutNetAssistant",
+    QSettings gui_settings("HKEY_CURRENT_USER\\Software\\HrrcnTech\\BjutNetAssistant\\Board",
                            QSettings::NativeFormat);
 #else
     QString conf_file = QDir::home().absoluteFilePath(".bjutnet/board.conf");
