@@ -61,6 +61,8 @@ private:
     QPushButton *m_btnApplyLogin;
 
     QLabel *m_lblURL;
+
+    Q_DISABLE_COPY(WndSetting)
 };
 
 }

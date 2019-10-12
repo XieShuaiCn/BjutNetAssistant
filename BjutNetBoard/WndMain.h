@@ -191,6 +191,8 @@ private:
     WndTrayIcon *m_tray;
     core::BjutNet *m_coreBjutNet;
     ServiceBridge m_guiServiceBridge;
+
+    Q_DISABLE_COPY(WndMain)
 };
 
 inline void WndMain::setFlowGraphType(UISetting::FlowGraphType type)

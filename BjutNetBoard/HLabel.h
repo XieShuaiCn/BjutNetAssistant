@@ -21,6 +21,9 @@ signals:
 protected:
     void mouseDoubleClickEvent(QMouseEvent *event);
     void mousePressEvent(QMouseEvent *event);
+
+private:
+    Q_DISABLE_COPY(HLabel)
 };
 }
 }

@@ -56,6 +56,8 @@ protected slots:
     void openBjutWeb_action();
     void initBjutWebMenu();
 
+private:
+
     QTimer m_tmClick;
 
     QApplication *m_app;
@@ -73,6 +75,8 @@ protected slots:
     QMenu *m_menuBjutWeb;
 
     QVector<BjutWebItemInfo> m_vecBjutWeb;
+
+    Q_DISABLE_COPY(WndTrayIcon)
 };
 
 }}

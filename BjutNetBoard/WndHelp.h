@@ -19,6 +19,8 @@ public slots:
     void on_lblImage_clicked();
 private:
     HLabel *m_lblImage;
+
+    Q_DISABLE_COPY(WndHelp)
 };
 
 }}

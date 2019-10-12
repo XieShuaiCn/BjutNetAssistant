@@ -4,7 +4,6 @@
 #include <QPaintEvent>
 #include <QPen>
 #include <QGraphicsEffect>
-#include <QPropertyAnimation>
 
 namespace bna {
 namespace gui {

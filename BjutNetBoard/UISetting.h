@@ -16,8 +16,6 @@ public:
         FLOW_GRAPH_PIE_3D,
         FLOW_GRAPH_TYPE_SIZE
     };
-    UISetting();
-    ~UISetting();
 
     static UISetting &getInstance();
     static UISetting &I();
@@ -40,6 +38,10 @@ public:
     PROPERTY_READ(bool, NewUpdate, m_bNewUpdate)
 
 private:
+    UISetting();
+    ~UISetting();
+    Q_DISABLE_COPY(UISetting)
+
     FlowGraphType m_typeFlowGraph;
     bool m_bShowDetail;
     bool m_bShowLog;

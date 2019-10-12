@@ -29,6 +29,8 @@ protected:
     void timerEvent(QTimerEvent *event);
 
 private:
+    Q_DISABLE_COPY(HPanel)
+
     QLabel *m_lblText;
     bool m_bShowText;
     bool m_bShowBorder;
