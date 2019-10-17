@@ -44,8 +44,12 @@ public slots:
     void cmdShowMainWnd();
     void cmdShowSettingWnd();
     void cmdShowHelpWnd();
-    void cmdLoginLgn();
-    void cmdLogoutLgn();
+    void cmdLoginAndStartMonitor();
+    void cmdLogoutAndStopMonitor();
+    void cmdLoginOnly();
+    void cmdLogoutOnly();
+    void cmdStartMonitor();
+    void cmdStopMonitor();
 
     void increaseBjutWebFrequency(int id, long freq_inc = 1);
     void updateBjutWebFrequency(int id, long frequency);
@@ -57,18 +61,20 @@ protected slots:
     void initBjutWebMenu();
 
 private:
-
-    QTimer m_tmClick;
-
     QApplication *m_app;
     bna::core::BjutNet *m_coreBjutNet;
     WndMain *m_wndMain;
     WndSetting *m_wndSetting;
     WndHelp *m_wndHelp;
     QMenu *m_menuTray;
+#ifdef Q_OS_LINUX
+    QAction *m_actMenuShowStatus;
+#endif
     QAction *m_actMenuShowMain;
-    QAction *m_actMenuLogout;
     QAction *m_actMenuLogin;
+    QAction *m_actMenuLogout;
+    QAction *m_actMenuLoginOnly;
+    QAction *m_actMenuStopMonitor;
     QAction *m_actMenuSetting;
     QAction *m_actMenuQuit;
 

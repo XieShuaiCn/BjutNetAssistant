@@ -88,7 +88,7 @@ void WndSetting::on_btnApplyLogin_clicked()
     on_btnApply_clicked();
     if(m_tray)
     {
-        m_tray->cmdLoginLgn();
+        m_tray->cmdLoginAndStartMonitor();
     }
 }
 

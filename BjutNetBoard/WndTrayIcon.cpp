@@ -46,35 +46,44 @@ WndTrayIcon::WndTrayIcon(QApplication *app, core::BjutNet *core_bjut, QObject *p
     this->setIcon(ico);
 
     m_menuTray = new QMenu("托盘菜单");
-    this->setContextMenu(m_menuTray);
     //
+#ifdef Q_OS_LINUX
+    m_actMenuShowStatus = new QAction("当前网关状态");
+#endif
     m_actMenuShowMain = new QAction("显示主窗口");
     m_actMenuLogin = new QAction("上线");
     m_actMenuLogout = new QAction("下线");
+    m_actMenuLoginOnly = new QAction("上线不监控");
+    m_actMenuStopMonitor = new QAction("停止在线监控");
     m_actMenuSetting = new QAction("设置");
     m_actMenuQuit = new QAction("退出");
     m_menuBjutWeb = new QMenu("常用网址");
+#ifdef Q_OS_LINUX
+    m_menuTray->addAction(m_actMenuShowStatus);
+#endif
     m_menuTray->addAction(m_actMenuShowMain);
     m_menuTray->addMenu(m_menuBjutWeb);
     m_menuTray->addSeparator();
     m_menuTray->addAction(m_actMenuLogin);
     m_menuTray->addAction(m_actMenuLogout);
+    m_menuTray->addAction(m_actMenuLoginOnly);
+    m_menuTray->addAction(m_actMenuStopMonitor);
     m_menuTray->addSeparator();
     m_menuTray->addAction(m_actMenuSetting);
     m_menuTray->addAction(m_actMenuQuit);
-    //initBjutWebMenu();
-    //双击间隔200ms
-    m_tmClick.setInterval(200);
-    //一次触发
-    m_tmClick.setSingleShot(true);
+    this->setContextMenu(m_menuTray);
 
     connect(this, &WndTrayIcon::activated, this, &WndTrayIcon::on_actived);
+#ifdef Q_OS_LINUX
+    connect(m_actMenuShowStatus, &QAction::triggered, this, &WndTrayIcon::on_clicked);
+#endif
     connect(m_actMenuShowMain, &QAction::triggered, this, &WndTrayIcon::cmdShowMainWnd);
-    connect(m_actMenuLogin, &QAction::triggered, this, &WndTrayIcon::cmdLoginLgn);
-    connect(m_actMenuLogout, &QAction::triggered, this, &WndTrayIcon::cmdLogoutLgn);
+    connect(m_actMenuLogin, &QAction::triggered, this, &WndTrayIcon::cmdLoginAndStartMonitor);
+    connect(m_actMenuLogout, &QAction::triggered, this, &WndTrayIcon::cmdLogoutAndStopMonitor);
+    connect(m_actMenuLoginOnly, &QAction::triggered, this, &WndTrayIcon::cmdLoginOnly);
+    connect(m_actMenuStopMonitor, &QAction::triggered, this, &WndTrayIcon::cmdStopMonitor);
     connect(m_actMenuSetting, &QAction::triggered, this, &WndTrayIcon::cmdShowSettingWnd);
     connect(m_actMenuQuit, &QAction::triggered, this, &WndTrayIcon::cmdExitApp);
-    connect(&m_tmClick, &QTimer::timeout, this, &WndTrayIcon::on_clicked);
     connect(m_menuBjutWeb, &QMenu::aboutToShow, this, &WndTrayIcon::initBjutWebMenu);
 }
 
@@ -117,7 +126,6 @@ void WndTrayIcon::on_clicked()
                    (online?"在":"离"), ftime, fflow, flowUnit[flowUnitIndex], ffee);
     //return status;
     this->showMessage("北工大校园网助手", status, QSystemTrayIcon::NoIcon);
-    m_tmClick.stop();
 }
 
 void WndTrayIcon::openBjutWeb_action()
@@ -201,16 +209,36 @@ void WndTrayIcon::cmdExitAll()
     cmdExitApp();
 }
 
-void WndTrayIcon::cmdLoginLgn()
+void WndTrayIcon::cmdLoginAndStartMonitor()
 {
     m_coreBjutNet->getWebLgn().login();
     m_coreBjutNet->start_monitor();
 }
 
-void WndTrayIcon::cmdLogoutLgn()
+void WndTrayIcon::cmdLogoutAndStopMonitor()
 {
     m_coreBjutNet->stop_monitor();
     m_coreBjutNet->getWebLgn().logout();
+}
+
+void WndTrayIcon::cmdLoginOnly()
+{
+    m_coreBjutNet->getWebLgn().login();
+}
+
+void WndTrayIcon::cmdLogoutOnly()
+{
+    m_coreBjutNet->getWebLgn().logout();
+}
+
+void WndTrayIcon::cmdStartMonitor()
+{
+    cmdLoginAndStartMonitor();
+}
+
+void WndTrayIcon::cmdStopMonitor()
+{
+    m_coreBjutNet->stop_monitor();
 }
 
 void WndTrayIcon::increaseBjutWebFrequency(int id, long freq_inc)
@@ -246,22 +274,14 @@ void WndTrayIcon::updateBjutWebFrequency(int id, long frequency)
 void WndTrayIcon::on_actived(QSystemTrayIcon::ActivationReason reason)
 {
     switch (reason) {
-    case QSystemTrayIcon::Context:
-        m_menuTray->exec();
-        break;
+    //case QSystemTrayIcon::Context:
+    //    m_menuTray->exec();
+    //    break;
     case QSystemTrayIcon::DoubleClick:
         cmdShowMainWnd();
         break;
     case QSystemTrayIcon::Trigger:
-        if(m_tmClick.isActive())
-        {//双击
-            m_tmClick.stop();
-            cmdShowMainWnd();
-        }
-        else
-        {//单击计时器
-            m_tmClick.start();
-        }
+        on_clicked();
         break;
     default:
         break;

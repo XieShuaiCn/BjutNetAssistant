@@ -94,7 +94,6 @@ WndMain::WndMain(WndTrayIcon *tray, QWidget *parent) :
     connect(m_btnBjutWeb5, &QPushButton::clicked, this, &bna::gui::WndMain::on_btnBjutWebCommon_clicked);
     connect(m_lblVersion, &bna::gui::HLabel::clicked, this, &bna::gui::WndMain::on_lblVersion_clicked);
     connect(m_lblFeedback, &bna::gui::HLabel::clicked, this, &bna::gui::WndMain::on_lblFeedback_clicked);
-    //connect(this, &WndMain::showed, this, &WndMain::on_show);
     if(m_coreBjutNet){
         connect(m_coreBjutNet, &bna::core::BjutNet::message, this, &bna::gui::WndMain::on_txtMsg_MessageWithTime);
         WebLgn &lgn = m_coreBjutNet->getWebLgn();
@@ -569,13 +568,13 @@ void WndMain::on_lblShowMsg_clicked()
 
 void WndMain::on_btnLogout_clicked()
 {
-    m_tray->cmdLogoutLgn();
+    m_tray->cmdLogoutAndStopMonitor();
     m_coreBjutNet->getWebJfself().refreshOnline();
 }
 
 void WndMain::on_btnLogin_clicked()
 {
-    m_tray->cmdLoginLgn();
+    m_tray->cmdLoginAndStartMonitor();
     m_coreBjutNet->getWebJfself().refreshOnline();
 }
 
@@ -1155,7 +1154,7 @@ void WndMain::logRemoteDevice(int index, bool login)
         const OnlineDevice &od = m_lstOnline.at(index);
         // local device
         if(std::get<OLDEV_LOCAL>(od)){
-            login ? m_tray->cmdLoginLgn() : m_tray->cmdLogoutLgn();
+            login ? m_tray->cmdLoginAndStartMonitor() : m_tray->cmdLogoutAndStopMonitor();
             on_txtMsg_Message(QString("[ OK ] ") + (login? "on":"off") + "line local device");
         }
         else{
@@ -1165,7 +1164,7 @@ void WndMain::logRemoteDevice(int index, bool login)
                 if(!param_ip.isNull()){
                     // local device
                     if(param_ip.isLoopback()){
-                        login ? m_tray->cmdLoginLgn() : m_tray->cmdLogoutLgn();
+                        login ? m_tray->cmdLoginAndStartMonitor() : m_tray->cmdLogoutAndStopMonitor();
                         on_txtMsg_Message(QString("[ OK ] ") + (login? "on":"off") + "line local device");
                     }
                     else{
