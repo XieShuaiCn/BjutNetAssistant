@@ -20,10 +20,11 @@ public:
     PROPERTY_READ_WRITE(double, BorderWidth, m_dBorderWidth)
     PROPERTY_READ_WRITE(double, BorderRound, m_dBorderRound)
     PROPERTY_READ_WRITE(QColor, BorderColor, m_colorBorder)
+    void setBorderStyle(double width, double round = 5);
     void setBorderStyle(double width, double round, QColor color);
     void setText(const QString &text);
 public slots:
-    virtual void setVisible(bool visible);
+    void setVisibleAnimation(bool visible);
 protected:
     void paintEvent(QPaintEvent *event);
     void timerEvent(QTimerEvent *event);
@@ -47,6 +48,12 @@ private:
     bool m_bToVisible;
     bool m_bToInvisible;
 };
+
+inline void HPanel::setBorderStyle(double width, double round)
+{
+    m_dBorderWidth = width;
+    m_dBorderRound = round;
+}
 
 inline void HPanel::setBorderStyle(double width, double round, QColor color)
 {

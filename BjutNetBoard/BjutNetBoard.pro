@@ -66,8 +66,7 @@ SOURCES += \
     WndSetting_ui.cpp \
     Utility.cpp \
     WndHelp.cpp \
-    UISetting.cpp \
-    HWidget.cpp
+    UISetting.cpp
 unix{
 macx{
 SOURCES += WndMain_ui_mac.cpp
@@ -103,8 +102,7 @@ HEADERS += \
     WndSetting.h \
     Utility.h \
     WndHelp.h \
-    UISetting.h \
-    HWidget.h
+    UISetting.h
 
 DISTFILES += \
     C:/Users/XIESHUAI/.bjutnet/account.json \

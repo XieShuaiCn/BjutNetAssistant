@@ -57,6 +57,7 @@ public slots:
     void initUI();
     void layoutUI();
     void initBjutWeb();
+    void setSizeWithAnimation(const QSize &size);
     void on_btnRefresh_clicked();
     void on_btnSetting_clicked();
     void on_btnHelp_clicked();
@@ -166,6 +167,7 @@ private:
     QPushButton *m_btnRefreshBook;
 
     HLabel *m_lblShowMsg;
+    HPanel *m_frmShowMsg;
     QTextEdit *m_txtMsg;
     HLabel *m_lblFeedback;
     HLabel *m_lblVersion;
@@ -181,6 +183,13 @@ private:
     double m_dFlowPieDegree = 0.;
     double m_dFlowPieDegreeMax = 0.;
     double m_dFlowPieDegreeSpeed = 0.;
+    // setFixSize
+    int m_nSizeEffectTimer = 0;
+    QMutex m_mtxResize;
+    QSize m_szSizeStart;
+    QSize m_szSizeStop;
+    QSize m_szSizeStep;
+    bool m_bResizing = false;
 
     bool m_bNeedUpdate;
     QVector<BjutWebItemInfo> m_vecBjutWeb;

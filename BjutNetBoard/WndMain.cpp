@@ -110,11 +110,16 @@ WndMain::WndMain(WndTrayIcon *tray, QWidget *parent) :
     m_txtMsg->setFocus();
     // change frame size
     if(m_bShowDetail){
-        m_bShowDetail = !m_bShowDetail;
-        on_btnDetail_clicked();
+        m_btnDetail->setText(QString("<<简洁"));
+        m_frmOnline->setVisible(true);
+        m_frmOperation->setVisible(true);
+        m_frmBjutWeb->setVisible(true);
         if(m_bShowLog){
-            m_bShowLog = !m_bShowLog;
-            on_lblShowMsg_clicked();
+            this->setFixedSize(m_szFrameShowMsg);
+            m_frmShowMsg->setVisible(true);
+        }
+        else{
+            this->setFixedSize(m_szFrameAdvanced);
         }
     }
     if(UISetting::I().getNewInstall()){
@@ -155,8 +160,6 @@ void WndMain::initBjutWeb()
 
 void WndMain::closeEvent(QCloseEvent *event)
 {
-    //QMessageBox::StandardButton ret = QMessageBox::information(this, "关闭", "是否关闭？", QMessageBox::Cancel, QMessageBox::Ok);
-    //event->setAccepted(ret == QMessageBox::Ok);
     //取消关闭命令
     event->setAccepted(false);
     this->hide();
@@ -272,6 +275,31 @@ void WndMain::timerEvent(QTimerEvent *event)
         }
         m_mtxFlowPieFlash.unlock();
         this->update(m_rectFlowGraph);
+    }
+    else if(event->timerId() == m_nSizeEffectTimer){
+        m_mtxResize.lock();
+        QSize szNow = m_szSizeStart + m_szSizeStep;
+        // normalize width and height
+        if(m_szSizeStep.width() > 0){
+            m_szSizeStart.setWidth(std::min(szNow.width(),m_szSizeStop.width()));
+        }
+        else if(m_szSizeStep.width() < 0){
+            m_szSizeStart.setWidth(std::max(szNow.width(), m_szSizeStop.width()));
+        }
+        if(m_szSizeStep.height() > 0){
+            m_szSizeStart.setHeight(std::min(szNow.height(),m_szSizeStop.height()));
+        }
+        else if(m_szSizeStep.height() < 0){
+            m_szSizeStart.setHeight(std::max(szNow.height(), m_szSizeStop.height()));
+        }
+        //
+        this->setFixedSize(m_szSizeStart);
+        if(m_szSizeStart == m_szSizeStop){
+            killTimer(m_nSizeEffectTimer);
+            m_nSizeEffectTimer = 0;
+            m_bResizing = false;
+        }
+        m_mtxResize.unlock();
     }
 }
 
@@ -431,6 +459,18 @@ void WndMain::drawFlowPie(QPainter &painter, const QBrush &brushPie, double dFlo
     }
 }
 
+void WndMain::setSizeWithAnimation(const QSize &size)
+{
+    m_mtxResize.lock();
+    m_szSizeStop = size;
+    m_szSizeStart = this->size();
+    m_szSizeStep = (m_szSizeStop-m_szSizeStart) / 5;
+    if(m_nSizeEffectTimer <= 0){
+        m_nSizeEffectTimer = startTimer(50, Qt::PreciseTimer);
+    }
+    m_mtxResize.unlock();
+}
+
 void WndMain::on_txtMsg_MessageWithTime(const QDateTime &time, const QString &info)
 {
     m_txtMsg->append(time.toString("[yyyy-MM-dd hh:mm:ss] ") + (info.endsWith('\n') ? info : (info + '\n')));
@@ -495,19 +535,19 @@ void WndMain::on_btnDetail_clicked()
     m_bShowDetail = !m_bShowDetail;
     if(m_bShowDetail)
     {
-        this->setFixedSize(m_bShowLog ? m_szFrameShowMsg : m_szFrameAdvanced);
+        this->setSizeWithAnimation(m_bShowLog ? m_szFrameShowMsg : m_szFrameAdvanced);
         m_btnDetail->setText(QString("<<简洁"));
-        m_frmOnline->setVisible(true);
-        m_frmOperation->setVisible(true);
-        m_frmBjutWeb->setVisible(true);
+        m_frmOnline->setVisibleAnimation(true);
+        m_frmOperation->setVisibleAnimation(true);
+        m_frmBjutWeb->setVisibleAnimation(true);
     }
     else
     {
-        this->setFixedSize(m_szFrameSimple);
+        this->setSizeWithAnimation(m_szFrameSimple);
         m_btnDetail->setText(QString(">>更多"));
-        m_frmOnline->setVisible(false);
-        m_frmOperation->setVisible(false);
-        m_frmBjutWeb->setVisible(false);
+        m_frmOnline->setVisibleAnimation(false);
+        m_frmOperation->setVisibleAnimation(false);
+        m_frmBjutWeb->setVisibleAnimation(false);
     }
     UISetting::I().setShowDetail(m_bShowDetail);
 }
@@ -517,13 +557,13 @@ void WndMain::on_lblShowMsg_clicked()
     m_bShowLog = !m_bShowLog;
     if(m_bShowLog)
     {
-        this->setFixedSize(m_szFrameShowMsg);
+        this->setSizeWithAnimation(m_szFrameShowMsg);
     }
     else
     {
-        this->setFixedSize(m_bShowDetail ? m_szFrameAdvanced : m_szFrameSimple);
+        this->setSizeWithAnimation(m_bShowDetail ? m_szFrameAdvanced : m_szFrameSimple);
     }
-    this->m_txtMsg->setVisible(m_bShowLog);
+    m_frmShowMsg->setVisibleAnimation(m_bShowLog);
     UISetting::I().setShowLog(m_bShowLog);
 }
 

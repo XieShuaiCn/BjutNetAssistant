@@ -154,7 +154,8 @@ void bna::gui::WndMain::layoutUI()
 
     //消息日志框
     m_lblShowMsg->setGeometry(QRect(35, 450, 540, 20));
-    m_txtMsg->setGeometry(QRect(15, 475, 540, 115));
+    m_frmShowMsg->setGeometry(15, 475, 540, 115);
+    m_txtMsg->setGeometry(0, 0, 540, 115);
     //版本号
     m_lblVersion->setFont(font_s100);
     // feedback

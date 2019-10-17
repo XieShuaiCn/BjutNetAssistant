@@ -25,7 +25,7 @@ HPanel::HPanel(QWidget* parent, Qt::WindowFlags f) :
     m_lblText = new QLabel(this);
     m_lblText->setGeometry(QRect(25, 0, 100, 20));
     m_effectOpacity = new QGraphicsOpacityEffect(this);
-    m_effectOpacity->setOpacity(0.0);
+    m_effectOpacity->setOpacity(1.0);
     setGraphicsEffect(m_effectOpacity);
 }
 
@@ -111,7 +111,7 @@ void HPanel::timerEvent(QTimerEvent *event)
     }
 }
 
-void HPanel::setVisible(bool visible)
+void HPanel::setVisibleAnimation(bool visible)
 {
     if(visible){
         if(isVisible() && !m_bToInvisible){

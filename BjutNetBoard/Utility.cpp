@@ -28,7 +28,9 @@ bool ListLocalIpAddress(QVector<QHostAddress> &addrs)
         if(_name.startsWith("vboxnet")){//virtual box
             continue;
         }
-        addrs.push_back(nif);
+        for(const QNetworkAddressEntry &entry : nif.addressEntries()){
+            addrs.push_back(entry.ip());
+        }
     }
     return true;
     // 3.

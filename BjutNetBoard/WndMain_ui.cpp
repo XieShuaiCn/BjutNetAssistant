@@ -100,9 +100,11 @@ void bna::gui::WndMain::initUI()
 
     //消息日志框
     m_lblShowMsg = new HLabel(this);
-    m_txtMsg = new QTextEdit(this);
+    m_frmShowMsg = new HPanel(this);
+    m_frmShowMsg->setShowBorder(false);
+    m_frmShowMsg->setVisible(false);
+    m_txtMsg = new QTextEdit(m_frmShowMsg);
     m_txtMsg->setReadOnly(true);
-    m_txtMsg->setVisible(m_bShowLog);
     //版本号
     m_lblVersion = new HLabel(this);
     // feedback
