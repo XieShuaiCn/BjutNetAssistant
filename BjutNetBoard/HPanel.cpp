@@ -1,4 +1,5 @@
 #include "HPanel.h"
+#include <math.h>
 #include <QPainter>
 #include <QFrame>
 #include <QPaintEvent>
@@ -94,7 +95,7 @@ void HPanel::timerEvent(QTimerEvent *event)
         m_fOpacityStart = std::min(std::max(m_fOpacityStart, 0.0), 1.0);
         m_effectOpacity->setOpacity(m_fOpacityStart);
         // completed
-        if(std::abs(m_fOpacityStart-m_fOpacityStop) < 1e-3){
+        if(fabs(m_fOpacityStart-m_fOpacityStop) < 1e-3){
             if(m_fOpacityStop < 0.1){
                 QWidget::setVisible(false);
             }

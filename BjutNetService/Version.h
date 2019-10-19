@@ -7,8 +7,8 @@
 #define BNC_NAME "BjutNetConsole"
 #define BNW_NAME "BjutNetBoard"
 
-#define BNA_VERSION "4.1.0"
+#define BNA_VERSION "4.2.0"
 
-#define BNA_INNER_VERSION 19
+#define BNA_INNER_VERSION 20
 
 #endif // BNS_VERSION_H
