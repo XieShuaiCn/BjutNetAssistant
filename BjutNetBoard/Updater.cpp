@@ -33,6 +33,10 @@ bool Updater::checkUpdate()
                           "Windows"
 #elif defined(Q_OS_LINUX)
                           "Linux64"
+#elif defined(Q_OS_MAC)
+                          "Mac"
+#else
+                          "Any"
 #endif
                      ), content);
     if(ret != 200){
@@ -82,6 +86,8 @@ bool Updater::downloadNewPackage()
                           "Windows"
 #elif defined(Q_OS_LINUX)
                           "Linux64"
+#elif defined(Q_OS_MAC)
+                          "Mac"
 #else
                           "Any"
 #endif
